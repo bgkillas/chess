@@ -9,6 +9,7 @@ fn main()
     let mut flip = false;
     let mut numbers = false;
     let mut keep_flip = false;
+    let mut file = String::new();
     for i in 0..std::env::args().len()
     {
         if std::env::args().nth(i).unwrap() == "--help"
@@ -21,36 +22,57 @@ fn main()
             println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
             std::process::exit(0);
         }
-        if std::env::args().nth(i).unwrap() == "--flip"
+        else if std::env::args().nth(i).unwrap() == "--flip"
         {
             flip = true;
         }
-        if std::env::args().nth(i).unwrap() == "--keep_flip"
+        else if std::env::args().nth(i).unwrap() == "--keep_flip"
         {
             keep_flip = true;
         }
-        if std::env::args().nth(i).unwrap() == "--numbers"
+        else if std::env::args().nth(i).unwrap() == "--numbers"
         {
             numbers = true;
         }
+        else if std::env::args().nth(i).unwrap() == "--file"
+        {
+            file = std::env::args().nth(i + 1).unwrap();
+        }
     }
-    let mut board:Vec<Vec<char>> = vec![vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],
-                                        vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
-                                        vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
-                                        vec!['q', 'p', ' ', ' ', ' ', ' ', 'P', 'Q'],
-                                        vec!['k', 'p', ' ', ' ', ' ', ' ', 'P', 'K'],
-                                        vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
-                                        vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
-                                        vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R']];
+    let mut board:Vec<Vec<char>>;
+    if file != ""
+    {
+        let csv = std::fs::File::open(file).unwrap();
+        let reader = std::io::BufReader::new(csv);
+        use std::io::BufRead;
+        board = reader.lines().map(|l| l.unwrap().split(',').map(|c| c.chars().nth(0).unwrap()).collect()).collect();
+    }
+    else
+    {
+        board = vec![vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],
+                     vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
+                     vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
+                     vec!['q', 'p', ' ', ' ', ' ', ' ', 'P', 'Q'],
+                     vec!['k', 'p', ' ', ' ', ' ', ' ', 'P', 'K'],
+                     vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
+                     vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
+                     vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R']];
+    }
+    //ensure the board is a square
+    if board[0].len() != board.len()
+    {
+        println!("Board must be a square");
+        std::process::exit(1);
+    }
     //turn tracker
-    let mut turns:Vec<Vec<char>> = vec![vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0']];
+    let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
     print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn);
     //castling stuff
     let mut black_castle = true;
     let mut white_castle = true;
     //en passant stuff
-    let mut passant = [0, 0, 0];
+    let mut passant = [0; 3];
     'outer: loop
     {
         //dont allow en passant on a piece after a turn
@@ -98,20 +120,38 @@ fn main()
                                          'f' => Some(6),
                                          'g' => Some(7),
                                          'h' => Some(8),
+                                         'i' => Some(9),
+                                         'j' => Some(10),
+                                         'k' => Some(11),
+                                         'l' => Some(12),
+                                         'm' => Some(13),
+                                         'n' => Some(14),
+                                         'o' => Some(15),
+                                         'p' => Some(16),
+                                         'q' => Some(17),
+                                         'r' => Some(18),
+                                         's' => Some(19),
+                                         't' => Some(20),
+                                         'u' => Some(21),
+                                         'v' => Some(22),
+                                         'w' => Some(23),
+                                         'x' => Some(24),
+                                         'y' => Some(25),
+                                         'z' => Some(26),
                                          _ => c.to_digit(10).map(|d| d as u8),
                                      }
                                  })
                                  .collect();
         //ensure the input is in range
-        if moves.len() != 4 || moves[0] < 1 || moves[0] > 9 || moves[1] < 1 || moves[1] > 9 || moves[2] < 1 || moves[2] > 9 || moves[3] < 1 || moves[3] > 9
+        if moves.len() != 4 || moves[0] < 1 || moves[0] > (board.len() + 2) as u8 || moves[1] < 1 || moves[1] > (board.len() + 2) as u8 || moves[2] < 1 || moves[2] > (board.len() + 2) as u8 || moves[3] < 1 || moves[3] > (board.len() + 2) as u8
         {
             println!("Invalid move");
             continue;
         }
         let x = moves[0] as usize - 1;
-        let y = (moves[1] as i8 - 8).abs() as usize;
+        let y = (moves[1] as i8 - board.len() as i8).abs() as usize;
         let x2 = moves[2] as usize - 1;
-        let y2 = (moves[3] as i8 - 8).abs() as usize;
+        let y2 = (moves[3] as i8 - board.len() as i8).abs() as usize;
         let piece = board[x][y];
         let piece2 = board[x2][y2];
         //dont move if the piece is the same color as the piece you are moving to
@@ -624,7 +664,7 @@ fn main()
             continue;
         }
         //delete the first turn of the turn tracker if there are too many to display
-        if turn > 8
+        if turn > board.len()
         {
             turns.remove(0);
             turns.push(input.chars().collect());
@@ -639,8 +679,9 @@ fn main()
 }
 fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bool, keep_flip:bool, turn:usize)
 {
+    //clear line and move cursor to top left
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-    for i in 0..8
+    for i in 0..board.len()
     {
         let res;
         let ind;
@@ -648,23 +689,23 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
         {
             if turn == 1 || turn % 2 == 1
             {
-                res = (i - 8 as i8).abs();
+                res = (i as i8 - board.len() as i8).abs();
                 ind = i as usize;
             }
             else
             {
-                res = i + 1;
-                ind = (i - 7 as i8).abs() as usize;
+                res = i as i8 + 1i8;
+                ind = (i as i8 - (board.len() as i8 - 1)).abs() as usize;
             }
         }
         else if keep_flip
         {
-            res = i + 1;
-            ind = (i - 7 as i8).abs() as usize;
+            res = i as i8 + 1i8;
+            ind = (i as i8 - (board.len() as i8 - 1)).abs() as usize;
         }
         else
         {
-            res = (i - 8 as i8).abs();
+            res = (i as i8 - board.len() as i8).abs();
             ind = i as usize;
         }
         let mut col = 'B';
@@ -674,23 +715,61 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
             col = 'W';
             opp = 'B';
         }
-        if (i + 1) % 2 == 0
+        if board.len() > 8
         {
-            println!("{} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[0m {} {}{}{}{}",
-                     res, board[0][ind], board[1][ind], board[2][ind], board[3][ind], board[4][ind], board[5][ind], board[6][ind], board[7][ind], col, turns[i as usize][0], turns[i as usize][1], turns[i as usize][2], turns[i as usize][3]);
+            print!("{} ", (res as u8 + 96) as char);
         }
         else
         {
-            println!("{} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[0m {} {}{}{}{}",
-                     res, board[0][ind], board[1][ind], board[2][ind], board[3][ind], board[4][ind], board[5][ind], board[6][ind], board[7][ind], opp, turns[i as usize][0], turns[i as usize][1], turns[i as usize][2], turns[i as usize][3]);
+            print!("{} ", res);
         }
+        if (i + 1) % 2 == 0
+        {
+            for j in 0..board.len()
+            {
+                if j % 2 == 0
+                {
+                    print!("\x1b[100m\x1b[37m {} \x1b[0m", board[j][ind]);
+                }
+                else
+                {
+                    print!("\x1b[47m\x1b[90m {} \x1b[0m", board[j][ind]);
+                }
+            }
+            print!(" {} {}{}{}{}", col, turns[i as usize][0], turns[i as usize][1], turns[i as usize][2], turns[i as usize][3]);
+        }
+        else
+        {
+            for j in 0..board.len()
+            {
+                if j % 2 == 0
+                {
+                    print!("\x1b[47m\x1b[90m {} \x1b[0m", board[j][ind]);
+                }
+                else
+                {
+                    print!("\x1b[100m\x1b[37m {} \x1b[0m", board[j][ind]);
+                }
+            }
+            print!(" {} {}{}{}{}", opp, turns[i as usize][0], turns[i as usize][1], turns[i as usize][2], turns[i as usize][3]);
+        }
+        println!();
     }
     if numbers
     {
-        println!("   1  2  3  4  5  6  7  8");
+        print!(" ");
+        for j in 0..board.len()
+        {
+            print!("  {}", j + 1);
+        }
     }
     else
     {
-        println!("   a  b  c  d  e  f  g  h");
+        print!(" ");
+        for j in 0..board.len()
+        {
+            print!("  {}", (j as u8 + 97) as char);
+        }
     }
+    println!();
 }
