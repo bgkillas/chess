@@ -23,4 +23,6 @@ TODO: implement networking
 
 TODO: implement stockfish
 
-![image](https://user-images.githubusercontent.com/55570525/231209242-38f20d25-750d-4a2e-b4a3-ca0f9f8beacf.png)
+TODO: more compact code/modularization stuff
+
+![image](https://user-images.githubusercontent.com/55570525/231222928-69903850-e981-4044-b7fb-53b0e5d7403f.png)
