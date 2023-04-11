@@ -5,6 +5,8 @@ made in and tested for linux i think everything is os independent though you wil
 
 ``./chess flip`` will flip the board each turn
 
+the moves are donoted as (x)(y)(x2)(y2) as in (start position)(end position) so 4244 means move the pawn on the 4th row and 2nd collumn to the 4th row 4th collumn or pawn d2->d4 in normal notation
+
 TODO: allow for normal chess notation
 
 TODO: show the last 8 moves to the right of the board
