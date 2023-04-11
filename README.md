@@ -3,15 +3,13 @@ a cli chess implementation written in rust
 
 made in and tested for linux i think everything is os independent though you will have to compile yourself for now
 
-``./chess flip`` will flip the board each turn
+Usage: chess [OPTION]...
 
-the moves are donoted as (x)(y)(x2)(y2) as in (start position)(end position) so 4244 means move the pawn on the 4th row and 2nd collumn to the 4th row 4th collumn or pawn d2->d4 in normal notation
+--flip will flip the board each move
 
-TODO: allow for normal chess notation
+--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h
 
 TODO: show the last 8 moves to the right of the board
-
-TODO: en passant
 
 TODO: check
 
