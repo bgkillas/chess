@@ -1,6 +1,5 @@
 fn main()
 {
-    // TODO: show the last 8 moves to the right of the board
     // TODO: check
     // TODO: checkmate
     // TODO: stalemate
@@ -9,6 +8,7 @@ fn main()
     // TODO: implement stock fish
     let mut flip = false;
     let mut numbers = false;
+    let mut keep_flip = false;
     for i in 0..std::env::args().len()
     {
         if std::env::args().nth(i).unwrap() == "--help"
@@ -17,6 +17,7 @@ fn main()
             println!("to move a piece type the coordinates of the piece you want to move and the coordinates of where you want to move it");
             println!("for example: e2e4 or 5254");
             println!("--flip will flip the board each move");
+            println!("--keep_flip will have black on the bottom and white on the top");
             println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
             std::process::exit(0);
         }
@@ -24,27 +25,14 @@ fn main()
         {
             flip = true;
         }
+        if std::env::args().nth(i).unwrap() == "--keep_flip"
+        {
+            keep_flip = true;
+        }
         if std::env::args().nth(i).unwrap() == "--numbers"
         {
             numbers = true;
         }
-    }
-    print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-    println!("8 \x1b[47m\x1b[90m r \x1b[37m\x1b[100m n \x1b[47m\x1b[90m b \x1b[37m\x1b[100m q \x1b[47m\x1b[90m k \x1b[37m\x1b[100m b \x1b[47m\x1b[90m n \x1b[37m\x1b[100m r \x1b[0m");
-    println!("7 \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[0m");
-    println!("6 \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[0m");
-    println!("5 \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[0m");
-    println!("4 \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[0m");
-    println!("3 \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[0m");
-    println!("2 \x1b[47m\x1b[90m P \x1b[37m\x1b[100m P \x1b[47m\x1b[90m P \x1b[37m\x1b[100m P \x1b[47m\x1b[90m P \x1b[37m\x1b[100m P \x1b[47m\x1b[90m P \x1b[37m\x1b[100m P \x1b[0m");
-    println!("1 \x1b[37m\x1b[100m R \x1b[47m\x1b[90m N \x1b[37m\x1b[100m B \x1b[47m\x1b[90m Q \x1b[37m\x1b[100m K \x1b[47m\x1b[90m B \x1b[37m\x1b[100m N \x1b[47m\x1b[90m R \x1b[0m");
-    if numbers
-    {
-        println!("   1  2  3  4  5  6  7  8");
-    }
-    else
-    {
-        println!("   a  b  c  d  e  f  g  h");
     }
     let mut board:Vec<Vec<char>> = vec![vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],
                                         vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
@@ -54,19 +42,26 @@ fn main()
                                         vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
                                         vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
                                         vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R']];
+    //turn tracker
+    let mut turns:Vec<Vec<char>> = vec![vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0'], vec!['0', '0', '0', '0']];
     let mut turn = 1;
+    print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn);
+    //castling stuff
     let mut black_castle = true;
     let mut white_castle = true;
-    let mut double_move = [0, 0, 0];
+    //en passant stuff
+    let mut passant = [0, 0, 0];
     'outer: loop
     {
-        if turn != double_move[2] + 1
+        //dont allow en passant on a piece after a turn
+        if turn != passant[2] + 1
         {
-            double_move[0] = 0;
-            double_move[1] = 0;
-            double_move[2] = 0;
+            passant[0] = 0;
+            passant[1] = 0;
+            passant[2] = 0;
         }
         println!();
+        //check for draw
         'inner: for row in board.iter()
         {
             for &c in row.iter()
@@ -90,6 +85,7 @@ fn main()
         println!("Enter a move: ");
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).expect("Failed to read line");
+        //turn input from a2a4 to [1,2,1,4]
         let moves:Vec<u8> = input.chars()
                                  .flat_map(|c| {
                                      match c
@@ -106,6 +102,7 @@ fn main()
                                      }
                                  })
                                  .collect();
+        //ensure the input is in range
         if moves.len() != 4 || moves[0] < 1 || moves[0] > 9 || moves[1] < 1 || moves[1] > 9 || moves[2] < 1 || moves[2] > 9 || moves[3] < 1 || moves[3] > 9
         {
             println!("Invalid move");
@@ -117,53 +114,64 @@ fn main()
         let y2 = (moves[3] as i8 - 8).abs() as usize;
         let piece = board[x][y];
         let piece2 = board[x2][y2];
+        //dont move if the piece is the same color as the piece you are moving to
         if piece.is_uppercase() && piece2.is_uppercase() || piece.is_lowercase() && piece2.is_lowercase()
         {
             println!("Invalid move");
             continue;
         }
+        //allow only white piece to move if its white's turn
         if turn % 2 == 0 && piece.is_uppercase()
         {
             println!("Invalid move");
             continue;
         }
+        //allow only black piece to move if its black's turn
         else if turn % 2 == 1 && piece.is_lowercase()
         {
             println!("Invalid move");
             continue;
         }
+        //pawn movement
         if piece == 'P' || piece == 'p'
         {
+            //if white
             if piece.is_uppercase()
             {
-                if y == 6 && y2 == y - 2 && x2 == x
+                //if it is the first move for the pawn allow double move, and dont allow moving if piece is there
+                if y == 6 && y2 == y - 2 && x2 == x && piece2 == ' '
                 {
-                    double_move = [x2, y2, turn];
+                    passant = [x2, y2, turn];
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
-                else if y2 == y - 1 && x2 == x
+                //if it is not the first move for the pawn only allow single move, and dont allow moving if piece is there
+                else if y2 == y - 1 && x2 == x && piece2 == ' '
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
+                //allow diagonal right if there is a piece to capture
                 else if x != 7 && (y2 == y - 1 && x2 == x + 1 && piece2.is_lowercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
+                //allow diagonal left if there is a piece to capture
                 else if x != 0 && (y2 == y - 1 && x2 == x - 1 && piece2.is_lowercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
-                else if x != 7 && (y2 == y - 1 && x2 == x + 1 && x2 == double_move[0] && y == double_move[1])
+                //allow en passant right
+                else if x != 7 && (y2 == y - 1 && x2 == x + 1 && x2 == passant[0] && y == passant[1])
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                     board[x2][y] = ' ';
                 }
-                else if x != 0 && (y2 == y - 1 && x2 == x - 1 && x2 == double_move[0] && y == double_move[1])
+                //allow en passant left
+                else if x != 0 && (y2 == y - 1 && x2 == x - 1 && x2 == passant[0] && y == passant[1])
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
@@ -174,6 +182,7 @@ fn main()
                     println!("Invalid move");
                     continue;
                 }
+                //allow for promotions, loop is if you type an invalid piece
                 loop
                 {
                     if y2 == 0
@@ -213,36 +222,43 @@ fn main()
                     }
                 }
             }
+            //if black
             else if piece.is_lowercase()
             {
-                if y == 1 && y2 == y + 2 && x2 == x
+                //if it is the first move for the pawn allow double move, and dont allow moving if piece is there
+                if y == 1 && y2 == y + 2 && x2 == x && piece2 == ' '
                 {
-                    double_move = [x2, y2, turn];
+                    passant = [x2, y2, turn];
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
-                else if y2 == y + 1 && x2 == x
+                //if it is not the first move for the pawn only allow single move, and dont allow moving if piece is there
+                else if y2 == y + 1 && x2 == x && piece2 == ' '
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
+                //allow diagonal right if there is a piece to capture
                 else if x != 7 && (y2 == y + 1 && x2 == x + 1 && piece2.is_uppercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
+                //allow diagonal left if there is a piece to capture
                 else if x != 0 && (y2 == y + 1 && x2 == x - 1 && piece2.is_uppercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
-                else if x != 7 && (y2 == y + 1 && x2 == x + 1 && x2 == double_move[0] && y == double_move[1])
+                //allow en passant right
+                else if x != 7 && (y2 == y + 1 && x2 == x + 1 && x2 == passant[0] && y == passant[1])
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                     board[x2][y] = ' ';
                 }
-                else if x != 0 && (y2 == y + 1 && x2 == x - 1 && x2 == double_move[0] && y == double_move[1])
+                //allow en passant left
+                else if x != 0 && (y2 == y + 1 && x2 == x - 1 && x2 == passant[0] && y == passant[1])
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
@@ -253,6 +269,7 @@ fn main()
                     println!("Invalid move");
                     continue;
                 }
+                //allow for promotions, loop is if you type an invalid piece
                 loop
                 {
                     if y2 == 7
@@ -293,8 +310,10 @@ fn main()
                 }
             }
         }
+        //if rook
         else if piece == 'R' || piece == 'r'
         {
+            //dont allow moving horizontally if piece is in the path
             for i in 1..(x2 as i8 - x as i8).abs()
             {
                 if x2 > x
@@ -314,6 +333,7 @@ fn main()
                     }
                 }
             }
+            //dont allow moving vertically if piece is in the path
             for i in 1..(y2 as i8 - y as i8).abs()
             {
                 if y2 > y
@@ -333,11 +353,13 @@ fn main()
                     }
                 }
             }
+            //allow moving vertically
             if x2 == x && y2 != y
             {
                 board[x][y] = ' ';
                 board[x2][y2] = piece;
             }
+            //allow moving horizontally
             else if x2 != x && y2 == y
             {
                 board[x][y] = ' ';
@@ -349,8 +371,10 @@ fn main()
                 continue;
             }
         }
+        //if bishop
         else if piece == 'B' || piece == 'b'
         {
+            //dont allow moving if piece is in the path
             for i in 1..(x2 as i8 - x as i8).abs()
             {
                 if x2 > x && y2 > y
@@ -386,6 +410,7 @@ fn main()
                     }
                 }
             }
+            //only allow moving diagonally
             if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs()
             {
                 board[x][y] = ' ';
@@ -397,8 +422,10 @@ fn main()
                 continue;
             }
         }
+        //if knight
         else if piece == 'N' || piece == 'n'
         {
+            //only allow moving in an L shape
             if (x2 as i8 - x as i8).abs() == 2 && (y2 as i8 - y as i8).abs() == 1
             {
                 board[x][y] = ' ';
@@ -415,10 +442,13 @@ fn main()
                 continue;
             }
         }
+        //if queen
         else if piece == 'Q' || piece == 'q'
         {
+            //if moving horizontally
             if x2 == x && y2 != y
             {
+                //dont allow moving horizontally if piece is in the path
                 for i in 1..(y2 as i8 - y as i8).abs()
                 {
                     if y2 > y
@@ -441,8 +471,10 @@ fn main()
                 board[x][y] = ' ';
                 board[x2][y2] = piece;
             }
+            //if moving vertically
             else if x2 != x && y2 == y
             {
+                //dont allow moving vertically if piece is in the path
                 for i in 1..(x2 as i8 - x as i8).abs()
                 {
                     if x2 > x
@@ -465,8 +497,10 @@ fn main()
                 board[x][y] = ' ';
                 board[x2][y2] = piece;
             }
+            //if moving diagonally
             else if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs()
             {
+                //dont allow moving diagonally if piece is in the path
                 for i in 1..(x2 as i8 - x as i8).abs()
                 {
                     if x2 > x && y2 > y
@@ -511,8 +545,10 @@ fn main()
                 continue;
             }
         }
+        //if king
         else if piece == 'K' || piece == 'k'
         {
+            //allow castling
             if y2 == y && x == 4 && (x2 == 2 || x2 == 6)
             {
                 if white_castle
@@ -560,6 +596,7 @@ fn main()
                     }
                 }
             }
+            //allow moving one space in any direction
             else if (x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1
             {
                 board[x][y] = ' ';
@@ -586,48 +623,74 @@ fn main()
             println!("Invalid move");
             continue;
         }
-        turn += 1;
-        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-        for i in 0..8
+        //delete the first turn of the turn tracker if there are too many to display
+        if turn > 8
         {
-            let res;
-            let ind;
-            if flip
-            {
-                if turn % 2 == 1
-                {
-                    res = (i - 8 as i8).abs();
-                    ind = i as usize;
-                }
-                else
-                {
-                    res = i + 1;
-                    ind = (i - 7 as i8).abs() as usize;
-                }
-            }
-            else
+            turns.remove(0);
+            turns.push(input.chars().collect());
+        }
+        else
+        {
+            turns[turn - 1] = input.chars().collect();
+        }
+        turn += 1;
+        print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn);
+    }
+}
+fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bool, keep_flip:bool, turn:usize)
+{
+    print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+    for i in 0..8
+    {
+        let res;
+        let ind;
+        if flip
+        {
+            if turn == 1 || turn % 2 == 1
             {
                 res = (i - 8 as i8).abs();
                 ind = i as usize;
             }
-            if (i + 1) % 2 == 0
-            {
-                println!("{} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[0m",
-                         res, board[0][ind], board[1][ind], board[2][ind], board[3][ind], board[4][ind], board[5][ind], board[6][ind], board[7][ind]);
-            }
             else
             {
-                println!("{} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[0m",
-                         res, board[0][ind], board[1][ind], board[2][ind], board[3][ind], board[4][ind], board[5][ind], board[6][ind], board[7][ind]);
+                res = i + 1;
+                ind = (i - 7 as i8).abs() as usize;
             }
         }
-        if numbers
+        else if keep_flip
         {
-            println!("   1  2  3  4  5  6  7  8");
+            res = i + 1;
+            ind = (i - 7 as i8).abs() as usize;
         }
         else
         {
-            println!("   a  b  c  d  e  f  g  h");
+            res = (i - 8 as i8).abs();
+            ind = i as usize;
         }
+        let mut col = 'B';
+        let mut opp = 'W';
+        if turn > 8 && turn % 2 == 0
+        {
+            col = 'W';
+            opp = 'B';
+        }
+        if (i + 1) % 2 == 0
+        {
+            println!("{} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[0m {} {}{}{}{}",
+                     res, board[0][ind], board[1][ind], board[2][ind], board[3][ind], board[4][ind], board[5][ind], board[6][ind], board[7][ind], col, turns[i as usize][0], turns[i as usize][1], turns[i as usize][2], turns[i as usize][3]);
+        }
+        else
+        {
+            println!("{} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[47m\x1b[90m {} \x1b[37m\x1b[100m {} \x1b[0m {} {}{}{}{}",
+                     res, board[0][ind], board[1][ind], board[2][ind], board[3][ind], board[4][ind], board[5][ind], board[6][ind], board[7][ind], opp, turns[i as usize][0], turns[i as usize][1], turns[i as usize][2], turns[i as usize][3]);
+        }
+    }
+    if numbers
+    {
+        println!("   1  2  3  4  5  6  7  8");
+    }
+    else
+    {
+        println!("   a  b  c  d  e  f  g  h");
     }
 }
