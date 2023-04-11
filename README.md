@@ -9,8 +9,6 @@ Usage: chess [OPTION]...
 
 --numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h
 
-TODO: show the last 8 moves to the right of the board
-
 TODO: check
 
 TODO: checkmate
@@ -25,4 +23,4 @@ TODO: implement stockfish
 
 TODO: more compact code/modularization stuff
 
-![image](https://user-images.githubusercontent.com/55570525/231222928-69903850-e981-4044-b7fb-53b0e5d7403f.png)
+![image](https://user-images.githubusercontent.com/55570525/231251408-e46ff9f4-b055-41ca-931d-42b127c8dc5f.png)
