@@ -1,9 +1,14 @@
 fn main()
 {
+    // TODO: allow for normal chess notation
+    // TODO: show the last 8 moves to the right of the board
     // TODO: en passant
     // TODO: check
     // TODO: checkmate
     // TODO: stalemate
+    // TODO: dont allow castling after the rook moved
+    // TODO: implement networking
+    // TODO: implement stock fish
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
     println!("8 \x1b[47m\x1b[90m r \x1b[37m\x1b[100m n \x1b[47m\x1b[90m b \x1b[37m\x1b[100m q \x1b[47m\x1b[90m k \x1b[37m\x1b[100m b \x1b[47m\x1b[90m n \x1b[37m\x1b[100m r \x1b[0m");
     println!("7 \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[0m");
