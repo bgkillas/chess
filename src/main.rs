@@ -1,14 +1,34 @@
 fn main()
 {
-    // TODO: allow for normal chess notation
     // TODO: show the last 8 moves to the right of the board
-    // TODO: en passant
     // TODO: check
     // TODO: checkmate
     // TODO: stalemate
     // TODO: dont allow castling after the rook moved
     // TODO: implement networking
     // TODO: implement stock fish
+    let mut flip = false;
+    let mut numbers = false;
+    for i in 0..std::env::args().len()
+    {
+        if std::env::args().nth(i).unwrap() == "--help"
+        {
+            println!("Usage: chess [OPTION]...");
+            println!("to move a piece type the coordinates of the piece you want to move and the coordinates of where you want to move it");
+            println!("for example: e2e4 or 5254");
+            println!("--flip will flip the board each move");
+            println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
+            std::process::exit(0);
+        }
+        if std::env::args().nth(i).unwrap() == "--flip"
+        {
+            flip = true;
+        }
+        if std::env::args().nth(i).unwrap() == "--numbers"
+        {
+            numbers = true;
+        }
+    }
     print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
     println!("8 \x1b[47m\x1b[90m r \x1b[37m\x1b[100m n \x1b[47m\x1b[90m b \x1b[37m\x1b[100m q \x1b[47m\x1b[90m k \x1b[37m\x1b[100m b \x1b[47m\x1b[90m n \x1b[37m\x1b[100m r \x1b[0m");
     println!("7 \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[37m\x1b[100m p \x1b[47m\x1b[90m p \x1b[0m");
@@ -18,7 +38,14 @@ fn main()
     println!("3 \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[37m\x1b[100m   \x1b[47m\x1b[90m   \x1b[0m");
     println!("2 \x1b[47m\x1b[90m P \x1b[37m\x1b[100m P \x1b[47m\x1b[90m P \x1b[37m\x1b[100m P \x1b[47m\x1b[90m P \x1b[37m\x1b[100m P \x1b[47m\x1b[90m P \x1b[37m\x1b[100m P \x1b[0m");
     println!("1 \x1b[37m\x1b[100m R \x1b[47m\x1b[90m N \x1b[37m\x1b[100m B \x1b[47m\x1b[90m Q \x1b[37m\x1b[100m K \x1b[47m\x1b[90m B \x1b[37m\x1b[100m N \x1b[47m\x1b[90m R \x1b[0m");
-    println!("   1  2  3  4  5  6  7  8");
+    if numbers
+    {
+        println!("   1  2  3  4  5  6  7  8");
+    }
+    else
+    {
+        println!("   a  b  c  d  e  f  g  h");
+    }
     let mut board:Vec<Vec<char>> = vec![vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],
                                         vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
                                         vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
@@ -30,8 +57,15 @@ fn main()
     let mut turn = 1;
     let mut black_castle = true;
     let mut white_castle = true;
+    let mut double_move = [0, 0, 0];
     'outer: loop
     {
+        if turn != double_move[2] + 1
+        {
+            double_move[0] = 0;
+            double_move[1] = 0;
+            double_move[2] = 0;
+        }
         println!();
         'inner: for row in board.iter()
         {
@@ -56,7 +90,22 @@ fn main()
         println!("Enter a move: ");
         let mut input = String::new();
         std::io::stdin().read_line(&mut input).expect("Failed to read line");
-        let moves:Vec<u8> = input.chars().filter(|c| c.is_digit(10)).map(|c| c.to_digit(10).unwrap() as u8).collect();
+        let moves:Vec<u8> = input.chars()
+                                 .flat_map(|c| {
+                                     match c
+                                     {
+                                         'a' => Some(1),
+                                         'b' => Some(2),
+                                         'c' => Some(3),
+                                         'd' => Some(4),
+                                         'e' => Some(5),
+                                         'f' => Some(6),
+                                         'g' => Some(7),
+                                         'h' => Some(8),
+                                         _ => c.to_digit(10).map(|d| d as u8),
+                                     }
+                                 })
+                                 .collect();
         if moves.len() != 4 || moves[0] < 1 || moves[0] > 9 || moves[1] < 1 || moves[1] > 9 || moves[2] < 1 || moves[2] > 9 || moves[3] < 1 || moves[3] > 9
         {
             println!("Invalid move");
@@ -89,6 +138,7 @@ fn main()
             {
                 if y == 6 && y2 == y - 2 && x2 == x
                 {
+                    double_move = [x2, y2, turn];
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
@@ -97,15 +147,27 @@ fn main()
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
-                else if y2 == y - 1 && x2 == x + 1 && piece2.is_lowercase()
+                else if x != 7 && (y2 == y - 1 && x2 == x + 1 && piece2.is_lowercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
-                else if y2 == y - 1 && x2 == x - 1 && piece2.is_lowercase()
+                else if x != 0 && (y2 == y - 1 && x2 == x - 1 && piece2.is_lowercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
+                }
+                else if x != 7 && (y2 == y - 1 && x2 == x + 1 && x2 == double_move[0] && y == double_move[1])
+                {
+                    board[x][y] = ' ';
+                    board[x2][y2] = piece;
+                    board[x2][y] = ' ';
+                }
+                else if x != 0 && (y2 == y - 1 && x2 == x - 1 && x2 == double_move[0] && y == double_move[1])
+                {
+                    board[x][y] = ' ';
+                    board[x2][y2] = piece;
+                    board[x2][y] = ' ';
                 }
                 else
                 {
@@ -155,6 +217,7 @@ fn main()
             {
                 if y == 1 && y2 == y + 2 && x2 == x
                 {
+                    double_move = [x2, y2, turn];
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
@@ -163,15 +226,27 @@ fn main()
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
-                else if y2 == y + 1 && x2 == x + 1 && piece2.is_uppercase()
+                else if x != 7 && (y2 == y + 1 && x2 == x + 1 && piece2.is_uppercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
                 }
-                else if y2 == y + 1 && x2 == x - 1 && piece2.is_uppercase()
+                else if x != 0 && (y2 == y + 1 && x2 == x - 1 && piece2.is_uppercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
+                }
+                else if x != 7 && (y2 == y + 1 && x2 == x + 1 && x2 == double_move[0] && y == double_move[1])
+                {
+                    board[x][y] = ' ';
+                    board[x2][y2] = piece;
+                    board[x2][y] = ' ';
+                }
+                else if x != 0 && (y2 == y + 1 && x2 == x - 1 && x2 == double_move[0] && y == double_move[1])
+                {
+                    board[x][y] = ' ';
+                    board[x2][y2] = piece;
+                    board[x2][y] = ' ';
                 }
                 else
                 {
@@ -517,7 +592,7 @@ fn main()
         {
             let res;
             let ind;
-            if std::env::args().nth(1) == Some("flip".to_string())
+            if flip
             {
                 if turn % 2 == 1
                 {
@@ -546,6 +621,13 @@ fn main()
                          res, board[0][ind], board[1][ind], board[2][ind], board[3][ind], board[4][ind], board[5][ind], board[6][ind], board[7][ind]);
             }
         }
-        println!("   1  2  3  4  5  6  7  8");
+        if numbers
+        {
+            println!("   1  2  3  4  5  6  7  8");
+        }
+        else
+        {
+            println!("   a  b  c  d  e  f  g  h");
+        }
     }
 }
