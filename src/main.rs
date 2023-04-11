@@ -20,6 +20,7 @@ fn main()
             println!("--flip will flip the board each move");
             println!("--keep_flip will have black on the bottom and white on the top");
             println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
+            println!("--file CSV will load a board from a csv file");
             std::process::exit(0);
         }
         else if std::env::args().nth(i).unwrap() == "--flip"
