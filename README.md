@@ -9,7 +9,7 @@ Usage: chess [OPTION]...
 
 --numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h
 
-TODO: custom boards
+--file CSV will load a board from a csv file
 
 TODO: check
 
