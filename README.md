@@ -1,6 +1,10 @@
 # chess
 a cli chess implementation written in rust
 
+made in and tested for linux i think everything is os independent though
+
+``./chess flip`` will flip the board each turn
+
 TODO: en passant
 
 TODO: check
