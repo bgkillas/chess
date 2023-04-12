@@ -11,6 +11,10 @@ Usage: chess [OPTION]...
 
 --file CSV will load a board from a csv file
 
+8x8.csv is an example which is just the default board
+
+26x26.csv is just a silly board example with a 26x26 grid
+
 TODO: checkmate
 
 TODO: stalemate
