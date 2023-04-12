@@ -848,6 +848,16 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
 }
 fn check(board:Vec<Vec<char>>) -> u8
 {
+    // if no_check
+    //     return 0
+    // if white_check
+    //     return 1
+    // if black_check
+    //     return 2;
+    // if checkmate
+    //     return 3;
+    // if stalemate
+    //     return 4;
     for i in 0..board.len()
     {
         for j in 0..board.len()
@@ -1166,13 +1176,5 @@ fn check(board:Vec<Vec<char>>) -> u8
             }
         }
     }
-    // if white_check
-    //     return 1
-    // if black_check
-    //     return 2;
-    // if checkmate
-    //     return 3;
-    // if stalemate
-    //     return 4;
     return 0;
 }
