@@ -1,9 +1,7 @@
 fn main()
 {
-    // TODO: check
     // TODO: checkmate
     // TODO: stalemate
-    // TODO: dont allow castling after the rook moved
     // TODO: implement networking
     // TODO: implement stock fish
     let mut flip = false;
@@ -41,7 +39,7 @@ fn main()
         }
     }
     let mut board:Vec<Vec<char>>;
-    if file != ""
+    if file != "" && std::path::Path::new(&file).exists()
     {
         let csv = std::fs::File::open(file).unwrap();
         let reader = std::io::BufReader::new(csv);
@@ -72,6 +70,11 @@ fn main()
     //castling stuff
     let mut black_castle = true;
     let mut white_castle = true;
+    let mut white_left_castle = true;
+    let mut white_right_castle = true;
+    let mut black_left_castle = true;
+    let mut black_right_castle = true;
+    let mut copy = board.clone();
     //en passant stuff
     let mut passant = [0; 3];
     'outer: loop
@@ -96,6 +99,36 @@ fn main()
             }
             println!("Draw");
             break 'outer;
+        }
+        //check for checkmate
+        if check(board.clone()) == 3
+        {
+            println!("Stalemate");
+            std::process::exit(0);
+        }
+        else if check(board.clone()) == 2
+        {
+            if turn % 2 == 0
+            {
+                println!("White wins");
+            }
+            else
+            {
+                println!("Black wins");
+            }
+            std::process::exit(0);
+        }
+        else if check(board.clone()) == 1
+        {
+            if turn % 2 == 0
+            {
+                println!("Black is in check");
+            }
+            else
+            {
+                println!("White is in check");
+            }
+            copy = board.clone();
         }
         if turn % 2 == 0
         {
@@ -180,7 +213,7 @@ fn main()
             if piece.is_uppercase()
             {
                 //if it is the first move for the pawn allow double move, and dont allow moving if piece is there
-                if y == 6 && y2 == y - 2 && x2 == x && piece2 == ' '
+                if y == board.len() - 2 && y2 == y - 2 && x2 == x && piece2 == ' '
                 {
                     passant = [x2, y2, turn];
                     board[x][y] = ' ';
@@ -193,7 +226,7 @@ fn main()
                     board[x2][y2] = piece;
                 }
                 //allow diagonal right if there is a piece to capture
-                else if x != 7 && (y2 == y - 1 && x2 == x + 1 && piece2.is_lowercase())
+                else if x != board.len() - 1 && (y2 == y - 1 && x2 == x + 1 && piece2.is_lowercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
@@ -205,7 +238,7 @@ fn main()
                     board[x2][y2] = piece;
                 }
                 //allow en passant right
-                else if x != 7 && (y2 == y - 1 && x2 == x + 1 && x2 == passant[0] && y == passant[1])
+                else if x != board.len() - 1 && (y2 == y - 1 && x2 == x + 1 && x2 == passant[0] && y == passant[1])
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
@@ -280,7 +313,7 @@ fn main()
                     board[x2][y2] = piece;
                 }
                 //allow diagonal right if there is a piece to capture
-                else if x != 7 && (y2 == y + 1 && x2 == x + 1 && piece2.is_uppercase())
+                else if x != board.len() - 1 && (y2 == y + 1 && x2 == x + 1 && piece2.is_uppercase())
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
@@ -292,7 +325,7 @@ fn main()
                     board[x2][y2] = piece;
                 }
                 //allow en passant right
-                else if x != 7 && (y2 == y + 1 && x2 == x + 1 && x2 == passant[0] && y == passant[1])
+                else if x != board.len() - 1 && (y2 == y + 1 && x2 == x + 1 && x2 == passant[0] && y == passant[1])
                 {
                     board[x][y] = ' ';
                     board[x2][y2] = piece;
@@ -410,6 +443,22 @@ fn main()
             {
                 println!("Invalid move");
                 continue;
+            }
+            if x == 0 && piece == 'R'
+            {
+                white_left_castle = false;
+            }
+            else if x == 7 && piece == 'R'
+            {
+                white_right_castle = false;
+            }
+            else if x == 0 && piece == 'r'
+            {
+                black_left_castle = false;
+            }
+            else if x == 7 && piece == 'r'
+            {
+                black_right_castle = false;
             }
         }
         //if bishop
@@ -596,18 +645,23 @@ fn main()
                 {
                     if piece == 'K' && (x2 == 6 && board[7][7] == 'R') || (x2 == 2 && board[0][7] == 'R')
                     {
-                        board[x][y] = ' ';
-                        board[x2][y2] = piece;
-                        if x2 == 6
+                        if x2 == 6 && white_right_castle
                         {
                             board[7][7] = ' ';
                             board[5][7] = 'R';
                         }
-                        else if x2 == 2
+                        else if x2 == 2 && white_left_castle
                         {
                             board[0][7] = ' ';
                             board[3][7] = 'R';
                         }
+                        else
+                        {
+                            println!("Invalid move");
+                            continue;
+                        }
+                        board[x][y] = ' ';
+                        board[x2][y2] = piece;
                     }
                     else if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
                     {
@@ -618,18 +672,23 @@ fn main()
                 {
                     if piece == 'k' && (x2 == 6 && board[7][0] == 'r') || (x2 == 2 && board[0][0] == 'r')
                     {
-                        board[x][y] = ' ';
-                        board[x2][y2] = piece;
-                        if x2 == 6
+                        if x2 == 6 && black_right_castle
                         {
                             board[7][0] = ' ';
                             board[5][0] = 'r';
                         }
-                        else if x2 == 2
+                        else if x2 == 2 && black_left_castle
                         {
                             board[0][0] = ' ';
                             board[3][0] = 'r';
                         }
+                        else
+                        {
+                            println!("Invalid move");
+                            continue;
+                        }
+                        board[x][y] = ' ';
+                        board[x2][y2] = piece;
                     }
                     else if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
                     {
@@ -662,6 +721,19 @@ fn main()
         else
         {
             println!("Invalid move");
+            continue;
+        }
+        //ensure that the player is not in check after move
+        if turn % 2 == 0 && check(board.clone()) == 2
+        {
+            println!("Invalid move");
+            board = copy.clone();
+            continue;
+        }
+        else if turn % 2 == 1 && check(board.clone()) == 1
+        {
+            println!("Invalid move");
+            board = copy.clone();
             continue;
         }
         //delete the first turn of the turn tracker if there are too many to display
@@ -773,4 +845,334 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
         }
     }
     println!();
+}
+fn check(board:Vec<Vec<char>>) -> u8
+{
+    for i in 0..board.len()
+    {
+        for j in 0..board.len()
+        {
+            if board[i][j] == 'K'
+            {
+                //check if white king is in check via pawn
+                if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'p') || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'p')
+                {
+                    return 1;
+                }
+                //check if white king is in check via knight
+                else if (i < board.len() - 2 && j < board.len() - 1 && board[i + 2][j + 1] == 'n')
+                          || (i < board.len() - 2 && j != 0 && board[i + 2][j - 1] == 'n')
+                          || (i < board.len() - 1 && j < board.len() - 2 && board[i + 1][j + 2] == 'n')
+                          || (i != 0 && j < board.len() - 2 && board[i - 1][j + 2] == 'n')
+                          || (i != 0 && j > 1 && board[i - 1][j - 2] == 'n')
+                          || (i < board.len() - 1 && j > 1 && board[i + 1][j - 2] == 'n')
+                          || (i > 1 && j != 0 && board[i - 2][j - 1] == 'n')
+                          || (i > 1 && j < board.len() - 1 && board[i - 2][j + 1] == 'n')
+                {
+                    return 1;
+                }
+                else
+                {
+                    for x in 0..board.len()
+                    {
+                        for y in 0..board.len()
+                        {
+                            if board[x][y] == 'b' || board[x][y] == 'q' || board[x][y] == 'r'
+                            {
+                                //check if white king is in check via rook/queen horizontally
+                                if x == i
+                                {
+                                    if y < j
+                                    {
+                                        for z in y..j
+                                        {
+                                            if board[x][z] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == j - 1
+                                            {
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for z in j..y
+                                        {
+                                            if board[x][z] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == y - 1
+                                            {
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                }
+                                //check if white king is in check via rook/queen vertically
+                                else if y == j
+                                {
+                                    if x < i
+                                    {
+                                        for z in x..i
+                                        {
+                                            if board[z][y] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == i - 1
+                                            {
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for z in i..x
+                                        {
+                                            if board[z][y] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == x - 1
+                                            {
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                }
+                                //check if white king is in check via bishop/queen diagonally
+                                else if (x as i8 - i as i8).abs() == (y as i8 - j as i8).abs()
+                                {
+                                    if x < i && y < j
+                                    {
+                                        for z in 1..(x as i8 - i as i8).abs()
+                                        {
+                                            if board[x as usize + z as usize][y as usize + z as usize] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == (x as i8 - i as i8).abs() - 1
+                                            {
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                    else if x < i && y > j
+                                    {
+                                        for z in 1..(x as i8 - i as i8).abs()
+                                        {
+                                            if board[x as usize + z as usize][y as usize - z as usize] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == (x as i8 - i as i8).abs() - 1
+                                            {
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                    else if x > i && y < j
+                                    {
+                                        for z in 1..(x as i8 - i as i8).abs()
+                                        {
+                                            if board[x as usize - z as usize][y as usize + z as usize] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == (x as i8 - i as i8).abs() - 1
+                                            {
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for z in 1..(x as i8 - i as i8).abs()
+                                        {
+                                            if board[x as usize - z as usize][y as usize - z as usize] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == (x as i8 - i as i8).abs() - 1
+                                            {
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else if board[i][j] == 'k'
+            {
+                //check if black king is in check via pawn
+                if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'P') || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'P')
+                {
+                    return 2;
+                }
+                //check if black king is in check via knight
+                else if (i < board.len() - 2 && j < board.len() - 1 && board[i + 2][j + 1] == 'N')
+                          || (i < board.len() - 2 && j != 0 && board[i + 2][j - 1] == 'N')
+                          || (i < board.len() - 1 && j < board.len() - 2 && board[i + 1][j + 2] == 'N')
+                          || (i != 0 && j < board.len() - 2 && board[i - 1][j + 2] == 'N')
+                          || (i != 0 && j > 1 && board[i - 1][j - 2] == 'N')
+                          || (i < board.len() - 1 && j > 1 && board[i + 1][j - 2] == 'N')
+                          || (i > 1 && j != 0 && board[i - 2][j - 1] == 'N')
+                          || (i > 1 && j < board.len() - 1 && board[i - 2][j + 1] == 'N')
+                {
+                    return 2;
+                }
+                else
+                {
+                    for x in 0..board.len()
+                    {
+                        for y in 0..board.len()
+                        {
+                            if board[x][y] == 'B' || board[x][y] == 'Q' || board[x][y] == 'R'
+                            {
+                                //check if black king is in check via rook/queen horizontally
+                                if x == i
+                                {
+                                    if y < j
+                                    {
+                                        for z in y..j
+                                        {
+                                            if board[x][z] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == j - 1
+                                            {
+                                                return 2;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for z in j..y
+                                        {
+                                            if board[x][z] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == y - 1
+                                            {
+                                                return 2;
+                                            }
+                                        }
+                                    }
+                                }
+                                //check if black king is in check via rook/queen vertically
+                                else if y == j
+                                {
+                                    if x < i
+                                    {
+                                        for z in x..i
+                                        {
+                                            if board[z][y] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == i - 1
+                                            {
+                                                return 2;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for z in i..x
+                                        {
+                                            if board[z][y] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == x - 1
+                                            {
+                                                return 2;
+                                            }
+                                        }
+                                    }
+                                }
+                                //check if black king is in check via bishop/queen diagonally
+                                else if (x as i8 - i as i8).abs() == (y as i8 - j as i8).abs()
+                                {
+                                    if x < i && y < j
+                                    {
+                                        for z in 1..(x as i8 - i as i8).abs()
+                                        {
+                                            if board[x as usize + z as usize][y as usize + z as usize] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == (x as i8 - i as i8).abs() - 1
+                                            {
+                                                return 2;
+                                            }
+                                        }
+                                    }
+                                    else if x < i && y > j
+                                    {
+                                        for z in 1..(x as i8 - i as i8).abs()
+                                        {
+                                            if board[x as usize + z as usize][y as usize - z as usize] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == (x as i8 - i as i8).abs() - 1
+                                            {
+                                                return 2;
+                                            }
+                                        }
+                                    }
+                                    else if x > i && y < j
+                                    {
+                                        for z in 1..(x as i8 - i as i8).abs()
+                                        {
+                                            if board[x as usize - z as usize][y as usize + z as usize] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == (x as i8 - i as i8).abs() - 1
+                                            {
+                                                return 2;
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        for z in 1..(x as i8 - i as i8).abs()
+                                        {
+                                            if board[x as usize - z as usize][y as usize - z as usize] != ' '
+                                            {
+                                                break;
+                                            }
+                                            if z == (x as i8 - i as i8).abs() - 1
+                                            {
+                                                return 2;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // if white_check
+    //     return 1
+    // if black_check
+    //     return 2;
+    // if checkmate
+    //     return 3;
+    // if stalemate
+    //     return 4;
+    return 0;
 }
