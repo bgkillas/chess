@@ -64,6 +64,7 @@ fn main()
         std::process::exit(1);
     }
     //turn tracker
+    let mut all_turns:Vec<Vec<char>> = vec![vec![]];
     let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
     print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn);
@@ -172,10 +173,25 @@ fn main()
                                          'x' => Some(24),
                                          'y' => Some(25),
                                          'z' => Some(26),
+                                         'E' => Some(27),
+                                         'X' => Some(28),
+                                         'I' => Some(29),
+                                         'T' => Some(30),
                                          _ => c.to_digit(10).map(|d| d as u8),
                                      }
                                  })
                                  .collect();
+        if moves[0] == 27 && moves[1] == 28 && moves[2] == 29 && moves[3] == 30
+        {
+            for i in 0..all_turns.len()
+            {
+                for j in 0..all_turns[i].len()
+                {
+                    print!("{}", all_turns[i][j]);
+                }
+            }
+            std::process::exit(0);
+        }
         //ensure the input is in range
         if moves.len() != 4 || moves[0] < 1 || moves[0] > (board.len() + 2) as u8 || moves[1] < 1 || moves[1] > (board.len() + 2) as u8 || moves[2] < 1 || moves[2] > (board.len() + 2) as u8 || moves[3] < 1 || moves[3] > (board.len() + 2) as u8
         {
@@ -746,6 +762,7 @@ fn main()
         {
             turns[turn - 1] = input.chars().collect();
         }
+        all_turns.push(input.chars().collect());
         turn += 1;
         print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn);
     }
