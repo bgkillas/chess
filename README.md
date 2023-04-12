@@ -15,6 +15,8 @@ Usage: chess [OPTION]...
 
 26x26.csv is just a silly board example with a 26x26 grid
 
+typing EXIT returns all the moves and exits
+
 TODO: checkmate
 
 TODO: stalemate
