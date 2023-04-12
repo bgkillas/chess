@@ -102,12 +102,12 @@ fn main()
             break 'outer;
         }
         //check for checkmate
-        if check(board.clone()) == 3
+        if check(board.clone(), turn) == 3
         {
             println!("Stalemate");
             std::process::exit(0);
         }
-        else if check(board.clone()) == 2
+        else if check(board.clone(), turn) == 2
         {
             if turn % 2 == 0
             {
@@ -119,7 +119,7 @@ fn main()
             }
             std::process::exit(0);
         }
-        else if check(board.clone()) == 1
+        else if check(board.clone(), turn) == 1
         {
             if turn % 2 == 0
             {
@@ -144,44 +144,17 @@ fn main()
         std::io::stdin().read_line(&mut input).expect("Failed to read line");
         //turn input from a2a4 to [1,2,1,4]
         let moves:Vec<u8> = input.chars()
-                                 .flat_map(|c| {
+                                 .filter_map(|c| {
                                      match c
                                      {
-                                         'a' => Some(1),
-                                         'b' => Some(2),
-                                         'c' => Some(3),
-                                         'd' => Some(4),
-                                         'e' => Some(5),
-                                         'f' => Some(6),
-                                         'g' => Some(7),
-                                         'h' => Some(8),
-                                         'i' => Some(9),
-                                         'j' => Some(10),
-                                         'k' => Some(11),
-                                         'l' => Some(12),
-                                         'm' => Some(13),
-                                         'n' => Some(14),
-                                         'o' => Some(15),
-                                         'p' => Some(16),
-                                         'q' => Some(17),
-                                         'r' => Some(18),
-                                         's' => Some(19),
-                                         't' => Some(20),
-                                         'u' => Some(21),
-                                         'v' => Some(22),
-                                         'w' => Some(23),
-                                         'x' => Some(24),
-                                         'y' => Some(25),
-                                         'z' => Some(26),
-                                         'E' => Some(27),
-                                         'X' => Some(28),
-                                         'I' => Some(29),
-                                         'T' => Some(30),
-                                         _ => c.to_digit(10).map(|d| d as u8),
+                                         'a'..='t' => Some(c as u8 - b'a' + 1),
+                                         'A'..='Z' => Some(c as u8 - b'A' + 27),
+                                         '0'..='9' => c.to_digit(10).map(|d| d as u8),
+                                         _ => None,
                                      }
                                  })
                                  .collect();
-        if moves[0] == 27 && moves[1] == 28 && moves[2] == 29 && moves[3] == 30
+        if moves[0] == 31 && moves[1] == 50 && moves[2] == 35 && moves[3] == 46
         {
             for i in 0..all_turns.len()
             {
@@ -740,29 +713,30 @@ fn main()
             continue;
         }
         //ensure that the player is not in check after move
-        if turn % 2 == 0 && check(board.clone()) == 2
+        if turn % 2 == 0 && check(board.clone(), turn) == 2
         {
             println!("Invalid move");
             board = copy.clone();
             continue;
         }
-        else if turn % 2 == 1 && check(board.clone()) == 1
+        else if turn % 2 == 1 && check(board.clone(), turn) == 1
         {
             println!("Invalid move");
             board = copy.clone();
             continue;
         }
+        let turn_str:Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
         //delete the first turn of the turn tracker if there are too many to display
         if turn > board.len()
         {
             turns.remove(0);
-            turns.push(input.chars().collect());
+            turns.push(turn_str.clone());
         }
         else
         {
-            turns[turn - 1] = input.chars().collect();
+            turns[turn - 1] = turn_str.clone();
         }
-        all_turns.push(input.chars().collect());
+        all_turns.push(turn_str);
         turn += 1;
         print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn);
     }
@@ -863,18 +837,20 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
     }
     println!();
 }
-fn check(board:Vec<Vec<char>>) -> u8
+fn check(board:Vec<Vec<char>>, turn:usize) -> u8
 {
     // if no_check
     //     return 0
     // if white_check
     //     return 1
     // if black_check
-    //     return 2;
+    //     return 2
     // if checkmate
-    //     return 3;
+    //     return 3
     // if stalemate
-    //     return 4;
+    //     return 4
+    let mut white_check = false;
+    let mut black_check = false;
     for i in 0..board.len()
     {
         for j in 0..board.len()
@@ -884,7 +860,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                 //check if white king is in check via pawn
                 if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'p') || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'p')
                 {
-                    return 1;
+                    white_check = true;
                 }
                 //check if white king is in check via knight
                 else if (i < board.len() - 2 && j < board.len() - 1 && board[i + 2][j + 1] == 'n')
@@ -896,7 +872,18 @@ fn check(board:Vec<Vec<char>>) -> u8
                           || (i > 1 && j != 0 && board[i - 2][j - 1] == 'n')
                           || (i > 1 && j < board.len() - 1 && board[i - 2][j + 1] == 'n')
                 {
-                    return 1;
+                    white_check = true;
+                }
+                else if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'k')
+                          || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'k')
+                          || (j != 0 && i < board.len() - 1 && board[i + 1][j - 1] == 'k')
+                          || (j != 0 && i != 0 && board[i - 1][j - 1] == 'k')
+                          || (j < board.len() - 1 && board[i][j + 1] == 'k')
+                          || (j != 0 && board[i][j - 1] == 'k')
+                          || (i < board.len() - 1 && board[i + 1][j] == 'k')
+                          || (i != 0 && board[i - 1][j] == 'k')
+                {
+                    white_check = true;
                 }
                 else
                 {
@@ -919,7 +906,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                                             }
                                             if z == j - 1
                                             {
-                                                return 1;
+                                                white_check = true;
                                             }
                                         }
                                     }
@@ -933,7 +920,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                                             }
                                             if z == y - 1
                                             {
-                                                return 1;
+                                                white_check = true;
                                             }
                                         }
                                     }
@@ -951,7 +938,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                                             }
                                             if z == i - 1
                                             {
-                                                return 1;
+                                                white_check = true;
                                             }
                                         }
                                     }
@@ -965,7 +952,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                                             }
                                             if z == x - 1
                                             {
-                                                return 1;
+                                                white_check = true;
                                             }
                                         }
                                     }
@@ -973,60 +960,18 @@ fn check(board:Vec<Vec<char>>) -> u8
                                 //check if white king is in check via bishop/queen diagonally
                                 else if (x as i8 - i as i8).abs() == (y as i8 - j as i8).abs()
                                 {
-                                    if x < i && y < j
+                                    let x_diff = (x as i8 - i as i8).abs();
+                                    let x_dir = (i as i8 - x as i8).signum();
+                                    let y_dir = (j as i8 - y as i8).signum();
+                                    for z in 1..x_diff
                                     {
-                                        for z in 1..(x as i8 - i as i8).abs()
+                                        if board[(x as i8 + z * x_dir) as usize][(y as i8 + z * y_dir) as usize] != ' '
                                         {
-                                            if board[x as usize + z as usize][y as usize + z as usize] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == (x as i8 - i as i8).abs() - 1
-                                            {
-                                                return 1;
-                                            }
+                                            break;
                                         }
-                                    }
-                                    else if x < i && y > j
-                                    {
-                                        for z in 1..(x as i8 - i as i8).abs()
+                                        if z == x_diff - 1
                                         {
-                                            if board[x as usize + z as usize][y as usize - z as usize] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == (x as i8 - i as i8).abs() - 1
-                                            {
-                                                return 1;
-                                            }
-                                        }
-                                    }
-                                    else if x > i && y < j
-                                    {
-                                        for z in 1..(x as i8 - i as i8).abs()
-                                        {
-                                            if board[x as usize - z as usize][y as usize + z as usize] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == (x as i8 - i as i8).abs() - 1
-                                            {
-                                                return 1;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        for z in 1..(x as i8 - i as i8).abs()
-                                        {
-                                            if board[x as usize - z as usize][y as usize - z as usize] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == (x as i8 - i as i8).abs() - 1
-                                            {
-                                                return 1;
-                                            }
+                                            white_check = true;
                                         }
                                     }
                                 }
@@ -1040,7 +985,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                 //check if black king is in check via pawn
                 if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'P') || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'P')
                 {
-                    return 2;
+                    black_check = true;
                 }
                 //check if black king is in check via knight
                 else if (i < board.len() - 2 && j < board.len() - 1 && board[i + 2][j + 1] == 'N')
@@ -1052,7 +997,18 @@ fn check(board:Vec<Vec<char>>) -> u8
                           || (i > 1 && j != 0 && board[i - 2][j - 1] == 'N')
                           || (i > 1 && j < board.len() - 1 && board[i - 2][j + 1] == 'N')
                 {
-                    return 2;
+                    black_check = true;
+                }
+                else if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'K')
+                          || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'K')
+                          || (j != 0 && i < board.len() - 1 && board[i + 1][j - 1] == 'K')
+                          || (j != 0 && i != 0 && board[i - 1][j - 1] == 'K')
+                          || (j < board.len() - 1 && board[i][j + 1] == 'K')
+                          || (j != 0 && board[i][j - 1] == 'K')
+                          || (i < board.len() - 1 && board[i + 1][j] == 'K')
+                          || (i != 0 && board[i - 1][j] == 'K')
+                {
+                    black_check = true;
                 }
                 else
                 {
@@ -1075,7 +1031,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                                             }
                                             if z == j - 1
                                             {
-                                                return 2;
+                                                black_check = true;
                                             }
                                         }
                                     }
@@ -1089,7 +1045,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                                             }
                                             if z == y - 1
                                             {
-                                                return 2;
+                                                black_check = true;
                                             }
                                         }
                                     }
@@ -1107,7 +1063,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                                             }
                                             if z == i - 1
                                             {
-                                                return 2;
+                                                black_check = true;
                                             }
                                         }
                                     }
@@ -1121,7 +1077,7 @@ fn check(board:Vec<Vec<char>>) -> u8
                                             }
                                             if z == x - 1
                                             {
-                                                return 2;
+                                                black_check = true;
                                             }
                                         }
                                     }
@@ -1129,60 +1085,18 @@ fn check(board:Vec<Vec<char>>) -> u8
                                 //check if black king is in check via bishop/queen diagonally
                                 else if (x as i8 - i as i8).abs() == (y as i8 - j as i8).abs()
                                 {
-                                    if x < i && y < j
+                                    let x_diff = (x as i8 - i as i8).abs();
+                                    let x_dir = (i as i8 - x as i8).signum();
+                                    let y_dir = (j as i8 - y as i8).signum();
+                                    for z in 1..x_diff
                                     {
-                                        for z in 1..(x as i8 - i as i8).abs()
+                                        if board[(x as i8 + z * x_dir) as usize][(y as i8 + z * y_dir) as usize] != ' '
                                         {
-                                            if board[x as usize + z as usize][y as usize + z as usize] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == (x as i8 - i as i8).abs() - 1
-                                            {
-                                                return 2;
-                                            }
+                                            break;
                                         }
-                                    }
-                                    else if x < i && y > j
-                                    {
-                                        for z in 1..(x as i8 - i as i8).abs()
+                                        if z == x_diff - 1
                                         {
-                                            if board[x as usize + z as usize][y as usize - z as usize] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == (x as i8 - i as i8).abs() - 1
-                                            {
-                                                return 2;
-                                            }
-                                        }
-                                    }
-                                    else if x > i && y < j
-                                    {
-                                        for z in 1..(x as i8 - i as i8).abs()
-                                        {
-                                            if board[x as usize - z as usize][y as usize + z as usize] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == (x as i8 - i as i8).abs() - 1
-                                            {
-                                                return 2;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        for z in 1..(x as i8 - i as i8).abs()
-                                        {
-                                            if board[x as usize - z as usize][y as usize - z as usize] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == (x as i8 - i as i8).abs() - 1
-                                            {
-                                                return 2;
-                                            }
+                                            black_check = true;
                                         }
                                     }
                                 }
@@ -1192,6 +1106,16 @@ fn check(board:Vec<Vec<char>>) -> u8
                 }
             }
         }
+    }
+    if turn % 2 == 1 && white_check
+    {
+        println!("cant move into check");
+        return 1;
+    }
+    else if turn % 2 == 0 && black_check
+    {
+        println!("cant move into check");
+        return 2;
     }
     return 0;
 }
