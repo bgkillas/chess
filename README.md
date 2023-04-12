@@ -17,6 +17,8 @@ Usage: chess [OPTION]...
 
 typing EXIT returns all the moves and exits
 
+TODO: implement move suggestions
+
 TODO: checkmate
 
 TODO: stalemate

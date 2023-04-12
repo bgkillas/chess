@@ -1,9 +1,11 @@
 fn main()
 {
+    // TODO: implement move suggestions
     // TODO: checkmate
     // TODO: stalemate
     // TODO: implement networking
     // TODO: implement stock fish
+    // TODO: more compact code/modularization stuff
     let mut flip = false;
     let mut numbers = false;
     let mut keep_flip = false;
@@ -787,17 +789,26 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
         {
             print!("{} ", res);
         }
+        let mut color;
         if (i + 1) % 2 == 0
         {
             for j in 0..board.len()
             {
-                if j % 2 == 0
+                if board[j][ind].is_uppercase()
                 {
-                    print!("\x1b[100m\x1b[37m {} \x1b[0m", board[j][ind]);
+                    color = 97;
                 }
                 else
                 {
-                    print!("\x1b[47m\x1b[90m {} \x1b[0m", board[j][ind]);
+                    color = 30;
+                }
+                if j % 2 == 0
+                {
+                    print!("\x1b[100m\x1b[{}m {} \x1b[0m", color, board[j][ind]);
+                }
+                else
+                {
+                    print!("\x1b[47m\x1b[{}m {} \x1b[0m", color, board[j][ind]);
                 }
             }
             print!(" {} {}{}{}{}", col, turns[i as usize][0], turns[i as usize][1], turns[i as usize][2], turns[i as usize][3]);
@@ -806,13 +817,21 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
         {
             for j in 0..board.len()
             {
-                if j % 2 == 0
+                if board[j][ind].is_uppercase()
                 {
-                    print!("\x1b[47m\x1b[90m {} \x1b[0m", board[j][ind]);
+                    color = 97;
                 }
                 else
                 {
-                    print!("\x1b[100m\x1b[37m {} \x1b[0m", board[j][ind]);
+                    color = 30;
+                }
+                if j % 2 == 0
+                {
+                    print!("\x1b[47m\x1b[{}m {} \x1b[0m", color, board[j][ind]);
+                }
+                else
+                {
+                    print!("\x1b[100m\x1b[{}m {} \x1b[0m", color, board[j][ind]);
                 }
             }
             print!(" {} {}{}{}{}", opp, turns[i as usize][0], turns[i as usize][1], turns[i as usize][2], turns[i as usize][3]);
