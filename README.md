@@ -11,13 +11,9 @@ Usage: chess [OPTION]...
 
 --file CSV will load a board from a csv file
 
-TODO: check
-
 TODO: checkmate
 
 TODO: stalemate
-
-TODO: dont allow castling after the rook moved
 
 TODO: implement networking
 
