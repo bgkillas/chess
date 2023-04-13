@@ -25,8 +25,8 @@ TODO: stalemate
 
 TODO: implement networking
 
-TODO: implement stockfish
+TODO: implement stock fish
 
 TODO: more compact code/modularization stuff
 
-![image](https://user-images.githubusercontent.com/55570525/231594678-b344322b-2dbf-42f2-8d07-2e5c892d1f91.png)
+![image](https://user-images.githubusercontent.com/55570525/231251408-e46ff9f4-b055-41ca-931d-42b127c8dc5f.png)
