@@ -29,4 +29,4 @@ TODO: implement stock fish
 
 TODO: more compact code/modularization stuff
 
-![image](https://user-images.githubusercontent.com/55570525/231251408-e46ff9f4-b055-41ca-931d-42b127c8dc5f.png)
+![image](https://user-images.githubusercontent.com/55570525/231619805-26f73cb4-51d9-470d-a5cb-6c3ca2e30071.png)
