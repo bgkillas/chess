@@ -1,8 +1,6 @@
 # chess
 a cli chess implementation written in rust
 
-made in and tested for linux i think everything is os independent though you will have to compile yourself for now
-
 Usage: chess [OPTION]...
 
 --flip will flip the board each move
