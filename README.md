@@ -19,10 +19,6 @@ typing EXIT returns all the moves and exits
 
 TODO: implement move suggestions
 
-TODO: checkmate
-
-TODO: stalemate
-
 TODO: implement networking
 
 TODO: implement stock fish

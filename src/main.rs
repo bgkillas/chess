@@ -1,9 +1,6 @@
 fn main()
 {
-    // create functions to output all available moves for a piece
     // TODO: implement move suggestions
-    // TODO: checkmate
-    // TODO: stalemate
     // TODO: implement networking
     // TODO: implement stock fish
     let mut flip = false;
@@ -99,6 +96,16 @@ fn main()
             println!("Draw");
             break 'outer;
         }
+        copy = board.clone();
+        if turn % 2 == 0
+        {
+            println!("Black's turn");
+        }
+        else
+        {
+            println!("White's turn");
+        }
+        println!("Enter a move: ");
         match check(board.clone(), turn, true)
         {
             1 => println!("White is in check"),
@@ -112,8 +119,9 @@ fn main()
                     {
                         print!("{}", all_turns[i][j]);
                     }
-                    println!();
+                    print!(" ");
                 }
+                println!();
                 std::process::exit(0);
             }
             4 =>
@@ -125,22 +133,13 @@ fn main()
                     {
                         print!("{}", all_turns[i][j]);
                     }
-                    println!();
+                    print!(" ");
                 }
+                println!();
                 std::process::exit(0);
             }
             _ => (),
         }
-        copy = board.clone();
-        if turn % 2 == 0
-        {
-            println!("Black's turn");
-        }
-        else
-        {
-            println!("White's turn");
-        }
-        println!("Enter a move: ");
         let mut input = String::new();
         //println!("{}", instant.elapsed().as_nanos());
         std::io::stdin().read_line(&mut input).expect("Failed to read line");
@@ -169,8 +168,9 @@ fn main()
                 {
                     print!("{}", all_turns[i][j]);
                 }
-                println!();
+                print!(" ");
             }
+            println!();
             std::process::exit(0);
         }
         //ensure the input is in range
@@ -208,7 +208,6 @@ fn main()
         if piece.eq_ignore_ascii_case(&'p')
         {
             let possible_moves = pawn(board.clone(), x, y, Some(passant));
-            println!("{:?}", possible_moves);
             for row in possible_moves.iter()
             {
                 let mut iter = row.iter().peekable();
@@ -326,7 +325,6 @@ fn main()
         else if piece.eq_ignore_ascii_case(&'r')
         {
             let possible_moves = rook(board.clone(), x, y);
-            println!("{:?}", possible_moves);
             for row in possible_moves.iter()
             {
                 let mut iter = row.iter().peekable();
@@ -370,7 +368,6 @@ fn main()
         else if piece.eq_ignore_ascii_case(&'b')
         {
             let possible_moves = bishop(board.clone(), x, y);
-            println!("{:?}", possible_moves);
             for row in possible_moves.iter()
             {
                 let mut iter = row.iter().peekable();
@@ -398,7 +395,6 @@ fn main()
         else if piece.eq_ignore_ascii_case(&'n')
         {
             let possible_moves = knight(board.clone(), x, y);
-            println!("{:?}", possible_moves);
             for row in possible_moves.iter()
             {
                 let mut iter = row.iter().peekable();
@@ -428,7 +424,6 @@ fn main()
             //just use rook and bishop logic together
             let mut possible_moves = bishop(board.clone(), x, y);
             possible_moves.extend(rook(board.clone(), x, y));
-            println!("{:?}", possible_moves);
             for row in possible_moves.iter()
             {
                 let mut iter = row.iter().peekable();
@@ -456,7 +451,6 @@ fn main()
         else if piece.eq_ignore_ascii_case(&'k')
         {
             let possible_moves = king(board.clone(), x, y, Some(castle.clone()));
-            println!("{:?}", possible_moves);
             for row in possible_moves.iter()
             {
                 let mut iter = row.iter().peekable();
@@ -1056,6 +1050,10 @@ fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                         }
                         if num_of_checks[0] == num_of_checks[1]
                         {
+                            if !white_check && !black_check
+                            {
+                                return 4;
+                            }
                             return 3;
                         }
                     }
