@@ -1,11 +1,11 @@
 fn main()
 {
+    // create functions to output all available moves for a piece
     // TODO: implement move suggestions
     // TODO: checkmate
     // TODO: stalemate
     // TODO: implement networking
     // TODO: implement stock fish
-    // TODO: more compact code/modularization stuff
     let mut flip = false;
     let mut numbers = false;
     let mut keep_flip = false;
@@ -76,16 +76,12 @@ fn main()
     let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
     print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn);
-    //castling stuff
-    let mut black_castle = true;
-    let mut white_castle = true;
-    let mut white_left_castle = true;
-    let mut white_right_castle = true;
-    let mut black_left_castle = true;
-    let mut black_right_castle = true;
-    let mut copy = board.clone();
+    //castling stuff castle[0]= white left castle, castle[1] = white right castle, castle[2] = black left castle, castle[3] = black right castle, castle[4] = white castle, castle[5] = black castle
+    let mut castle:Vec<bool> = vec![true; 6];
+    let mut copy:Vec<Vec<char>>;
     //en passant stuff
     let mut passant = [0; 3];
+    //let mut instant = std::time::Instant::now();
     'outer: loop
     {
         //dont allow en passant on a piece after a turn
@@ -109,36 +105,15 @@ fn main()
             println!("Draw");
             break 'outer;
         }
-        //check for checkmate
-        if check(board.clone(), turn) == 3
+        match check(board.clone(), turn)
         {
-            println!("Stalemate");
-            std::process::exit(0);
+            1 => println!("White is in check"),
+            2 => println!("Black is in check"),
+            3 => println!("Checkmate"),
+            4 => println!("Stalemate"),
+            _ => (),
         }
-        else if check(board.clone(), turn) == 2
-        {
-            if turn % 2 == 0
-            {
-                println!("White wins");
-            }
-            else
-            {
-                println!("Black wins");
-            }
-            std::process::exit(0);
-        }
-        else if check(board.clone(), turn) == 1
-        {
-            if turn % 2 == 0
-            {
-                println!("Black is in check");
-            }
-            else
-            {
-                println!("White is in check");
-            }
-            copy = board.clone();
-        }
+        copy = board.clone();
         if turn % 2 == 0
         {
             println!("Black's turn");
@@ -155,7 +130,9 @@ fn main()
         //        }
         //       else
         //        {
+        //println!("{}", instant.elapsed().as_nanos());
         std::io::stdin().read_line(&mut input).expect("Failed to read line");
+        //instant = std::time::Instant::now();
         //        }
         //turn input from a2a4 to [1,2,1,4]
         let moves:Vec<u8> = input.chars()
@@ -169,6 +146,11 @@ fn main()
                                      }
                                  })
                                  .collect();
+        if moves.len() == 0
+        {
+            println!("Invalid input");
+            continue;
+        }
         if moves[0] == 31 && moves[1] == 50 && moves[2] == 35 && moves[3] == 46
         {
             for i in 0..all_turns.len()
@@ -177,6 +159,7 @@ fn main()
                 {
                     print!("{}", all_turns[i][j]);
                 }
+                println!();
             }
             std::process::exit(0);
         }
@@ -210,170 +193,111 @@ fn main()
             println!("Invalid move");
             continue;
         }
+        let mut success = false;
         //pawn movement
-        if piece == 'P' || piece == 'p'
+        if piece.eq_ignore_ascii_case(&'p')
         {
-            //if white
-            if piece.is_uppercase()
+            let possible_moves = pawn(board.clone(), x, y, Some(passant));
+            println!("{:?}", possible_moves);
+            for row in possible_moves.iter()
             {
-                //if it is the first move for the pawn allow double move, and dont allow moving if piece is there
-                if y == board.len() - 2 && y2 == y - 2 && x2 == x && piece2 == ' '
+                let mut iter = row.iter().peekable();
+                while let Some(&value) = iter.next()
                 {
-                    passant = [x2, y2, turn];
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                }
-                //if it is not the first move for the pawn only allow single move, and dont allow moving if piece is there
-                else if y2 == y - 1 && x2 == x && piece2 == ' '
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                }
-                //allow diagonal right if there is a piece to capture
-                else if x != board.len() - 1 && (y2 == y - 1 && x2 == x + 1 && piece2.is_lowercase())
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                }
-                //allow diagonal left if there is a piece to capture
-                else if x != 0 && (y2 == y - 1 && x2 == x - 1 && piece2.is_lowercase())
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                }
-                //allow en passant right
-                else if x != board.len() - 1 && (y2 == y - 1 && x2 == x + 1 && x2 == passant[0] && y == passant[1])
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                    board[x2][y] = ' ';
-                }
-                //allow en passant left
-                else if x != 0 && (y2 == y - 1 && x2 == x - 1 && x2 == passant[0] && y == passant[1])
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                    board[x2][y] = ' ';
-                }
-                else
-                {
-                    println!("Invalid move");
-                    continue;
-                }
-                //allow for promotions, loop is if you type an invalid piece
-                loop
-                {
-                    if y2 == 0
+                    if value == x2 as u8
                     {
-                        println!("Promote to: ");
-                        let mut input = String::new();
-                        std::io::stdin().read_line(&mut input).expect("Failed to read line");
-                        let input = input.trim();
-                        if input == "Q"
+                        if iter.peek() == Some(&&(y2 as u8))
                         {
-                            board[x2][y2] = 'Q';
+                            if y2 as i8 == y as i8 + 2
+                            {
+                                passant = [x2, y2, turn];
+                            }
+                            else if y2 as i8 == y as i8 - 2
+                            {
+                                passant = [x2, y2, turn];
+                            }
+                            success = true;
+                            if board[x2][y2] == ' '
+                            {
+                                if x2 == x + 1 && y2 == y + 1
+                                {
+                                    board[x2][y2 - 1] = ' ';
+                                }
+                                else if x2 as i8 == x as i8 - 1 && y2 == y + 1
+                                {
+                                    board[x2][y2 - 1] = ' ';
+                                }
+                                else if x2 == x + 1 && y2 as i8 == y as i8 - 1
+                                {
+                                    board[x2][y2 + 1] = ' ';
+                                }
+                                else if x2 as i8 == x as i8 - 1 && y2 as i8 == y as i8 - 1
+                                {
+                                    board[x2][y2 + 1] = ' ';
+                                }
+                            }
+                            board[x2][y2] = piece;
+                            board[x][y] = ' ';
                             break;
                         }
-                        else if input == "R"
-                        {
-                            board[x2][y2] = 'R';
-                            break;
-                        }
-                        else if input == "B"
-                        {
-                            board[x2][y2] = 'B';
-                            break;
-                        }
-                        else if input == "H"
-                        {
-                            board[x2][y2] = 'N';
-                            break;
-                        }
-                        else
-                        {
-                            println!("Invalid piece");
-                        }
-                    }
-                    else
-                    {
-                        break;
                     }
                 }
             }
-            //if black
-            else if piece.is_lowercase()
+            if !success
             {
-                //if it is the first move for the pawn allow double move, and dont allow moving if piece is there
-                if y == 1 && y2 == y + 2 && x2 == x && piece2 == ' '
+                println!("Invalid move");
+                continue;
+            }
+            if y2 == 0 || y2 == board.len() - 1
+            {
+                let rook:char;
+                let bishop:char;
+                let night:char;
+                let queen:char;
+                let end:usize;
+                if piece.is_uppercase()
                 {
-                    passant = [x2, y2, turn];
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                }
-                //if it is not the first move for the pawn only allow single move, and dont allow moving if piece is there
-                else if y2 == y + 1 && x2 == x && piece2 == ' '
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                }
-                //allow diagonal right if there is a piece to capture
-                else if x != board.len() - 1 && (y2 == y + 1 && x2 == x + 1 && piece2.is_uppercase())
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                }
-                //allow diagonal left if there is a piece to capture
-                else if x != 0 && (y2 == y + 1 && x2 == x - 1 && piece2.is_uppercase())
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                }
-                //allow en passant right
-                else if x != board.len() - 1 && (y2 == y + 1 && x2 == x + 1 && x2 == passant[0] && y == passant[1])
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                    board[x2][y] = ' ';
-                }
-                //allow en passant left
-                else if x != 0 && (y2 == y + 1 && x2 == x - 1 && x2 == passant[0] && y == passant[1])
-                {
-                    board[x][y] = ' ';
-                    board[x2][y2] = piece;
-                    board[x2][y] = ' ';
+                    queen = 'Q';
+                    rook = 'R';
+                    bishop = 'B';
+                    night = 'N';
+                    end = 0;
                 }
                 else
                 {
-                    println!("Invalid move");
-                    continue;
+                    queen = 'q';
+                    rook = 'r';
+                    bishop = 'b';
+                    night = 'n';
+                    end = board.len() - 1;
                 }
                 //allow for promotions, loop is if you type an invalid piece
                 loop
                 {
-                    if y2 == 7
+                    if y2 == end
                     {
                         println!("Promote to: ");
                         let mut input = String::new();
                         std::io::stdin().read_line(&mut input).expect("Failed to read line");
                         let input = input.trim();
-                        if input == "q"
+                        if input.eq_ignore_ascii_case("q")
                         {
-                            board[x2][y2] = 'q';
+                            board[x2][y2] = queen;
                             break;
                         }
-                        else if input == "r"
+                        else if input.eq_ignore_ascii_case("r")
                         {
-                            board[x2][y2] = 'r';
+                            board[x2][y2] = rook;
                             break;
                         }
-                        else if input == "b"
+                        else if input.eq_ignore_ascii_case("b")
                         {
-                            board[x2][y2] = 'b';
+                            board[x2][y2] = bishop;
                             break;
                         }
-                        else if input == "h"
+                        else if input.eq_ignore_ascii_case("n")
                         {
-                            board[x2][y2] = 'n';
+                            board[x2][y2] = night;
                             break;
                         }
                         else
@@ -389,334 +313,217 @@ fn main()
             }
         }
         //if rook
-        else if piece == 'R' || piece == 'r'
+        else if piece.eq_ignore_ascii_case(&'r')
         {
-            //dont allow moving horizontally if piece is in the path
-            for i in 1..(x2 as i8 - x as i8).abs()
+            let possible_moves = rook(board.clone(), x, y);
+            println!("{:?}", possible_moves);
+            for row in possible_moves.iter()
             {
-                if x2 > x
+                let mut iter = row.iter().peekable();
+                while let Some(&value) = iter.next()
                 {
-                    if board[x + i as usize][y] != ' '
+                    if value == x2 as u8
                     {
-                        println!("Invalid move");
-                        continue 'outer;
-                    }
-                }
-                else if x2 < x
-                {
-                    if board[x - i as usize][y] != ' '
-                    {
-                        println!("Invalid move");
-                        continue 'outer;
-                    }
-                }
-            }
-            //dont allow moving vertically if piece is in the path
-            for i in 1..(y2 as i8 - y as i8).abs()
-            {
-                if y2 > y
-                {
-                    if board[x][y + i as usize] != ' '
-                    {
-                        println!("Invalid move");
-                        continue 'outer;
-                    }
-                }
-                else if y2 < y
-                {
-                    if board[x][y - i as usize] != ' '
-                    {
-                        println!("Invalid move");
-                        continue 'outer;
+                        if iter.peek() == Some(&&(y2 as u8))
+                        {
+                            success = true;
+                            board[x2][y2] = piece;
+                            board[x][y] = ' ';
+                            break;
+                        }
                     }
                 }
             }
-            //allow moving vertically
-            if x2 == x && y2 != y
-            {
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            //allow moving horizontally
-            else if x2 != x && y2 == y
-            {
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            else
+            if !success
             {
                 println!("Invalid move");
                 continue;
             }
             if x == 0 && piece == 'R'
             {
-                white_left_castle = false;
+                castle[0] = false; //disable white left castle
             }
             else if x == 7 && piece == 'R'
             {
-                white_right_castle = false;
+                castle[1] = false; //disable white right castle
             }
             else if x == 0 && piece == 'r'
             {
-                black_left_castle = false;
+                castle[2] = false; //disable black left castle
             }
             else if x == 7 && piece == 'r'
             {
-                black_right_castle = false;
+                castle[3] = false; //disable black right castle
             }
         }
         //if bishop
-        else if piece == 'B' || piece == 'b'
+        else if piece.eq_ignore_ascii_case(&'b')
         {
-            //dont allow moving if piece is in the path
-            for i in 1..(x2 as i8 - x as i8).abs()
+            let possible_moves = bishop(board.clone(), x, y);
+            println!("{:?}", possible_moves);
+            for row in possible_moves.iter()
             {
-                if x2 > x && y2 > y
+                let mut iter = row.iter().peekable();
+                while let Some(&value) = iter.next()
                 {
-                    if board[x + i as usize][y + i as usize] != ' '
+                    if value == x2 as u8
                     {
-                        println!("Invalid move");
-                        continue 'outer;
-                    }
-                }
-                else if x2 < x && y2 < y
-                {
-                    if board[x - i as usize][y - i as usize] != ' '
-                    {
-                        println!("Invalid move");
-                        continue 'outer;
-                    }
-                }
-                else if x2 > x && y2 < y
-                {
-                    if board[x + i as usize][y - i as usize] != ' '
-                    {
-                        println!("Invalid move");
-                        continue 'outer;
-                    }
-                }
-                else if x2 < x && y2 > y
-                {
-                    if board[x - i as usize][y + i as usize] != ' '
-                    {
-                        println!("Invalid move");
-                        continue 'outer;
+                        if iter.peek() == Some(&&(y2 as u8))
+                        {
+                            success = true;
+                            board[x2][y2] = piece;
+                            board[x][y] = ' ';
+                            break;
+                        }
                     }
                 }
             }
-            //only allow moving diagonally
-            if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs()
-            {
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            else
+            if !success
             {
                 println!("Invalid move");
                 continue;
             }
         }
         //if knight
-        else if piece == 'N' || piece == 'n'
+        else if piece.eq_ignore_ascii_case(&'n')
         {
-            //only allow moving in an L shape
-            if (x2 as i8 - x as i8).abs() == 2 && (y2 as i8 - y as i8).abs() == 1
+            let possible_moves = knight(board.clone(), x, y);
+            println!("{:?}", possible_moves);
+            for row in possible_moves.iter()
             {
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
+                let mut iter = row.iter().peekable();
+                while let Some(&value) = iter.next()
+                {
+                    if value == x2 as u8
+                    {
+                        if iter.peek() == Some(&&(y2 as u8))
+                        {
+                            success = true;
+                            board[x2][y2] = piece;
+                            board[x][y] = ' ';
+                            break;
+                        }
+                    }
+                }
             }
-            else if (x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 2
-            {
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            else
+            if !success
             {
                 println!("Invalid move");
                 continue;
             }
         }
         //if queen
-        else if piece == 'Q' || piece == 'q'
+        else if piece.eq_ignore_ascii_case(&'q')
         {
-            //if moving horizontally
-            if x2 == x && y2 != y
+            //just use rook and bishop logic together
+            let mut possible_moves = bishop(board.clone(), x, y);
+            possible_moves.extend(rook(board.clone(), x, y));
+            println!("{:?}", possible_moves);
+            for row in possible_moves.iter()
             {
-                //dont allow moving horizontally if piece is in the path
-                for i in 1..(y2 as i8 - y as i8).abs()
+                let mut iter = row.iter().peekable();
+                while let Some(&value) = iter.next()
                 {
-                    if y2 > y
+                    if value == x2 as u8
                     {
-                        if board[x][y + i as usize] != ' '
+                        if iter.peek() == Some(&&(y2 as u8))
                         {
-                            println!("Invalid move");
-                            continue 'outer;
-                        }
-                    }
-                    else if y2 < y
-                    {
-                        if board[x][y - i as usize] != ' '
-                        {
-                            println!("Invalid move");
-                            continue 'outer;
+                            success = true;
+                            board[x2][y2] = piece;
+                            board[x][y] = ' ';
+                            break;
                         }
                     }
                 }
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
             }
-            //if moving vertically
-            else if x2 != x && y2 == y
-            {
-                //dont allow moving vertically if piece is in the path
-                for i in 1..(x2 as i8 - x as i8).abs()
-                {
-                    if x2 > x
-                    {
-                        if board[x + i as usize][y] != ' '
-                        {
-                            println!("Invalid move");
-                            continue 'outer;
-                        }
-                    }
-                    else if x2 < x
-                    {
-                        if board[x - i as usize][y] != ' '
-                        {
-                            println!("Invalid move");
-                            continue 'outer;
-                        }
-                    }
-                }
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            //if moving diagonally
-            else if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs()
-            {
-                //dont allow moving diagonally if piece is in the path
-                for i in 1..(x2 as i8 - x as i8).abs()
-                {
-                    if x2 > x && y2 > y
-                    {
-                        if board[x + i as usize][y + i as usize] != ' '
-                        {
-                            println!("Invalid move");
-                            continue 'outer;
-                        }
-                    }
-                    else if x2 < x && y2 < y
-                    {
-                        if board[x - i as usize][y - i as usize] != ' '
-                        {
-                            println!("Invalid move");
-                            continue 'outer;
-                        }
-                    }
-                    else if x2 > x && y2 < y
-                    {
-                        if board[x + i as usize][y - i as usize] != ' '
-                        {
-                            println!("Invalid move");
-                            continue 'outer;
-                        }
-                    }
-                    else if x2 < x && y2 > y
-                    {
-                        if board[x - i as usize][y + i as usize] != ' '
-                        {
-                            println!("Invalid move");
-                            continue 'outer;
-                        }
-                    }
-                }
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            else
+            if !success
             {
                 println!("Invalid move");
                 continue;
             }
         }
         //if king
-        else if piece == 'K' || piece == 'k'
+        else if piece.eq_ignore_ascii_case(&'k')
         {
-            //allow castling
-            if y2 == y && x == 4 && (x2 == 2 || x2 == 6)
+            let possible_moves = king(board.clone(), x, y, Some(castle.clone()));
+            println!("{:?}", possible_moves);
+            for row in possible_moves.iter()
             {
-                if white_castle
+                let mut iter = row.iter().peekable();
+                while let Some(&value) = iter.next()
                 {
-                    if piece == 'K' && (x2 == 6 && board[7][7] == 'R') || (x2 == 2 && board[0][7] == 'R')
+                    if value == x2 as u8
                     {
-                        if x2 == 6 && white_right_castle
+                        if iter.peek() == Some(&&(y2 as u8))
                         {
-                            board[7][7] = ' ';
-                            board[5][7] = 'R';
+                            if y2 == y && x == 4 && (x2 == 2 || x2 == 6)
+                            {
+                                if castle[4]
+                                //make sure whites castle still has not been done
+                                {
+                                    if piece == 'K' && (x2 == 6 && board[7][7] == 'R') || (x2 == 2 && board[0][7] == 'R')
+                                    {
+                                        if x2 == 6 && castle[1]
+                                        {
+                                            board[7][7] = ' ';
+                                            board[5][7] = 'R';
+                                        }
+                                        else if x2 == 2 && castle[0]
+                                        {
+                                            board[0][7] = ' ';
+                                            board[3][7] = 'R';
+                                        }
+                                        else
+                                        {
+                                            println!("Invalid move");
+                                            continue;
+                                        }
+                                        board[x][y] = ' ';
+                                        board[x2][y2] = piece;
+                                    }
+                                    else if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
+                                    {
+                                        castle[4] = false;
+                                    }
+                                }
+                                if castle[5]
+                                //make sure blacks castle still has not been done
+                                {
+                                    if piece == 'k' && (x2 == 6 && board[7][0] == 'r') || (x2 == 2 && board[0][0] == 'r')
+                                    {
+                                        if x2 == 6 && castle[3]
+                                        {
+                                            board[7][0] = ' ';
+                                            board[5][0] = 'r';
+                                        }
+                                        else if x2 == 2 && castle[2]
+                                        {
+                                            board[0][0] = ' ';
+                                            board[3][0] = 'r';
+                                        }
+                                        else
+                                        {
+                                            println!("Invalid move");
+                                            continue;
+                                        }
+                                        board[x][y] = ' ';
+                                        board[x2][y2] = piece;
+                                    }
+                                    else if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
+                                    {
+                                        castle[5] = false;
+                                    }
+                                }
+                            }
+                            success = true;
+                            board[x2][y2] = piece;
+                            board[x][y] = ' ';
+                            break;
                         }
-                        else if x2 == 2 && white_left_castle
-                        {
-                            board[0][7] = ' ';
-                            board[3][7] = 'R';
-                        }
-                        else
-                        {
-                            println!("Invalid move");
-                            continue;
-                        }
-                        board[x][y] = ' ';
-                        board[x2][y2] = piece;
-                    }
-                    else if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
-                    {
-                        white_castle = false;
                     }
                 }
-                if black_castle
-                {
-                    if piece == 'k' && (x2 == 6 && board[7][0] == 'r') || (x2 == 2 && board[0][0] == 'r')
-                    {
-                        if x2 == 6 && black_right_castle
-                        {
-                            board[7][0] = ' ';
-                            board[5][0] = 'r';
-                        }
-                        else if x2 == 2 && black_left_castle
-                        {
-                            board[0][0] = ' ';
-                            board[3][0] = 'r';
-                        }
-                        else
-                        {
-                            println!("Invalid move");
-                            continue;
-                        }
-                        board[x][y] = ' ';
-                        board[x2][y2] = piece;
-                    }
-                    else if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
-                    {
-                        black_castle = false;
-                    }
-                }
             }
-            //allow moving one space in any direction
-            else if (x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1
-            {
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            else if (x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1
-            {
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            else if (x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0
-            {
-                board[x][y] = ' ';
-                board[x2][y2] = piece;
-            }
-            else
+            if !success
             {
                 println!("Invalid move");
                 continue;
@@ -728,15 +535,16 @@ fn main()
             continue;
         }
         //ensure that the player is not in check after move
-        if turn % 2 == 0 && check(board.clone(), turn) == 2
+        let is_check = check(board.clone(), turn);
+        if turn % 2 == 0 && is_check == 2
         {
-            println!("Invalid move");
+            println!("cant move in check");
             board = copy.clone();
             continue;
         }
-        else if turn % 2 == 1 && check(board.clone(), turn) == 1
+        else if turn % 2 == 1 && is_check == 1
         {
-            println!("Invalid move");
+            println!("cant move in check");
             board = copy.clone();
             continue;
         }
@@ -755,6 +563,249 @@ fn main()
         turn += 1;
         print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn);
     }
+}
+fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) -> Vec<Vec<u8>>
+{
+    let piece = board[x][y];
+    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    let row:usize;
+    let first:usize;
+    let second:usize;
+    let third:usize;
+    if piece.is_uppercase()
+    {
+        row = 7;
+        first = 4; //make sure king has not moved
+        second = 0; //make sure left rook has not moved
+        third = 1; //make sure right rook has not moved
+    }
+    else
+    {
+        row = 0;
+        first = 5; //make sure king has not moved
+        second = 2; //make sure left rook has not moved
+        third = 3; //make sure right rook has not moved
+    }
+    for x2 in 0..board.len()
+    {
+        for y2 in 0..board.len()
+        {
+            let piece2 = board[x2][y2];
+            if piece2.is_uppercase() && piece.is_uppercase() || piece2.is_lowercase() && piece.is_lowercase()
+            {
+                continue;
+            }
+            //allow castling
+            if let Some(ref castle) = castle
+            {
+                if y == row && y2 == y && x == 4 && (x2 == 2 || x2 == 6) && castle[first] && castle[second] && castle[third]
+                {
+                    possible_moves.push(vec![x2 as u8, y2 as u8]);
+                }
+            }
+            //allow moving one space in any direction
+            if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
+            {
+                possible_moves.push(vec![x2 as u8, y2 as u8]);
+            }
+        }
+    }
+    return possible_moves;
+}
+fn knight(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
+{
+    let piece = board[x][y];
+    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    for x2 in 0..board.len()
+    {
+        for y2 in 0..board.len()
+        {
+            let piece2 = board[x2][y2];
+            if piece2.is_uppercase() && piece.is_uppercase() || piece2.is_lowercase() && piece.is_lowercase()
+            {
+                continue;
+            }
+            //only allow moving in an L shape
+            if ((x2 as i8 - x as i8).abs() == 2 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 2)
+            {
+                possible_moves.push(vec![x2 as u8, y2 as u8]);
+            }
+        }
+    }
+    return possible_moves;
+}
+fn bishop(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
+{
+    let piece = board[x][y];
+    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    'outer: for x2 in 0..board.len()
+    {
+        for y2 in 0..board.len()
+        {
+            let piece2 = board[x2][y2];
+            if piece2.is_uppercase() && piece.is_uppercase() || piece2.is_lowercase() && piece.is_lowercase()
+            {
+                continue;
+            }
+            //dont allow moving if piece is in the path
+            for i in 1..(x2 as i8 - x as i8).abs()
+            {
+                if x2 > x && y2 > y && (y + i as usize) < board.len() && (x + i as usize) < board.len()
+                {
+                    if board[x + i as usize][y + i as usize] != ' '
+                    {
+                        continue 'outer;
+                    }
+                }
+                else if x2 < x && y2 < y && i < y.try_into().unwrap() && i < x.try_into().unwrap()
+                {
+                    if board[x - i as usize][y - i as usize] != ' '
+                    {
+                        continue 'outer;
+                    }
+                }
+                else if x2 > x && y2 < y && i < y.try_into().unwrap() && (x + i as usize) < board.len()
+                {
+                    if board[x + i as usize][y - i as usize] != ' '
+                    {
+                        continue 'outer;
+                    }
+                }
+                else if x2 < x && y2 > y && i < x.try_into().unwrap() && (y + i as usize) < board.len()
+                {
+                    if board[x - i as usize][y + i as usize] != ' '
+                    {
+                        continue 'outer;
+                    }
+                }
+            }
+            //only allow moving diagonally
+            if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs()
+            {
+                possible_moves.push(vec![x2 as u8, y2 as u8]);
+            }
+        }
+    }
+    return possible_moves;
+}
+fn rook(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
+{
+    let piece = board[x][y];
+    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    'outer: for x2 in 0..board.len()
+    {
+        'inner: for y2 in 0..board.len()
+        {
+            let piece2 = board[x2][y2];
+            if piece2.is_uppercase() && piece.is_uppercase() || piece2.is_lowercase() && piece.is_lowercase()
+            {
+                continue;
+            }
+            //dont allow moving horizontally if piece is in the path
+            for i in 1..(x2 as i8 - x as i8).abs()
+            {
+                if x2 > x
+                {
+                    if board[x + i as usize][y] != ' '
+                    {
+                        continue 'outer;
+                    }
+                }
+                else if x2 < x
+                {
+                    if board[x - i as usize][y] != ' '
+                    {
+                        continue 'outer;
+                    }
+                }
+            }
+            //dont allow moving vertically if piece is in the path
+            for i in 1..(y2 as i8 - y as i8).abs()
+            {
+                if y2 > y
+                {
+                    if board[x][y + i as usize] != ' '
+                    {
+                        continue 'inner;
+                    }
+                }
+                else if y2 < y
+                {
+                    if board[x][y - i as usize] != ' '
+                    {
+                        continue 'inner;
+                    }
+                }
+            }
+            if (x2 == x && y2 != y) || (x2 != x && y2 == y)
+            {
+                possible_moves.push(vec![x2 as u8, y2 as u8]);
+            }
+        }
+    }
+    return possible_moves;
+}
+fn pawn(board:Vec<Vec<char>>, x:usize, y:usize, passant:Option<[usize; 3]>) -> Vec<Vec<u8>>
+{
+    let piece = board[x][y];
+    let start:usize;
+    let direction:i8;
+    if piece.is_uppercase()
+    {
+        start = board.len() - 2;
+        direction = -1;
+    }
+    else
+    {
+        start = 1;
+        direction = 1;
+    }
+    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    for x2 in 0..board.len()
+    {
+        for y2 in 0..board.len()
+        {
+            let piece2 = board[x2][y2];
+            if piece2.is_uppercase() && piece.is_uppercase() || piece2.is_lowercase() && piece.is_lowercase()
+            {
+                continue;
+            }
+            //if it is the first move for the pawn allow double move, and dont allow moving if piece is there
+            if y == start && y2 as i8 == y as i8 + (2 * direction) && x2 == x && piece2 == ' '
+            {
+                possible_moves.push(vec![x2 as u8, y2 as u8]);
+            }
+            //if it is not the first move for the pawn only allow single move, and dont allow moving if piece is there
+            else if y2 as i8 == y as i8 + direction && x2 == x && piece2 == ' '
+            {
+                possible_moves.push(vec![x2 as u8, y2 as u8]);
+            }
+            //allow diagonal right if there is a piece to capture
+            else if x != board.len() - 1 && (y2 as i8 == y as i8 + direction && x2 == x + 1) && piece2 != ' '
+            {
+                possible_moves.push(vec![x2 as u8, y2 as u8]);
+            }
+            //allow diagonal left if there is a piece to capture
+            else if x != 0 && (y2 as i8 == y as i8 + direction && x2 == x - 1) && piece2 != ' '
+            {
+                possible_moves.push(vec![x2 as u8, y2 as u8]);
+            }
+            //allow en passant right
+            else if let Some(passant) = passant
+            {
+                if x != board.len() - 1 && (y2 as i8 == y as i8 + direction && x2 == x + 1 && x2 == passant[0] && y == passant[1])
+                {
+                    possible_moves.push(vec![x2 as u8, y2 as u8]);
+                }
+                //allow en passant left
+                else if x != 0 && (y2 as i8 == y as i8 + direction && x2 == x - 1 && x2 == passant[0] && y == passant[1])
+                {
+                    possible_moves.push(vec![x2 as u8, y2 as u8]);
+                }
+            }
+        }
+    }
+    return possible_moves;
 }
 //fn bot_move(board:Vec<Vec<char>>) -> String
 //{
@@ -886,255 +937,64 @@ fn check(board:Vec<Vec<char>>, turn:usize) -> u8
     //     return 4
     let mut white_check = false;
     let mut black_check = false;
-    for i in 0..board.len()
+    let checkmate = false;
+    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    for x in 0..board.len()
     {
-        for j in 0..board.len()
+        for y in 0..board.len()
         {
-            if board[i][j] == 'K'
+            if board[x][y].eq_ignore_ascii_case(&'p')
             {
-                //check if white king is in check via pawn
-                if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'p') || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'p')
-                {
-                    white_check = true;
-                }
-                //check if white king is in check via knight
-                else if (i < board.len() - 2 && j < board.len() - 1 && board[i + 2][j + 1] == 'n')
-                          || (i < board.len() - 2 && j != 0 && board[i + 2][j - 1] == 'n')
-                          || (i < board.len() - 1 && j < board.len() - 2 && board[i + 1][j + 2] == 'n')
-                          || (i != 0 && j < board.len() - 2 && board[i - 1][j + 2] == 'n')
-                          || (i != 0 && j > 1 && board[i - 1][j - 2] == 'n')
-                          || (i < board.len() - 1 && j > 1 && board[i + 1][j - 2] == 'n')
-                          || (i > 1 && j != 0 && board[i - 2][j - 1] == 'n')
-                          || (i > 1 && j < board.len() - 1 && board[i - 2][j + 1] == 'n')
-                {
-                    white_check = true;
-                }
-                else if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'k')
-                          || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'k')
-                          || (j != 0 && i < board.len() - 1 && board[i + 1][j - 1] == 'k')
-                          || (j != 0 && i != 0 && board[i - 1][j - 1] == 'k')
-                          || (j < board.len() - 1 && board[i][j + 1] == 'k')
-                          || (j != 0 && board[i][j - 1] == 'k')
-                          || (i < board.len() - 1 && board[i + 1][j] == 'k')
-                          || (i != 0 && board[i - 1][j] == 'k')
-                {
-                    white_check = true;
-                }
-                else
-                {
-                    for x in 0..board.len()
-                    {
-                        for y in 0..board.len()
-                        {
-                            if board[x][y] == 'b' || board[x][y] == 'q' || board[x][y] == 'r'
-                            {
-                                //check if white king is in check via rook/queen horizontally
-                                if x == i
-                                {
-                                    if y < j
-                                    {
-                                        for z in y..j
-                                        {
-                                            if board[x][z] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == j - 1
-                                            {
-                                                white_check = true;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        for z in j..y
-                                        {
-                                            if board[x][z] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == y - 1
-                                            {
-                                                white_check = true;
-                                            }
-                                        }
-                                    }
-                                }
-                                //check if white king is in check via rook/queen vertically
-                                else if y == j
-                                {
-                                    if x < i
-                                    {
-                                        for z in x..i
-                                        {
-                                            if board[z][y] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == i - 1
-                                            {
-                                                white_check = true;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        for z in i..x
-                                        {
-                                            if board[z][y] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == x - 1
-                                            {
-                                                white_check = true;
-                                            }
-                                        }
-                                    }
-                                }
-                                //check if white king is in check via bishop/queen diagonally
-                                else if (x as i8 - i as i8).abs() == (y as i8 - j as i8).abs()
-                                {
-                                    let x_diff = (x as i8 - i as i8).abs();
-                                    let x_dir = (i as i8 - x as i8).signum();
-                                    let y_dir = (j as i8 - y as i8).signum();
-                                    for z in 1..x_diff
-                                    {
-                                        if board[(x as i8 + z * x_dir) as usize][(y as i8 + z * y_dir) as usize] != ' '
-                                        {
-                                            break;
-                                        }
-                                        if z == x_diff - 1
-                                        {
-                                            white_check = true;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                possible_moves.extend(pawn(board.clone(), x, y, None));
             }
-            else if board[i][j] == 'k'
+            else if board[x][y].eq_ignore_ascii_case(&'r')
             {
-                //check if black king is in check via pawn
-                if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'P') || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'P')
+                possible_moves.extend(rook(board.clone(), x, y));
+            }
+            else if board[x][y].eq_ignore_ascii_case(&'n')
+            {
+                possible_moves.extend(knight(board.clone(), x, y));
+            }
+            else if board[x][y].eq_ignore_ascii_case(&'b')
+            {
+                possible_moves.extend(bishop(board.clone(), x, y));
+            }
+            else if board[x][y].eq_ignore_ascii_case(&'q')
+            {
+                possible_moves.extend(bishop(board.clone(), x, y));
+                possible_moves.extend(rook(board.clone(), x, y));
+            }
+            else if board[x][y].eq_ignore_ascii_case(&'k')
+            {
+                possible_moves.extend(king(board.clone(), x, y, None));
+            }
+        }
+    }
+    for x in 0..board.len()
+    {
+        for y in 0..board.len()
+        {
+            if board[x][y].eq_ignore_ascii_case(&'k')
+            {
+                //check for check
+                for row in possible_moves.iter()
                 {
-                    black_check = true;
-                }
-                //check if black king is in check via knight
-                else if (i < board.len() - 2 && j < board.len() - 1 && board[i + 2][j + 1] == 'N')
-                          || (i < board.len() - 2 && j != 0 && board[i + 2][j - 1] == 'N')
-                          || (i < board.len() - 1 && j < board.len() - 2 && board[i + 1][j + 2] == 'N')
-                          || (i != 0 && j < board.len() - 2 && board[i - 1][j + 2] == 'N')
-                          || (i != 0 && j > 1 && board[i - 1][j - 2] == 'N')
-                          || (i < board.len() - 1 && j > 1 && board[i + 1][j - 2] == 'N')
-                          || (i > 1 && j != 0 && board[i - 2][j - 1] == 'N')
-                          || (i > 1 && j < board.len() - 1 && board[i - 2][j + 1] == 'N')
-                {
-                    black_check = true;
-                }
-                else if (j < board.len() - 1 && i < board.len() - 1 && board[i + 1][j + 1] == 'K')
-                          || (j < board.len() - 1 && i != 0 && board[i - 1][j + 1] == 'K')
-                          || (j != 0 && i < board.len() - 1 && board[i + 1][j - 1] == 'K')
-                          || (j != 0 && i != 0 && board[i - 1][j - 1] == 'K')
-                          || (j < board.len() - 1 && board[i][j + 1] == 'K')
-                          || (j != 0 && board[i][j - 1] == 'K')
-                          || (i < board.len() - 1 && board[i + 1][j] == 'K')
-                          || (i != 0 && board[i - 1][j] == 'K')
-                {
-                    black_check = true;
-                }
-                else
-                {
-                    for x in 0..board.len()
+                    let mut iter = row.iter().peekable();
+                    while let Some(&value) = iter.next()
                     {
-                        for y in 0..board.len()
+                        if value == x as u8
                         {
-                            if board[x][y] == 'B' || board[x][y] == 'Q' || board[x][y] == 'R'
+                            if iter.peek() == Some(&&(y as u8))
                             {
-                                //check if black king is in check via rook/queen horizontally
-                                if x == i
+                                if board[x][y].is_uppercase()
                                 {
-                                    if y < j
-                                    {
-                                        for z in y..j
-                                        {
-                                            if board[x][z] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == j - 1
-                                            {
-                                                black_check = true;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        for z in j..y
-                                        {
-                                            if board[x][z] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == y - 1
-                                            {
-                                                black_check = true;
-                                            }
-                                        }
-                                    }
+                                    white_check = true;
                                 }
-                                //check if black king is in check via rook/queen vertically
-                                else if y == j
+                                else
                                 {
-                                    if x < i
-                                    {
-                                        for z in x..i
-                                        {
-                                            if board[z][y] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == i - 1
-                                            {
-                                                black_check = true;
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        for z in i..x
-                                        {
-                                            if board[z][y] != ' '
-                                            {
-                                                break;
-                                            }
-                                            if z == x - 1
-                                            {
-                                                black_check = true;
-                                            }
-                                        }
-                                    }
+                                    black_check = true;
                                 }
-                                //check if black king is in check via bishop/queen diagonally
-                                else if (x as i8 - i as i8).abs() == (y as i8 - j as i8).abs()
-                                {
-                                    let x_diff = (x as i8 - i as i8).abs();
-                                    let x_dir = (i as i8 - x as i8).signum();
-                                    let y_dir = (j as i8 - y as i8).signum();
-                                    for z in 1..x_diff
-                                    {
-                                        if board[(x as i8 + z * x_dir) as usize][(y as i8 + z * y_dir) as usize] != ' '
-                                        {
-                                            break;
-                                        }
-                                        if z == x_diff - 1
-                                        {
-                                            black_check = true;
-                                        }
-                                    }
-                                }
+                                break;
                             }
                         }
                     }
@@ -1142,14 +1002,16 @@ fn check(board:Vec<Vec<char>>, turn:usize) -> u8
             }
         }
     }
-    if turn % 2 == 1 && white_check
+    if checkmate
     {
-        println!("cant move into check");
+        return 3;
+    }
+    else if turn % 2 == 1 && white_check
+    {
         return 1;
     }
     else if turn % 2 == 0 && black_check
     {
-        println!("cant move into check");
         return 2;
     }
     return 0;
