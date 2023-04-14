@@ -9,7 +9,6 @@ fn main()
     let mut flip = false;
     let mut numbers = false;
     let mut keep_flip = false;
-    //    let mut bot = true;
     let mut file = String::new();
     for i in 0..std::env::args().len()
     {
@@ -22,7 +21,6 @@ fn main()
             println!("--keep_flip will have black on the bottom and white on the top");
             println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
             println!("--file CSV will load a board from a csv file");
-            //            println!("--no_bot will disable the bot");
             std::process::exit(0);
         }
         else if std::env::args().nth(i).unwrap() == "--flip"
@@ -41,10 +39,6 @@ fn main()
         {
             file = std::env::args().nth(i + 1).unwrap();
         }
-        //        else if std::env::args().nth(i).unwrap() == "--no_bot"
-        //        {
-        //           bot = false;
-        //      }
     }
     let mut board:Vec<Vec<char>>;
     if file != "" && std::path::Path::new(&file).exists()
@@ -124,17 +118,9 @@ fn main()
         }
         println!("Enter a move: ");
         let mut input = String::new();
-        //        if bot && turn % 2 == 0
-        //        {
-        //            input = bot_move(board.clone());
-        //        }
-        //       else
-        //        {
         //println!("{}", instant.elapsed().as_nanos());
         std::io::stdin().read_line(&mut input).expect("Failed to read line");
         //instant = std::time::Instant::now();
-        //        }
-        //turn input from a2a4 to [1,2,1,4]
         let moves:Vec<u8> = input.chars()
                                  .filter_map(|c| {
                                      match c
@@ -807,9 +793,6 @@ fn pawn(board:Vec<Vec<char>>, x:usize, y:usize, passant:Option<[usize; 3]>) -> V
     }
     return possible_moves;
 }
-//fn bot_move(board:Vec<Vec<char>>) -> String
-//{
-//}
 fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bool, keep_flip:bool, turn:usize)
 {
     //clear line and move cursor to top left
