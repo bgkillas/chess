@@ -99,12 +99,36 @@ fn main()
             println!("Draw");
             break 'outer;
         }
-        match check(board.clone(), turn)
+        match check(board.clone(), turn, true)
         {
             1 => println!("White is in check"),
             2 => println!("Black is in check"),
-            3 => println!("Checkmate"),
-            4 => println!("Stalemate"),
+            3 =>
+            {
+                println!("Checkmate {} wins", if turn % 2 == 0 { "White" } else { "Black" });
+                for i in 0..all_turns.len()
+                {
+                    for j in 0..all_turns[i].len()
+                    {
+                        print!("{}", all_turns[i][j]);
+                    }
+                    println!();
+                }
+                std::process::exit(0);
+            }
+            4 =>
+            {
+                println!("Stalemate");
+                for i in 0..all_turns.len()
+                {
+                    for j in 0..all_turns[i].len()
+                    {
+                        print!("{}", all_turns[i][j]);
+                    }
+                    println!();
+                }
+                std::process::exit(0);
+            }
             _ => (),
         }
         copy = board.clone();
@@ -521,7 +545,7 @@ fn main()
             continue;
         }
         //ensure that the player is not in check after move
-        let is_check = check(board.clone(), turn);
+        let is_check = check(board.clone(), turn, false);
         if turn % 2 == 0 && is_check == 2
         {
             println!("cant move in check");
@@ -553,7 +577,7 @@ fn main()
 fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) -> Vec<Vec<u8>>
 {
     let piece = board[x][y];
-    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    let mut possible_moves:Vec<Vec<u8>> = vec![vec![x as u8, y as u8]];
     let row:usize;
     let first:usize;
     let second:usize;
@@ -601,7 +625,7 @@ fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) -> Vec
 fn knight(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
 {
     let piece = board[x][y];
-    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    let mut possible_moves:Vec<Vec<u8>> = vec![vec![x as u8, y as u8]];
     for x2 in 0..board.len()
     {
         for y2 in 0..board.len()
@@ -622,9 +646,28 @@ fn knight(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
 }
 fn bishop(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
 {
+    fn is_path_blocked(board:Vec<Vec<char>>, start:(usize, usize), end:(usize, usize)) -> bool
+    {
+        let (x1, y1) = start;
+        let (x2, y2) = end;
+        let delta_x:i8 = if x1 < x2 { 1 } else { -1 };
+        let delta_y:i8 = if y1 < y2 { 1 } else { -1 };
+        let mut x:i8 = x1 as i8 + delta_x as i8;
+        let mut y:i8 = y1 as i8 + delta_y as i8;
+        while x != x2 as i8 && y != y2 as i8
+        {
+            if board[x as usize][y as usize] != ' '
+            {
+                return true;
+            }
+            x += delta_x;
+            y += delta_y;
+        }
+        return false;
+    }
     let piece = board[x][y];
-    let mut possible_moves:Vec<Vec<u8>> = vec![];
-    'outer: for x2 in 0..board.len()
+    let mut possible_moves:Vec<Vec<u8>> = vec![vec![x as u8, y as u8]];
+    for x2 in 0..board.len()
     {
         for y2 in 0..board.len()
         {
@@ -633,42 +676,12 @@ fn bishop(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
             {
                 continue;
             }
-            //dont allow moving if piece is in the path
-            for i in 1..(x2 as i8 - x as i8).abs()
-            {
-                if x2 > x && y2 > y && (y + i as usize) < board.len() && (x + i as usize) < board.len()
-                {
-                    if board[x + i as usize][y + i as usize] != ' '
-                    {
-                        continue 'outer;
-                    }
-                }
-                else if x2 < x && y2 < y && i < y.try_into().unwrap() && i < x.try_into().unwrap()
-                {
-                    if board[x - i as usize][y - i as usize] != ' '
-                    {
-                        continue 'outer;
-                    }
-                }
-                else if x2 > x && y2 < y && i < y.try_into().unwrap() && (x + i as usize) < board.len()
-                {
-                    if board[x + i as usize][y - i as usize] != ' '
-                    {
-                        continue 'outer;
-                    }
-                }
-                else if x2 < x && y2 > y && i < x.try_into().unwrap() && (y + i as usize) < board.len()
-                {
-                    if board[x - i as usize][y + i as usize] != ' '
-                    {
-                        continue 'outer;
-                    }
-                }
-            }
-            //only allow moving diagonally
             if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs()
             {
-                possible_moves.push(vec![x2 as u8, y2 as u8]);
+                if !is_path_blocked(board.clone(), (x, y), (x2, y2))
+                {
+                    possible_moves.push(vec![x2 as u8, y2 as u8]);
+                }
             }
         }
     }
@@ -677,7 +690,7 @@ fn bishop(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
 fn rook(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
 {
     let piece = board[x][y];
-    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    let mut possible_moves:Vec<Vec<u8>> = vec![vec![x as u8, y as u8]];
     'outer: for x2 in 0..board.len()
     {
         'inner: for y2 in 0..board.len()
@@ -746,7 +759,7 @@ fn pawn(board:Vec<Vec<char>>, x:usize, y:usize, passant:Option<[usize; 3]>) -> V
         start = 1;
         direction = 1;
     }
-    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    let mut possible_moves:Vec<Vec<u8>> = vec![vec![x as u8, y as u8]];
     for x2 in 0..board.len()
     {
         for y2 in 0..board.len()
@@ -906,7 +919,7 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
     }
     println!();
 }
-fn check(board:Vec<Vec<char>>, turn:usize) -> u8
+fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
 {
     // if no_check
     //     return 0
@@ -920,36 +933,73 @@ fn check(board:Vec<Vec<char>>, turn:usize) -> u8
     //     return 4
     let mut white_check = false;
     let mut black_check = false;
-    let checkmate = false;
-    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    let mut moves:Vec<Vec<Vec<Vec<Vec<u8>>>>> = vec![vec![vec![]; 6], vec![vec![]; 6]];
+    //moves[0] = white
+    //moves[1] = black
+    //moves[0][0] = white pawns
+    //moves[0][1] = white rooks
+    //moves[0][2] = white knights
+    //moves[0][3] = white bishops
+    //moves[0][4] = white queens
+    //moves[0][5] = white kings
+    //moves[0][0][0] = white pawn 1
+    //moves[0][0][0][0] = white pawn 1 move 1
+    //moves[0][0][0][0][0] = white pawn 1 move 1 x
+    //moves[0][0][0][0][1] = white pawn 1 move 1 y
     for x in 0..board.len()
     {
         for y in 0..board.len()
         {
-            if board[x][y].eq_ignore_ascii_case(&'p')
+            if board[x][y] != ' '
             {
-                possible_moves.extend(pawn(board.clone(), x, y, None));
+                let num;
+                if board[x][y].is_uppercase()
+                {
+                    num = 0;
+                }
+                else
+                {
+                    num = 1;
+                }
+                if board[x][y].eq_ignore_ascii_case(&'p')
+                {
+                    moves[num][0].push(pawn(board.clone(), x, y, None));
+                }
+                else if board[x][y].eq_ignore_ascii_case(&'r')
+                {
+                    moves[num][1].push(rook(board.clone(), x, y));
+                }
+                else if board[x][y].eq_ignore_ascii_case(&'n')
+                {
+                    moves[num][2].push(knight(board.clone(), x, y));
+                }
+                else if board[x][y].eq_ignore_ascii_case(&'b')
+                {
+                    moves[num][3].push(bishop(board.clone(), x, y));
+                }
+                else if board[x][y].eq_ignore_ascii_case(&'q')
+                {
+                    let mut bishop_moves:Vec<Vec<u8>> = bishop(board.clone(), x, y);
+                    let mut rook_moves:Vec<Vec<u8>> = rook(board.clone(), x, y);
+                    rook_moves.remove(0);
+                    bishop_moves.extend(rook_moves);
+                    moves[num][4].push(bishop_moves);
+                }
+                else if board[x][y].eq_ignore_ascii_case(&'k')
+                {
+                    moves[num][5].push(king(board.clone(), x, y, None));
+                }
             }
-            else if board[x][y].eq_ignore_ascii_case(&'r')
+        }
+    }
+    let mut possible_moves:Vec<Vec<u8>> = vec![];
+    for i in 0..2
+    {
+        for j in 0..6
+        {
+            for k in 0..moves[i][j].len()
             {
-                possible_moves.extend(rook(board.clone(), x, y));
-            }
-            else if board[x][y].eq_ignore_ascii_case(&'n')
-            {
-                possible_moves.extend(knight(board.clone(), x, y));
-            }
-            else if board[x][y].eq_ignore_ascii_case(&'b')
-            {
-                possible_moves.extend(bishop(board.clone(), x, y));
-            }
-            else if board[x][y].eq_ignore_ascii_case(&'q')
-            {
-                possible_moves.extend(bishop(board.clone(), x, y));
-                possible_moves.extend(rook(board.clone(), x, y));
-            }
-            else if board[x][y].eq_ignore_ascii_case(&'k')
-            {
-                possible_moves.extend(king(board.clone(), x, y, None));
+                possible_moves.extend(moves[i][j][k][1..].to_vec());
             }
         }
     }
@@ -982,14 +1032,38 @@ fn check(board:Vec<Vec<char>>, turn:usize) -> u8
                         }
                     }
                 }
+                if checkmate
+                {
+                    for color in 0..2
+                    {
+                        let mut num_of_checks:Vec<u8> = vec![0, 0];
+                        for piece in 0..6
+                        {
+                            for piece_moves in 0..moves[color][piece].len()
+                            {
+                                for i in 1..moves[color][piece][piece_moves].len()
+                                {
+                                    let mut copy = board.clone();
+                                    copy[moves[color][piece][piece_moves][i][0] as usize][moves[color][piece][piece_moves][i][1] as usize] = copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize];
+                                    copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize] = ' ';
+                                    num_of_checks[0] += 1;
+                                    if check(copy, turn, false) == (1 + color) as u8
+                                    {
+                                        num_of_checks[1] += 1;
+                                    }
+                                }
+                            }
+                        }
+                        if num_of_checks[0] == num_of_checks[1]
+                        {
+                            return 3;
+                        }
+                    }
+                }
             }
         }
     }
-    if checkmate
-    {
-        return 3;
-    }
-    else if turn % 2 == 1 && white_check
+    if turn % 2 == 1 && white_check
     {
         return 1;
     }
