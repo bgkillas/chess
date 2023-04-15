@@ -53,8 +53,8 @@ pub fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, number
         {
             print!("{} ", res);
         }
-        let mut fg_color:u8;
-        let mut bg_color:u8;
+        let mut fg_color:&str;
+        let mut bg_color:&str;
         'inner: for y in 0..board.len()
         {
             if let Some(ref moves) = moves
@@ -66,28 +66,44 @@ pub fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, number
                     {
                         x2 = (x as i8 - (board.len() as i8 - 1)).abs() as usize;
                     }
+                    if board[y][ind].is_uppercase()
+                    {
+                        fg_color = "38;5;255";
+                    }
+                    else
+                    {
+                        fg_color = "38;5;232";
+                    }
+                    if (y + ((x + 1) % 2)) % 2 == 0
+                    {
+                        bg_color = "48;5;236";
+                    }
+                    else
+                    {
+                        bg_color = "48;5;252";
+                    }
                     if moves[i][0] == y as u8 && moves[i][1] == x2 as u8
                     {
-                        print!("\x1b[48;5;226m\x1b[30m {} \x1b[0m", board[y][ind]);
+                        print!("\x1b[{}m\x1b[{}m {} \x1b[0m", bg_color, fg_color, board[y][ind]);
                         continue 'inner;
                     }
                 }
             }
             if board[y][ind].is_uppercase()
             {
-                fg_color = 97;
+                fg_color = "38;5;255";
             }
             else
             {
-                fg_color = 30;
+                fg_color = "38;5;232";
             }
             if (y + ((x + 1) % 2)) % 2 == 0
             {
-                bg_color = 100;
+                bg_color = "48;5;239";
             }
             else
             {
-                bg_color = 47;
+                bg_color = "48;5;247";
             }
             print!("\x1b[{}m\x1b[{}m {} \x1b[0m", bg_color, fg_color, board[y][ind]);
         }

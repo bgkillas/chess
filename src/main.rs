@@ -2,7 +2,6 @@
 use std::os::unix::io::AsRawFd;
 #[cfg(unix)]
 use libc::{tcgetattr, tcsetattr, ECHO, ICANON, TCSANOW, VMIN, VTIME};
-
 use std::io::BufRead;
 use std::io::Read;
 use std::io::Write;
