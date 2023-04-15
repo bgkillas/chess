@@ -5,7 +5,7 @@ use std::io::Read;
 use std::io::Write;
 #[cfg(unix)]
 use std::os::unix::io::AsRawFd;
-// TODO: implement bots
+//TODO: implement bots
 fn main()
 {
     let mut flip = false;
