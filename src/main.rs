@@ -1,15 +1,13 @@
 #[cfg(unix)]
 use libc::{tcgetattr, tcsetattr, ECHO, ICANON, TCSANOW, VMIN, VTIME};
 use std::io::BufRead;
-#[cfg(target_os = "linux")]
 use std::io::Read;
 use std::io::Write;
-#[cfg(target_os = "linux")]
+#[cfg(unix)]
 use std::os::unix::io::AsRawFd;
+// TODO: implement bots
 fn main()
 {
-    // TODO: implement networking
-    // TODO: implement bots
     let mut flip = false;
     let mut numbers = false;
     let mut keep_flip = false;
@@ -28,7 +26,7 @@ fn main()
             println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
             println!("--file CSV will load a board from a csv file");
             println!("--black will make you play as black");
-            println!("--ip IP will connect to a server at IP");
+            println!("--ip IP will connect to a server at IP:port");
             std::process::exit(0);
         }
         else if std::env::args().nth(i).unwrap() == "--flip"
@@ -85,7 +83,7 @@ fn main()
     let mut all_turns:Vec<Vec<char>> = vec![vec![]];
     let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
-    if color == 1
+    if color == 1 && ip == ""
     {
         turn = 2;
     }
@@ -146,7 +144,11 @@ fn main()
             _ => (),
         }
         let mut are_you_moving = false;
-        if turn % 2 == 0 && color == 1
+        if ip == ""
+        {
+            are_you_moving = true;
+        }
+        else if turn % 2 == 0 && color == 1
         {
             are_you_moving = true;
         }
@@ -162,125 +164,142 @@ fn main()
         {
             are_you_moving = true;
         }
-        if ip == ""
-        {
-            are_you_moving = true;
-        }
         let mut input = String::new();
         //println!("{}", instant.elapsed().as_nanos());
         if are_you_moving
         {
-            loop
+            #[cfg(target_os = "windows")]
             {
-                let move_char = read_single_char();
-                print!("{}", move_char);
-                std::io::stdout().flush().unwrap();
-                if input.len() == 1 && move_char != '\u{7f}'
+                std::io::stdin().read_line(&mut input).unwrap();
+            }
+            #[cfg(unix)]
+            {
+                loop
                 {
-                    let mut piece_moves:Vec<Vec<u8>>;
-                    let x:usize = input.chars()
-                                       .filter_map(|c| {
-                                           match c
-                                           {
-                                               'a'..='t' => Some(c as u8 - b'a' + 1),
-                                               'A'..='Z' => Some(c as u8 - b'A' + 27),
-                                               '0'..='9' => c.to_digit(10).map(|d| d as u8),
-                                               _ => None,
-                                           }
-                                       })
-                                       .nth(0)
-                                       .unwrap() as usize
-                                  - 1;
-                    let y:usize = (move_char.to_string()
-                                            .chars()
-                                            .filter_map(|c| {
-                                                match c
-                                                {
-                                                    'a'..='t' => Some(c as u8 - b'a' + 1),
-                                                    'A'..='Z' => Some(c as u8 - b'A' + 27),
-                                                    '0'..='9' => c.to_digit(10).map(|d| d as u8),
-                                                    _ => None,
-                                                }
-                                            })
-                                            .nth(0)
-                                            .unwrap() as i8
-                                   - board.len() as i8)
-                                                       .abs() as usize;
-                    if x >= board.len() || y >= board.len()
+                    let move_char = read_single_char();
+                    print!("{}", move_char);
+                    std::io::stdout().flush().unwrap();
+                    if input.len() == 1 && move_char != '\u{7f}'
                     {
-                        println!("Invalid move");
-                        input = String::new();
-                        continue;
-                    }
-                    match board[x][y]
-                    {
-                        'P' => piece_moves = pawn(board.clone(), x, y, Some(passant)),
-                        'p' => piece_moves = pawn(board.clone(), x, y, Some(passant)),
-                        'R' => piece_moves = rook(board.clone(), x, y),
-                        'r' => piece_moves = rook(board.clone(), x, y),
-                        'N' => piece_moves = knight(board.clone(), x, y),
-                        'n' => piece_moves = knight(board.clone(), x, y),
-                        'B' => piece_moves = bishop(board.clone(), x, y),
-                        'b' => piece_moves = bishop(board.clone(), x, y),
-                        'Q' =>
+                        let mut piece_moves:Vec<Vec<u8>>;
+                        let x:usize = input.chars()
+                                           .filter_map(|c| {
+                                               match c
+                                               {
+                                                   'a'..='t' => Some(c as u8 - b'a' + 1),
+                                                   'A'..='Z' => Some(c as u8 - b'A' + 27),
+                                                   '0'..='9' => c.to_digit(10).map(|d| d as u8),
+                                                   _ => None,
+                                               }
+                                           })
+                                           .nth(0)
+                                           .unwrap() as usize
+                                      - 1;
+                        let y:usize = (move_char.to_string()
+                                                .chars()
+                                                .filter_map(|c| {
+                                                    match c
+                                                    {
+                                                        'a'..='t' => Some(c as u8 - b'a' + 1),
+                                                        'A'..='Z' => Some(c as u8 - b'A' + 27),
+                                                        '0'..='9' => c.to_digit(10).map(|d| d as u8),
+                                                        _ => None,
+                                                    }
+                                                })
+                                                .nth(0)
+                                                .unwrap() as i8
+                                       - board.len() as i8)
+                                                           .abs() as usize;
+                        if input == "E" && move_char == 'X'
                         {
-                            let mut bishop_moves:Vec<Vec<u8>> = bishop(board.clone(), x, y);
-                            let mut rook_moves:Vec<Vec<u8>> = rook(board.clone(), x, y);
-                            rook_moves.remove(0);
-                            bishop_moves.extend(rook_moves);
-                            piece_moves = bishop_moves;
+                            println!();
+                            write_all_turns(&all_turns);
+                            std::process::exit(0);
                         }
-                        'q' =>
-                        {
-                            let mut bishop_moves:Vec<Vec<u8>> = bishop(board.clone(), x, y);
-                            let mut rook_moves:Vec<Vec<u8>> = rook(board.clone(), x, y);
-                            rook_moves.remove(0);
-                            bishop_moves.extend(rook_moves);
-                            piece_moves = bishop_moves;
-                        }
-                        'K' => piece_moves = king(board.clone(), x, y, Some(castle.clone())),
-                        'k' => piece_moves = king(board.clone(), x, y, Some(castle.clone())),
-                        _ =>
+                        if x >= board.len() || y >= board.len()
                         {
                             println!("Invalid move");
+                            input = String::new();
                             continue;
                         }
+                        match board[x][y]
+                        {
+                            'P' => piece_moves = pawn(board.clone(), x, y, Some(passant)),
+                            'p' => piece_moves = pawn(board.clone(), x, y, Some(passant)),
+                            'R' => piece_moves = rook(board.clone(), x, y),
+                            'r' => piece_moves = rook(board.clone(), x, y),
+                            'N' => piece_moves = knight(board.clone(), x, y),
+                            'n' => piece_moves = knight(board.clone(), x, y),
+                            'B' => piece_moves = bishop(board.clone(), x, y),
+                            'b' => piece_moves = bishop(board.clone(), x, y),
+                            'Q' =>
+                            {
+                                let mut bishop_moves:Vec<Vec<u8>> = bishop(board.clone(), x, y);
+                                let mut rook_moves:Vec<Vec<u8>> = rook(board.clone(), x, y);
+                                rook_moves.remove(0);
+                                bishop_moves.extend(rook_moves);
+                                piece_moves = bishop_moves;
+                            }
+                            'q' =>
+                            {
+                                let mut bishop_moves:Vec<Vec<u8>> = bishop(board.clone(), x, y);
+                                let mut rook_moves:Vec<Vec<u8>> = rook(board.clone(), x, y);
+                                rook_moves.remove(0);
+                                bishop_moves.extend(rook_moves);
+                                piece_moves = bishop_moves;
+                            }
+                            'K' => piece_moves = king(board.clone(), x, y, Some(castle.clone())),
+                            'k' => piece_moves = king(board.clone(), x, y, Some(castle.clone())),
+                            _ =>
+                            {
+                                println!("Invalid move");
+                                continue;
+                            }
+                        }
+                        piece_moves.remove(0);
+                        print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn, Some(piece_moves));
+                        println!();
+                        if turn % 2 == 0
+                        {
+                            println!("Black's turn");
+                        }
+                        else
+                        {
+                            println!("White's turn");
+                        }
+                        println!("Enter a move: ");
+                        print!("{}{}", input, move_char);
+                        std::io::stdout().flush().unwrap();
                     }
-                    piece_moves.remove(0);
-                    print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn, Some(piece_moves));
-                    println!();
-                    if turn % 2 == 0
+                    if move_char == '\u{7f}'
                     {
-                        println!("Black's turn");
+                        print!("{}", '\x08');
+                        std::io::stdout().flush().unwrap();
+                        input.pop();
                     }
                     else
                     {
-                        println!("White's turn");
+                        input += &move_char.to_string();
                     }
-                    println!("Enter a move: ");
-                    print!("{}{}", input, move_char);
-                    std::io::stdout().flush().unwrap();
-                }
-                if move_char == '\u{7f}'
-                {
-                    print!("{}", '\x08');
-                    std::io::stdout().flush().unwrap();
-                    input.pop();
-                }
-                else
-                {
-                    input += &move_char.to_string();
-                }
-                if move_char == '\n'
-                {
-                    break;
+                    if move_char == '\n'
+                    {
+                        break;
+                    }
                 }
             }
             //std::io::stdin().read_line(&mut input).expect("Failed to read line");
         }
-        else
+        else if ip != ""
         {
-            //get the moves from network
+            input = receive_data(ip.splitn(2, ':').nth(1).unwrap().parse::<u16>().unwrap()).unwrap();
+        }
+        if ip != ""
+        {
+            match send_data(input.clone(), &ip)
+            {
+                Ok(_) => (),
+                Err(e) => println!("Error: {}", e),
+            }
         }
         //instant = std::time::Instant::now();
         let moves:Vec<u8> = input.chars()
@@ -700,7 +719,7 @@ fn main()
 }
 fn write_all_turns(all_turns:&Vec<Vec<char>>)
 {
-    for i in 0..all_turns.len()
+    for i in 1..all_turns.len()
     {
         for j in 0..all_turns[i].len()
         {
@@ -966,7 +985,7 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
         }
         else if keep_flip
         {
-            res = (x as i8 - board.len() as i8).abs();
+            res = x as i8 + 1;
             ind = (x as i8 - (board.len() as i8 - 1)).abs() as usize;
         }
         else
@@ -1006,7 +1025,12 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
             {
                 for i in 0..moves.len()
                 {
-                    if moves[i][0] == y as u8 && moves[i][1] == x as u8
+                    let mut x2 = x;
+                    if keep_flip
+                    {
+                        x2 = (x as i8 - (board.len() as i8 - 1)).abs() as usize;
+                    }
+                    if moves[i][0] == y as u8 && moves[i][1] == x2 as u8
                     {
                         print!("\x1b[48;5;226m\x1b[30m {} \x1b[0m", board[y][ind]);
                         continue 'inner;
@@ -1212,17 +1236,12 @@ fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
 #[cfg(unix)]
 pub fn read_single_char() -> char
 {
-    // Get the file descriptor for stdin
     let stdin_fd = std::io::stdin().as_raw_fd();
-
-    // Save the original terminal settings
     let orig_termios = unsafe {
         let mut termios = std::mem::zeroed();
         tcgetattr(stdin_fd, &mut termios);
         termios
     };
-
-    // Set the terminal to non-canonical mode with echoing disabled
     let mut new_termios = orig_termios;
     new_termios.c_lflag &= !(ICANON | ECHO);
     new_termios.c_cc[VMIN] = 1;
@@ -1230,14 +1249,34 @@ pub fn read_single_char() -> char
     unsafe {
         tcsetattr(stdin_fd, TCSANOW, &new_termios);
     }
-
-    // Read a single character from stdin
     let mut input = [0u8; 1];
     std::io::stdin().read_exact(&mut input).unwrap();
-
-    // Restore the original terminal settings
     unsafe {
         tcsetattr(stdin_fd, TCSANOW, &orig_termios);
     }
     return input[0] as char;
+}
+fn send_data(moves:String, addr:&str) -> std::io::Result<String>
+{
+    let mut stream = std::net::TcpStream::connect(addr)?;
+    stream.write_all(moves.as_bytes())?;
+    let mut buf = [0; 3];
+    stream.read_exact(&mut buf)?;
+    let message = String::from_utf8_lossy(&buf).to_string();
+    Ok(message)
+}
+fn receive_data(port:u16) -> std::io::Result<String>
+{
+    let listener = std::net::TcpListener::bind(format!("0.0.0.0:{}", port))?;
+    for stream in listener.incoming()
+    {
+        let mut stream = stream?;
+        let mut buf = [0; 4];
+        stream.read_exact(&mut buf)?;
+        let message = String::from_utf8_lossy(&buf).to_string();
+        println!("Received message: {}", message);
+        stream.write_all(b"ACK")?;
+        return Ok(message);
+    }
+    unreachable!()
 }

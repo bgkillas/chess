@@ -6,4 +6,3 @@ edition = "2021"
 [target.'cfg(unix)'.dependencies]
 libc="*"
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "*", features = ["winbase", "consoleapi", "fileapi", "handleapi", "minwindef", "ntdef", "wincon", "winnt"] }

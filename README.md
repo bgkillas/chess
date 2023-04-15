@@ -3,6 +3,7 @@ a cli chess implementation written in rust
 
 made in and tested for linux i think everything is os independent though you will have to compile yourself for now
 
+```
 Usage: chess [OPTION]...
 
 --flip will flip the board each move
@@ -11,13 +12,16 @@ Usage: chess [OPTION]...
 
 --file CSV will load a board from a csv file
 
+--black will make you play as black
+
+--ip IP will connect to a server at IP:port
+```
+
 8x8.csv is an example which is just the default board
 
 26x26.csv is just a silly board example with a 26x26 grid
 
 typing EXIT returns all the moves and exits
-
-TODO: implement networking
 
 TODO: implement bots
 
