@@ -27,6 +27,8 @@ fn main()
             println!("--keep_flip will have black on the bottom and white on the top");
             println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
             println!("--file CSV will load a board from a csv file");
+            println!("--black will make you play as black");
+            println!("--ip IP will connect to a server at IP");
             std::process::exit(0);
         }
         else if std::env::args().nth(i).unwrap() == "--flip"
@@ -48,6 +50,7 @@ fn main()
         else if std::env::args().nth(i).unwrap() == "--black"
         {
             color = 1;
+            keep_flip = true;
         }
         else if std::env::args().nth(i).unwrap() == "--ip"
         {
@@ -82,6 +85,10 @@ fn main()
     let mut all_turns:Vec<Vec<char>> = vec![vec![]];
     let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
+    if color == 1
+    {
+        turn = 2;
+    }
     print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn, None);
     //castling stuff castle[0]= white left castle, castle[1] = white right castle, castle[2] = black left castle, castle[3] = black right castle, castle[4] = white castle, castle[5] = black castle
     let mut castle:Vec<bool> = vec![true; 6];
@@ -199,6 +206,12 @@ fn main()
                                             .unwrap() as i8
                                    - board.len() as i8)
                                                        .abs() as usize;
+                    if x >= board.len() || y >= board.len()
+                    {
+                        println!("Invalid move");
+                        input = String::new();
+                        continue;
+                    }
                     match board[x][y]
                     {
                         'P' => piece_moves = pawn(board.clone(), x, y, Some(passant)),
@@ -953,7 +966,7 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
         }
         else if keep_flip
         {
-            res = x as i8 + 1i8;
+            res = (x as i8 - board.len() as i8).abs();
             ind = (x as i8 - (board.len() as i8 - 1)).abs() as usize;
         }
         else
