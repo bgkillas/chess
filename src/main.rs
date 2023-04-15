@@ -193,8 +193,8 @@ fn main()
                                                }
                                            })
                                            .nth(0)
-                                           .unwrap() as usize
-                                      - 1;
+                                           .map(|val| val as usize - 1)
+                                           .unwrap_or_default();
                         let y:usize = (move_char.to_string()
                                                 .chars()
                                                 .filter_map(|c| {
@@ -207,9 +207,8 @@ fn main()
                                                     }
                                                 })
                                                 .nth(0)
-                                                .unwrap() as i8
-                                       - board.len() as i8)
-                                                           .abs() as usize;
+                                                .map(|val| val as i8 - board.len() as i8)
+                                                .unwrap_or_default()).abs() as usize;
                         if input == "E" && move_char == 'X'
                         {
                             println!();
@@ -287,7 +286,6 @@ fn main()
                     }
                 }
             }
-            //std::io::stdin().read_line(&mut input).expect("Failed to read line");
         }
         else if ip != ""
         {
