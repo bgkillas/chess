@@ -17,10 +17,8 @@ Usage: chess [OPTION]...
 
 typing EXIT returns all the moves and exits
 
-TODO: implement move suggestions
-
 TODO: implement networking
 
-TODO: implement stock fish
+TODO: implement bots
 
 ![image](https://user-images.githubusercontent.com/55570525/231619805-26f73cb4-51d9-470d-a5cb-6c3ca2e30071.png)

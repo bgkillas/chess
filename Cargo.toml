@@ -3,3 +3,7 @@ name = "chess"
 version = "0.1.0"
 edition = "2021"
 [dependencies]
+[target.'cfg(unix)'.dependencies]
+libc="*"
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "*", features = ["winbase", "consoleapi", "fileapi", "handleapi", "minwindef", "ntdef", "wincon", "winnt"] }
