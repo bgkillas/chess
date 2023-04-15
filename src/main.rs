@@ -13,12 +13,14 @@ mod pieces
     pub mod pawn;
     pub mod rook;
 }
-use pieces::*;
+pub mod bot;
 pub mod check;
-use check::*;
+pub mod possible_moves;
 pub mod print_board;
+use pieces::*;
+use check::*;
 use print_board::*;
-//TODO: implement bots
+use bot::*;
 fn main()
 {
     let mut flip = false;
@@ -27,6 +29,7 @@ fn main()
     let mut file = String::new();
     let mut color = 0;
     let mut ip = String::new();
+    let mut bot = true;
     for i in 0..std::env::args().len()
     {
         if std::env::args().nth(i).unwrap() == "--help"
@@ -40,6 +43,7 @@ fn main()
             println!("--file CSV will load a board from a csv file");
             println!("--black will make you play as black");
             println!("--ip IP will connect to a server at IP:port");
+            println!("--no_bot will not play against a bot");
             std::process::exit(0);
         }
         else if std::env::args().nth(i).unwrap() == "--flip"
@@ -65,7 +69,12 @@ fn main()
         }
         else if std::env::args().nth(i).unwrap() == "--ip"
         {
+            bot = false;
             ip = std::env::args().nth(i + 1).unwrap();
+        }
+        else if std::env::args().nth(i).unwrap() == "--no_bot"
+        {
+            bot = false;
         }
     }
     let mut board:Vec<Vec<char>>;
@@ -157,7 +166,7 @@ fn main()
             _ => (),
         }
         let mut are_you_moving = false;
-        if ip == ""
+        if ip == "" && !bot
         {
             are_you_moving = true;
         }
@@ -193,6 +202,10 @@ fn main()
         else if ip != ""
         {
             input = receive_data(ip.splitn(2, ':').nth(1).unwrap().parse::<u16>().unwrap()).unwrap();
+        }
+        else if bot
+        {
+            input = gen_move(board.clone(), castle.clone(), passant);
         }
         if ip != ""
         {
