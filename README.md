@@ -1,7 +1,7 @@
 # chess
 a cli chess implementation written in rust
 
-made in and tested for linux i think everything is os independent though you will have to compile yourself for now
+showing possible moves is disabled for windows since im too lazy to implement it right now
 
 ```
 Usage: chess [OPTION]...
@@ -25,4 +25,6 @@ typing EXIT returns all the moves and exits
 
 TODO: implement bots
 
-![image](https://user-images.githubusercontent.com/55570525/231619805-26f73cb4-51d9-470d-a5cb-6c3ca2e30071.png)
+yellow means the move is possible(does not account for check)
+
+![image](https://user-images.githubusercontent.com/55570525/232214521-d48c291b-6c96-4500-8800-fcf34d1756e8.png)
