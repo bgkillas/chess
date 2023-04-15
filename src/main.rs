@@ -894,7 +894,7 @@ fn pawn(board:Vec<Vec<char>>, x:usize, y:usize, passant:Option<[usize; 3]>) -> V
                 continue;
             }
             //if it is the first move for the pawn allow double move, and dont allow moving if piece is there
-            if y == start && y2 as i8 == y as i8 + (2 * direction) && x2 == x && piece2 == ' '
+            if y == start && y2 as i8 == y as i8 + (2 * direction) && board[x][(y as i8 + direction) as usize] == ' ' && x2 == x && piece2 == ' '
             {
                 possible_moves.push(vec![x2 as u8, y2 as u8]);
             }
@@ -962,9 +962,20 @@ fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bo
             ind = x as usize;
         }
         let mut col = 'W';
-        if (turn > 8 && turn % 2 == 0) || (x + 1) % 2 == 0
+        if turn > 8 && turn % 2 == 0
         {
             col = 'B';
+        }
+        if (x + 1) % 2 == 0
+        {
+            if col == 'W'
+            {
+                col = 'B';
+            }
+            else if col == 'B'
+            {
+                col = 'W';
+            }
         }
         if board.len() > 8
         {
