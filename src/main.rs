@@ -212,7 +212,15 @@ fn main()
             write_all_turns(&all_turns);
         }
         //ensure the input is in range
-        if moves.len() != 4 || moves[0] < 1 || moves[0] > (board.len() + 2) as u8 || moves[1] < 1 || moves[1] > (board.len() + 2) as u8 || moves[2] < 1 || moves[2] > (board.len() + 2) as u8 || moves[3] < 1 || moves[3] > (board.len() + 2) as u8
+        if moves.len() != 4
+           || moves[0] < 1
+           || moves[0] > (board.len() + 2) as u8
+           || moves[1] < 1
+           || moves[1] > (board.len() + 2) as u8
+           || moves[2] < 1
+           || moves[2] > (board.len() + 2) as u8
+           || moves[3] < 1
+           || moves[3] > (board.len() + 2) as u8
         {
             println!("Invalid move");
             continue;

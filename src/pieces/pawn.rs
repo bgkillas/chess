@@ -59,7 +59,8 @@ pub fn pawn(board:Vec<Vec<char>>, x:usize, y:usize, passant:Option<[usize; 3]>) 
             {
                 continue;
             }
-            if (y == start && y2 as i8 == y as i8 + (2 * direction) && board[x][(y as i8 + direction) as usize] == ' ' && x2 == x && piece2 == ' ')//if it is the first move for the pawn allow double move, and dont allow moving if piece is there
+            //if it is the first move for the pawn allow double move, and dont allow moving if piece is there
+            if (y == start && y2 as i8 == y as i8 + (2 * direction) && board[x][(y as i8 + direction) as usize] == ' ' && x2 == x && piece2 == ' ')
                || (y2 as i8 == y as i8 + direction && x2 == x && piece2 == ' ')//if it is not the first move for the pawn only allow moving forward if there is no piece there
                || (x != board.len() - 1 && (y2 as i8 == y as i8 + direction && x2 == x + 1) && piece2 != ' ')//allow capturing right
                || (x != 0 && (y2 as i8 == y as i8 + direction && x2 == x - 1) && piece2 != ' ')
@@ -70,7 +71,8 @@ pub fn pawn(board:Vec<Vec<char>>, x:usize, y:usize, passant:Option<[usize; 3]>) 
             //allow en passant right
             else if let Some(passant) = passant
             {
-                if (x != board.len() - 1 && (y2 as i8 == y as i8 + direction && x2 == x + 1 && x2 == passant[0] && y == passant[1])) || (x != 0 && (y2 as i8 == y as i8 + direction && x2 == x - 1 && x2 == passant[0] && y == passant[1]))
+                if (x != board.len() - 1 && (y2 as i8 == y as i8 + direction && x2 == x + 1 && x2 == passant[0] && y == passant[1]))
+                   || (x != 0 && (y2 as i8 == y as i8 + direction && x2 == x - 1 && x2 == passant[0] && y == passant[1]))
                 {
                     possible_moves.push(vec![x2 as u8, y2 as u8]);
                 }

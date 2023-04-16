@@ -42,7 +42,9 @@ pub fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) ->
                 }
             }
             //allow moving one space in any direction
-            if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
+            if ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1)
+               || ((x2 as i8 - x as i8).abs() == 0 && (y2 as i8 - y as i8).abs() == 1)
+               || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 0)
             {
                 possible_moves.push(vec![x2 as u8, y2 as u8]);
             }

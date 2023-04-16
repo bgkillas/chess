@@ -62,7 +62,8 @@ pub fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                 for i in 1..moves[color][piece][piece_moves].len()
                                 {
                                     let mut copy = board.clone();
-                                    copy[moves[color][piece][piece_moves][i][0] as usize][moves[color][piece][piece_moves][i][1] as usize] = copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize];
+                                    copy[moves[color][piece][piece_moves][i][0] as usize][moves[color][piece][piece_moves][i][1] as usize] =
+                                        copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize];
                                     copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize] = ' ';
                                     num_of_checks[0] += 1;
                                     if check(copy, turn, false) == (1 + color) as u8
