@@ -78,11 +78,11 @@ fn main()
         }
     }
     let mut board:Vec<Vec<char>>;
-    if file != "" && std::path::Path::new(&file).exists()
+    if !file.is_empty() && std::path::Path::new(&file).exists()
     {
         let csv = std::fs::File::open(file).unwrap();
         let reader = std::io::BufReader::new(csv);
-        board = reader.lines().map(|l| l.unwrap().split(',').map(|c| c.chars().nth(0).unwrap()).collect()).collect();
+        board = reader.lines().map(|l| l.unwrap().split(',').map(|c| c.chars().next().unwrap()).collect()).collect();
     }
     else
     {
@@ -105,18 +105,18 @@ fn main()
     let mut all_turns:Vec<Vec<char>> = vec![vec![]];
     let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
-    if color == 1 && ip == ""
+    if color == 1 && ip.is_empty()
     {
         turn = 2;
     }
-    print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn, None);
+    print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
     //castling stuff castle[0]= white left castle, castle[1] = white right castle, castle[2] = black left castle, castle[3] = black right castle, castle[4] = white castle, castle[5] = black castle
     let mut castle:Vec<bool> = vec![true; 6];
     let mut copy:Vec<Vec<char>>;
     //en passant stuff
     let mut passant = [0; 3];
-    //let mut instant = std::time::Instant::now();
-    'outer: loop
+    let mut instant = std::time::Instant::now();
+    loop
     {
         //dont allow en passant on a piece after a turn
         if turn != passant[2] + 1
@@ -126,19 +126,6 @@ fn main()
             passant[2] = 0;
         }
         println!();
-        //check for draw
-        'inner: for row in board.iter()
-        {
-            for &c in row.iter()
-            {
-                if !(c == ' ' || c.eq_ignore_ascii_case(&'k'))
-                {
-                    break 'inner;
-                }
-            }
-            println!("Draw");
-            break 'outer;
-        }
         copy = board.clone();
         if turn % 2 == 0
         {
@@ -166,28 +153,16 @@ fn main()
             _ => (),
         }
         let mut are_you_moving = false;
-        if ip == "" && !bot
+        if (ip.is_empty() && !bot) || (turn % 2 == 0 && color == 1) || (turn % 2 == 1 && color == 0)
         {
             are_you_moving = true;
         }
-        else if turn % 2 == 0 && color == 1
-        {
-            are_you_moving = true;
-        }
-        else if turn % 2 == 1 && color == 1
+        else if (turn % 2 == 1 && color == 1) || (turn % 2 == 0 && color == 0)
         {
             are_you_moving = false;
-        }
-        else if turn % 2 == 0 && color == 0
-        {
-            are_you_moving = false;
-        }
-        else if turn % 2 == 1 && color == 0
-        {
-            are_you_moving = true;
         }
         let mut input = String::new();
-        //println!("{}", instant.elapsed().as_nanos());
+        println!("{}", instant.elapsed().as_nanos());
         if are_you_moving
         {
             #[cfg(target_os = "windows")]
@@ -199,15 +174,15 @@ fn main()
                 get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input);
             }
         }
-        else if ip != ""
+        else if !ip.is_empty()
         {
-            input = receive_data(ip.splitn(2, ':').nth(1).unwrap().parse::<u16>().unwrap()).unwrap();
+            input = receive_data(ip.split_once(':').unwrap().1.parse::<u16>().unwrap()).unwrap();
         }
         else if bot
         {
-            input = gen_move(board.clone(), castle.clone(), passant);
+            input = gen_move(board.clone());
         }
-        if ip != ""
+        if !ip.is_empty()
         {
             match send_data(input.clone(), &ip)
             {
@@ -215,7 +190,7 @@ fn main()
                 Err(e) => println!("Error: {}", e),
             }
         }
-        //instant = std::time::Instant::now();
+        instant = std::time::Instant::now();
         let moves:Vec<u8> = input.chars()
                                  .filter_map(|c| {
                                      match c
@@ -227,7 +202,7 @@ fn main()
                                      }
                                  })
                                  .collect();
-        if moves.len() == 0
+        if moves.is_empty()
         {
             println!("Invalid input");
             continue;
@@ -243,9 +218,9 @@ fn main()
             continue;
         }
         let x = moves[0] as usize - 1;
-        let y = (moves[1] as i8 - board.len() as i8).abs() as usize;
+        let y = (moves[1] as i8 - board.len() as i8).unsigned_abs() as usize;
         let x2 = moves[2] as usize - 1;
-        let y2 = (moves[3] as i8 - board.len() as i8).abs() as usize;
+        let y2 = (moves[3] as i8 - board.len() as i8).unsigned_abs() as usize;
         let piece = board[x][y];
         let piece2 = board[x2][y2];
         //dont move if the piece is the same color as the piece you are moving to
@@ -254,14 +229,8 @@ fn main()
             println!("Invalid move");
             continue;
         }
-        //allow only white piece to move if its white's turn
-        if turn % 2 == 0 && piece.is_uppercase()
-        {
-            println!("Invalid move");
-            continue;
-        }
-        //allow only black piece to move if its black's turn
-        else if turn % 2 == 1 && piece.is_lowercase()
+        //allow only white/black piece to move if its white's/black's turn
+        if (turn % 2 == 0 && piece.is_uppercase()) || (turn % 2 == 1 && piece.is_lowercase())
         {
             println!("Invalid move");
             continue;
@@ -276,6 +245,17 @@ fn main()
                 continue;
             }
             pawn::promotion(&mut board, x2, y2, piece);
+            //if pawn moved 2 spaces
+            if y + 2 == y2 || (y > 1 && y - 2 == y2)
+            {
+                passant[0] = x2;
+                passant[1] = y2;
+                passant[2] = turn;
+            }
+            if piece2 == ' ' && x2 == passant[0] && y == passant[1] && turn - passant[2] == 1
+            {
+                board[passant[0]][passant[1]] = ' ';
+            }
         }
         //if rook
         else if piece.eq_ignore_ascii_case(&'r')
@@ -352,13 +332,7 @@ fn main()
         }
         //ensure that the player is not in check after move
         let is_check = check(board.clone(), turn, false);
-        if turn % 2 == 0 && is_check == 2
-        {
-            println!("cant move in check");
-            board = copy.clone();
-            continue;
-        }
-        else if turn % 2 == 1 && is_check == 1
+        if (turn % 2 == 0 && is_check == 2) || (turn % 2 == 1 && is_check == 1)
         {
             println!("cant move in check");
             board = copy.clone();
@@ -377,10 +351,10 @@ fn main()
         }
         all_turns.push(turn_str);
         turn += 1;
-        print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn, None);
+        print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
     }
 }
-fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&Vec<Vec<char>>, turn:usize, castle:&Vec<bool>, passant:[usize; 3], input:&mut String)
+fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>], turn:usize, castle:&[bool], passant:[usize; 3], input:&mut String)
 {
     loop
     {
@@ -400,7 +374,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
                                        _ => None,
                                    }
                                })
-                               .nth(0)
+                               .next()
                                .map(|val| val as usize - 1)
                                .unwrap_or_default();
             let y:usize = (move_char.to_string()
@@ -414,13 +388,13 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
                                             _ => None,
                                         }
                                     })
-                                    .nth(0)
+                                    .next()
                                     .map(|val| val as i8 - board.len() as i8)
-                                    .unwrap_or_default()).abs() as usize;
+                                    .unwrap_or_default()).unsigned_abs() as usize;
             if input == "E" && move_char == 'X'
             {
                 println!();
-                write_all_turns(&all_turns);
+                write_all_turns(all_turns);
                 std::process::exit(0);
             }
             if x >= board.len() || y >= board.len()
@@ -455,8 +429,8 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
                     bishop_moves.extend(rook_moves);
                     piece_moves = bishop_moves;
                 }
-                'K' => piece_moves = king::king(board.clone(), x, y, Some(castle.clone())),
-                'k' => piece_moves = king::king(board.clone(), x, y, Some(castle.clone())),
+                'K' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
+                'k' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
                 _ =>
                 {
                     println!("Invalid move");
@@ -464,7 +438,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
                 }
             }
             piece_moves.remove(0);
-            print_board(board.clone(), turns.clone(), flip, numbers, keep_flip, turn, Some(piece_moves));
+            print_board(board.clone(), turns, flip, numbers, keep_flip, turn, Some(piece_moves));
             println!();
             if turn % 2 == 0
             {
@@ -480,7 +454,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
         }
         if move_char == '\u{7f}'
         {
-            print!("{}", '\x08');
+            print!("\x08");
             std::io::stdout().flush().unwrap();
             input.pop();
         }
@@ -494,7 +468,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
         }
     }
 }
-fn can_move(board:&mut Vec<Vec<char>>, x:usize, y:usize, x2:usize, y2:usize, piece:char, possible_moves:Vec<Vec<u8>>) -> bool
+fn can_move(board:&mut [Vec<char>], x:usize, y:usize, x2:usize, y2:usize, piece:char, possible_moves:Vec<Vec<u8>>) -> bool
 {
     let mut success = false;
     for row in possible_moves.iter()
@@ -502,31 +476,28 @@ fn can_move(board:&mut Vec<Vec<char>>, x:usize, y:usize, x2:usize, y2:usize, pie
         let mut iter = row.iter().peekable();
         while let Some(&value) = iter.next()
         {
-            if value == x2 as u8
+            if value == x2 as u8 && iter.peek() == Some(&&(y2 as u8))
             {
-                if iter.peek() == Some(&&(y2 as u8))
-                {
-                    success = true;
-                    board[x2][y2] = piece;
-                    board[x][y] = ' ';
-                    break;
-                }
+                success = true;
+                board[x2][y2] = piece;
+                board[x][y] = ' ';
+                break;
             }
         }
     }
-    if !success
-    {
-        return false;
-    }
-    return true;
+    success
 }
 fn write_all_turns(all_turns:&Vec<Vec<char>>)
 {
-    for i in 1..all_turns.len()
+    for row in all_turns
     {
-        for j in 0..all_turns[i].len()
+        if row.is_empty()
         {
-            print!("{}", all_turns[i][j]);
+            continue;
+        }
+        for val in row
+        {
+            print!("{}", val);
         }
         print!(" ");
     }
@@ -554,7 +525,7 @@ pub fn read_single_char() -> char
     unsafe {
         tcsetattr(stdin_fd, TCSANOW, &orig_termios);
     }
-    return input[0] as char;
+    input[0] as char
 }
 fn send_data(moves:String, addr:&str) -> std::io::Result<String>
 {
@@ -568,7 +539,7 @@ fn send_data(moves:String, addr:&str) -> std::io::Result<String>
 fn receive_data(port:u16) -> std::io::Result<String>
 {
     let listener = std::net::TcpListener::bind(format!("0.0.0.0:{}", port))?;
-    for stream in listener.incoming()
+    if let Some(stream) = listener.incoming().next()
     {
         let mut stream = stream?;
         let mut buf = [0; 4];

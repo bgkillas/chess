@@ -20,9 +20,13 @@ pub fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) ->
         second = 2; //make sure left rook has not moved
         third = 3; //make sure right rook has not moved
     }
-    for x2 in 0..board.len()
+    let ymin = if y == 0 { 0 } else { y - 1 };
+    let ymax = if y == board.len() - 1 { board.len() - 1 } else { y + 1 };
+    let xmax = if x == board.len() - 1 { board.len() - 1 } else { x + 1 };
+    let xmin = if x == 0 { 0 } else { x - 1 };
+    for x2 in xmin..=xmax
     {
-        for y2 in 0..board.len()
+        for y2 in ymin..=ymax
         {
             let piece2 = board[x2][y2];
             if piece2.is_uppercase() && piece.is_uppercase() || piece2.is_lowercase() && piece.is_lowercase()
@@ -44,5 +48,5 @@ pub fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) ->
             }
         }
     }
-    return possible_moves;
+    possible_moves
 }

@@ -1,4 +1,4 @@
-pub fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, numbers:bool, keep_flip:bool, turn:usize, moves:Option<Vec<Vec<u8>>>)
+pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:bool, keep_flip:bool, turn:usize, moves:Option<Vec<Vec<u8>>>)
 {
     //clear line and move cursor to top left
     print!("\n{esc}[2J{esc}[1;1H", esc = 27 as char);
@@ -11,23 +11,23 @@ pub fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, number
             if turn == 1 || turn % 2 == 1
             {
                 res = (x as i8 - board.len() as i8).abs();
-                ind = x as usize;
+                ind = x;
             }
             else
             {
                 res = x as i8 + 1i8;
-                ind = (x as i8 - (board.len() as i8 - 1)).abs() as usize;
+                ind = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
             }
         }
         else if keep_flip
         {
             res = x as i8 + 1;
-            ind = (x as i8 - (board.len() as i8 - 1)).abs() as usize;
+            ind = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
         }
         else
         {
             res = (x as i8 - board.len() as i8).abs();
-            ind = x as usize;
+            ind = x;
         }
         let mut col = 'W';
         if turn > 8 && turn % 2 == 0
@@ -59,12 +59,12 @@ pub fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, number
         {
             if let Some(ref moves) = moves
             {
-                for i in 0..moves.len()
+                for mov in moves
                 {
                     let mut x2 = x;
                     if keep_flip
                     {
-                        x2 = (x as i8 - (board.len() as i8 - 1)).abs() as usize;
+                        x2 = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
                     }
                     if board[y][ind].is_uppercase()
                     {
@@ -82,7 +82,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, number
                     {
                         bg_color = "48;5;252";
                     }
-                    if moves[i][0] == y as u8 && moves[i][1] == x2 as u8
+                    if mov[0] == y as u8 && mov[1] == x2 as u8
                     {
                         print!("\x1b[{}m\x1b[{}m {} \x1b[0m", bg_color, fg_color, board[y][ind]);
                         continue 'inner;
@@ -107,7 +107,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:Vec<Vec<char>>, flip:bool, number
             }
             print!("\x1b[{}m\x1b[{}m {} \x1b[0m", bg_color, fg_color, board[y][ind]);
         }
-        println!(" {} {}{}{}{}", col, turns[x as usize][0], turns[x as usize][1], turns[x as usize][2], turns[x as usize][3]);
+        println!(" {} {}{}{}{}", col, turns[x][0], turns[x][1], turns[x][2], turns[x][3]);
     }
     if numbers
     {

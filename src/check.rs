@@ -14,13 +14,13 @@ pub fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     let mut black_check = false;
     let mut possible_moves:Vec<Vec<u8>> = vec![];
     let moves = crate::possible_moves::possible_moves(board.clone());
-    for i in 0..2
+    for mov in &moves
     {
-        for j in 0..6
+        for mo in mov
         {
-            for k in 0..moves[i][j].len()
+            for m in mo
             {
-                possible_moves.extend(moves[i][j][k][1..].to_vec());
+                possible_moves.extend(m[1..].to_vec());
             }
         }
     }
@@ -36,20 +36,17 @@ pub fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                     let mut iter = row.iter().peekable();
                     while let Some(&value) = iter.next()
                     {
-                        if value == x as u8
+                        if value == x as u8 && iter.peek() == Some(&&(y as u8))
                         {
-                            if iter.peek() == Some(&&(y as u8))
+                            if board[x][y].is_uppercase()
                             {
-                                if board[x][y].is_uppercase()
-                                {
-                                    white_check = true;
-                                }
-                                else
-                                {
-                                    black_check = true;
-                                }
-                                break;
+                                white_check = true;
                             }
+                            else
+                            {
+                                black_check = true;
+                            }
+                            break;
                         }
                     }
                 }
@@ -96,5 +93,5 @@ pub fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     {
         return 2;
     }
-    return 0;
+    0
 }

@@ -14,36 +14,42 @@ pub fn rook(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
             //dont allow moving horizontally if piece is in the path
             for i in 1..(x2 as i8 - x as i8).abs()
             {
-                if x2 > x
+                match x2 > x
                 {
-                    if board[x + i as usize][y] != ' '
+                    true =>
                     {
-                        continue 'outer;
+                        if board[x + i as usize][y] != ' '
+                        {
+                            continue 'outer;
+                        }
                     }
-                }
-                else if x2 < x
-                {
-                    if board[x - i as usize][y] != ' '
+                    false =>
                     {
-                        continue 'outer;
+                        if board[x - i as usize][y] != ' '
+                        {
+                            continue 'outer;
+                        }
                     }
                 }
             }
             //dont allow moving vertically if piece is in the path
             for i in 1..(y2 as i8 - y as i8).abs()
             {
-                if y2 > y
+                match y2 > y
                 {
-                    if board[x][y + i as usize] != ' '
+                    true =>
                     {
-                        continue 'inner;
+                        if board[x][y + i as usize] != ' '
+                        {
+                            continue 'inner;
+                        }
                     }
-                }
-                else if y2 < y
-                {
-                    if board[x][y - i as usize] != ' '
+                    false =>
                     {
-                        continue 'inner;
+                        if board[x][y - i as usize] != ' '
+                        {
+                            continue 'inner;
+                        }
                     }
                 }
             }
@@ -53,5 +59,5 @@ pub fn rook(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
             }
         }
     }
-    return possible_moves;
+    possible_moves
 }

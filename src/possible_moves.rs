@@ -17,13 +17,13 @@ pub fn possible_moves(board:Vec<Vec<char>>) -> Vec<Vec<Vec<Vec<Vec<u8>>>>>
     //moves[0][0][0][1] = white pawn 1 move 1
     //moves[0][0][0][1][0] = white pawn 1 move 1 x
     //moves[0][0][0][1][1] = white pawn 1 move 1 y
+    let mut num;
     for x in 0..board.len()
     {
         for y in 0..board.len()
         {
             if board[x][y] != ' '
             {
-                let num;
                 if board[x][y].is_uppercase()
                 {
                     num = 0;
@@ -63,5 +63,5 @@ pub fn possible_moves(board:Vec<Vec<char>>) -> Vec<Vec<Vec<Vec<Vec<u8>>>>>
             }
         }
     }
-    return moves;
+    moves
 }
