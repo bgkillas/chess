@@ -27,4 +27,6 @@ TODO: implement bots
 
 yellow means the move is possible(does not account for check)
 
-![image](https://user-images.githubusercontent.com/55570525/232214521-d48c291b-6c96-4500-8800-fcf34d1756e8.png)
+![image](https://user-images.githubusercontent.com/55570525/232333924-c73a0562-666c-4da3-adff-68ece5d24b05.png)
+
+![image](https://user-images.githubusercontent.com/55570525/232333893-d7dfb21e-ba6b-486d-b528-bcd8bf56f960.png)
