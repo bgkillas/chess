@@ -115,7 +115,7 @@ fn main()
     let mut copy:Vec<Vec<char>>;
     //en passant stuff
     let mut passant = [0; 3];
-    let mut instant = std::time::Instant::now();
+    //let mut instant = std::time::Instant::now();
     loop
     {
         //dont allow en passant on a piece after a turn
@@ -136,21 +136,24 @@ fn main()
             println!("White's turn");
         }
         println!("Enter a move: ");
-        match check(board.clone(), turn, true)
+        if turn > 2
         {
-            1 => println!("White is in check"),
-            2 => println!("Black is in check"),
-            3 =>
+            match check(board.clone(), turn, true)
             {
-                println!("Checkmate {} wins", if turn % 2 == 0 { "White" } else { "Black" });
-                write_all_turns(&all_turns);
+                1 => println!("White is in check"),
+                2 => println!("Black is in check"),
+                3 =>
+                {
+                    println!("Checkmate {} wins", if turn % 2 == 0 { "White" } else { "Black" });
+                    write_all_turns(&all_turns);
+                }
+                4 =>
+                {
+                    println!("Stalemate");
+                    write_all_turns(&all_turns);
+                }
+                _ => (),
             }
-            4 =>
-            {
-                println!("Stalemate");
-                write_all_turns(&all_turns);
-            }
-            _ => (),
         }
         let mut are_you_moving = false;
         if (ip.is_empty() && !bot) || (turn % 2 == 0 && color == 1) || (turn % 2 == 1 && color == 0)
@@ -162,7 +165,7 @@ fn main()
             are_you_moving = false;
         }
         let mut input = String::new();
-        println!("{}", instant.elapsed().as_nanos());
+        //println!("{}", instant.elapsed().as_nanos());
         if are_you_moving
         {
             #[cfg(target_os = "windows")]
@@ -190,7 +193,7 @@ fn main()
                 Err(e) => println!("Error: {}", e),
             }
         }
-        instant = std::time::Instant::now();
+        //instant = std::time::Instant::now();
         let moves:Vec<u8> = input.chars()
                                  .filter_map(|c| {
                                      match c
