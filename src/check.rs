@@ -1,3 +1,4 @@
+use crate::possible_moves::possible_moves;
 pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
 {
     // if no_check
@@ -12,15 +13,15 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     //     return 4
     let mut white_check = false;
     let mut black_check = false;
-    let mut possible_moves:Vec<Vec<u8>> = vec![];
-    let moves = crate::possible_moves::possible_moves(board);
+    let mut all_possible_moves:Vec<Vec<u8>> = vec![];
+    let moves = possible_moves(board);
     for mov in &moves
     {
         for mo in mov
         {
             for m in mo
             {
-                possible_moves.extend(m[1..].to_vec());
+                all_possible_moves.extend(m[1..].to_vec());
             }
         }
     }
@@ -31,7 +32,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
             if board[x][y].eq_ignore_ascii_case(&'k')
             {
                 //check for check
-                for row in possible_moves.iter()
+                for row in all_possible_moves.iter()
                 {
                     let mut iter = row.iter().peekable();
                     while let Some(&value) = iter.next()

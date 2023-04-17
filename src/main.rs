@@ -2,6 +2,13 @@ use console::{Key, Term};
 use std::io::BufRead;
 use std::io::Read;
 use std::io::Write;
+use std::env::args;
+use std::process::exit;
+use std::net::{TcpListener, TcpStream};
+use std::io::BufReader;
+use std::io::stdout;
+use std::io::Result;
+use std::fs::File;
 mod pieces
 {
     pub mod bishop;
@@ -14,10 +21,10 @@ pub mod bot;
 pub mod check;
 pub mod possible_moves;
 pub mod print_board;
-use pieces::*;
-use check::*;
-use print_board::*;
-use bot::*;
+use pieces::{bishop, king, knight, pawn, rook};
+use check::check;
+use print_board::print_board;
+use bot::gen_move;
 fn main()
 {
     let mut flip = false;
@@ -27,9 +34,9 @@ fn main()
     let mut color = 0;
     let mut ip = String::new();
     let mut bot = false;
-    for i in 0..std::env::args().len()
+    for i in 0..args().len()
     {
-        if std::env::args().nth(i).unwrap() == "--help"
+        if args().nth(i).unwrap() == "--help"
         {
             println!("Usage: chess [OPTION]...");
             println!("to move a piece type the coordinates of the piece you want to move and the coordinates of where you want to move it");
@@ -41,44 +48,44 @@ fn main()
             println!("--black will make you play as black");
             println!("--ip IP will connect to a server at IP:port");
             println!("--bot will play against a bot");
-            std::process::exit(0);
+            exit(0);
         }
-        else if std::env::args().nth(i).unwrap() == "--flip"
+        else if args().nth(i).unwrap() == "--flip"
         {
             flip = true;
         }
-        else if std::env::args().nth(i).unwrap() == "--keep_flip"
+        else if args().nth(i).unwrap() == "--keep_flip"
         {
             keep_flip = true;
         }
-        else if std::env::args().nth(i).unwrap() == "--numbers"
+        else if args().nth(i).unwrap() == "--numbers"
         {
             numbers = true;
         }
-        else if std::env::args().nth(i).unwrap() == "--file"
+        else if args().nth(i).unwrap() == "--file"
         {
-            file = std::env::args().nth(i + 1).unwrap();
+            file = args().nth(i + 1).unwrap();
         }
-        else if std::env::args().nth(i).unwrap() == "--black"
+        else if args().nth(i).unwrap() == "--black"
         {
             color = 1;
             keep_flip = true;
         }
-        else if std::env::args().nth(i).unwrap() == "--ip"
+        else if args().nth(i).unwrap() == "--ip"
         {
             bot = false;
-            ip = std::env::args().nth(i + 1).unwrap();
+            ip = args().nth(i + 1).unwrap();
         }
-        else if std::env::args().nth(i).unwrap() == "--bot"
+        else if args().nth(i).unwrap() == "--bot"
         {
             bot = true;
         }
     }
     let mut board:Vec<Vec<char>>;
-    if !file.is_empty() && std::path::Path::new(&file).exists()
+    if !file.is_empty() && File::open(&file).is_ok()
     {
-        let csv = std::fs::File::open(file).unwrap();
-        let reader = std::io::BufReader::new(csv);
+        let csv = File::open(file).unwrap();
+        let reader = BufReader::new(csv);
         board = reader.lines().map(|l| l.unwrap().split(',').map(|c| c.chars().next().unwrap()).collect()).collect();
     }
     else
@@ -96,7 +103,7 @@ fn main()
     if board[0].len() != board.len()
     {
         println!("Board must be a square");
-        std::process::exit(1);
+        exit(1);
     }
     //turn tracker
     let mut all_turns:Vec<Vec<char>> = vec![vec![]];
@@ -361,7 +368,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
     {
         let move_char = read_single_char();
         print!("{}", move_char);
-        std::io::stdout().flush().unwrap();
+        stdout().flush().unwrap();
         if input.len() == 1 && move_char != '\x08'
         {
             let mut piece_moves:Vec<Vec<u8>>;
@@ -396,7 +403,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
             {
                 println!();
                 write_all_turns(all_turns);
-                std::process::exit(0);
+                exit(0);
             }
             if x >= board.len() || y >= board.len()
             {
@@ -465,11 +472,11 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
             }
             println!("Enter a move: ");
             print!("{}{}", input, move_char);
-            std::io::stdout().flush().unwrap();
+            stdout().flush().unwrap();
         }
         if move_char == '\x08'
         {
-            std::io::stdout().flush().unwrap();
+            stdout().flush().unwrap();
             input.pop();
         }
         else
@@ -516,7 +523,7 @@ fn write_all_turns(all_turns:&Vec<Vec<char>>)
         print!(" ");
     }
     println!();
-    std::process::exit(0);
+    exit(0);
 }
 fn read_single_char() -> char
 {
@@ -530,18 +537,18 @@ fn read_single_char() -> char
         _ => '\x08',
     }
 }
-fn send_data(moves:String, addr:&str) -> std::io::Result<String>
+fn send_data(moves:String, addr:&str) -> Result<String>
 {
-    let mut stream = std::net::TcpStream::connect(addr)?;
+    let mut stream = TcpStream::connect(addr)?;
     stream.write_all(moves.as_bytes())?;
     let mut buf = [0; 3];
     stream.read_exact(&mut buf)?;
     let message = String::from_utf8_lossy(&buf).to_string();
     Ok(message)
 }
-fn receive_data(port:u16) -> std::io::Result<String>
+fn receive_data(port:u16) -> Result<String>
 {
-    let listener = std::net::TcpListener::bind(format!("0.0.0.0:{}", port))?;
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", port))?;
     if let Some(stream) = listener.incoming().next()
     {
         let mut stream = stream?;

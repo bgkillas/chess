@@ -1,3 +1,4 @@
+use std::io::stdin;
 pub fn pawn(board:Vec<Vec<char>>, x:usize, y:usize, passant:Option<[usize; 3]>) -> Vec<Vec<u8>>
 {
     let piece = board[x][y];
@@ -113,7 +114,7 @@ pub fn promotion(board:&mut Vec<Vec<char>>, x2:usize, y2:usize, piece:char)
             {
                 println!("Promote to: ");
                 let mut input = String::new();
-                std::io::stdin().read_line(&mut input).expect("Failed to read line");
+                stdin().read_line(&mut input).expect("Failed to read line");
                 let input = input.trim();
                 if input.eq_ignore_ascii_case("q")
                 {
