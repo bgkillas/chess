@@ -469,7 +469,6 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
         }
         if move_char == '\x08'
         {
-            print!("\x08");
             std::io::stdout().flush().unwrap();
             input.pop();
         }
@@ -528,7 +527,7 @@ fn read_single_char() -> char
         Key::Char(c) => c,
         Key::Enter => '\n',
         Key::Backspace => '\x08',
-        _ => panic!("Invalid key"),
+        _ => '\x08',
     }
 }
 fn send_data(moves:String, addr:&str) -> std::io::Result<String>

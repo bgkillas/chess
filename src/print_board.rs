@@ -80,7 +80,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                     }
                     else
                     {
-                        bg_color = "\x1b[48;2;255;250;205m";
+                        bg_color = "\x1b[48;2;235;230;205m";
                     }
                     if mov[0] == y as u8 && mov[1] == x2 as u8
                     {
