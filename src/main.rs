@@ -29,7 +29,7 @@ fn main()
     let mut file = String::new();
     let mut color = 0;
     let mut ip = String::new();
-    let mut bot = true;
+    let mut bot = false;
     for i in 0..std::env::args().len()
     {
         if std::env::args().nth(i).unwrap() == "--help"
@@ -43,7 +43,7 @@ fn main()
             println!("--file CSV will load a board from a csv file");
             println!("--black will make you play as black");
             println!("--ip IP will connect to a server at IP:port");
-            println!("--no_bot will not play against a bot");
+            println!("--bot will play against a bot");
             std::process::exit(0);
         }
         else if std::env::args().nth(i).unwrap() == "--flip"
@@ -72,9 +72,9 @@ fn main()
             bot = false;
             ip = std::env::args().nth(i + 1).unwrap();
         }
-        else if std::env::args().nth(i).unwrap() == "--no_bot"
+        else if std::env::args().nth(i).unwrap() == "--bot"
         {
-            bot = false;
+            bot = true;
         }
     }
     let mut board:Vec<Vec<char>>;
@@ -138,7 +138,7 @@ fn main()
         println!("Enter a move: ");
         if turn > 2
         {
-            match check(board.clone(), turn, true)
+            match check(&board, turn, true)
             {
                 1 => println!("White is in check"),
                 2 => println!("Black is in check"),
@@ -342,7 +342,7 @@ fn main()
             continue;
         }
         //ensure that the player is not in check after move
-        let is_check = check(board.clone(), turn, false);
+        let is_check = check(&board, turn, false);
         if (turn % 2 == 0 && is_check == 2) || (turn % 2 == 1 && is_check == 1)
         {
             println!("cant move in check");
@@ -365,6 +365,7 @@ fn main()
         print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
     }
 }
+#[cfg(unix)]
 fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>], turn:usize, castle:&[bool], passant:[usize; 3], input:&mut String)
 {
     loop
@@ -414,38 +415,52 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
                 *input = String::new();
                 continue;
             }
-            match board[x][y]
+            if turn % 2 == 1
             {
-                'P' => piece_moves = pawn::pawn(board.clone(), x, y, Some(passant)),
-                'p' => piece_moves = pawn::pawn(board.clone(), x, y, Some(passant)),
-                'R' => piece_moves = rook::rook(board.clone(), x, y),
-                'r' => piece_moves = rook::rook(board.clone(), x, y),
-                'N' => piece_moves = knight::knight(board.clone(), x, y),
-                'n' => piece_moves = knight::knight(board.clone(), x, y),
-                'B' => piece_moves = bishop::bishop(board.clone(), x, y),
-                'b' => piece_moves = bishop::bishop(board.clone(), x, y),
-                'Q' =>
+                match board[x][y]
                 {
-                    let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board.clone(), x, y);
-                    let mut rook_moves:Vec<Vec<u8>> = rook::rook(board.clone(), x, y);
-                    rook_moves.remove(0);
-                    bishop_moves.extend(rook_moves);
-                    piece_moves = bishop_moves;
+                    'P' => piece_moves = pawn::pawn(board.clone(), x, y, Some(passant)),
+                    'R' => piece_moves = rook::rook(board.clone(), x, y),
+                    'N' => piece_moves = knight::knight(board.clone(), x, y),
+                    'B' => piece_moves = bishop::bishop(board.clone(), x, y),
+                    'Q' =>
+                    {
+                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board.clone(), x, y);
+                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(board.clone(), x, y);
+                        rook_moves.remove(0);
+                        bishop_moves.extend(rook_moves);
+                        piece_moves = bishop_moves;
+                    }
+                    'K' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
+                    _ =>
+                    {
+                        println!("Invalid move");
+                        continue;
+                    }
                 }
-                'q' =>
+            }
+            else
+            {
+                match board[x][y]
                 {
-                    let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board.clone(), x, y);
-                    let mut rook_moves:Vec<Vec<u8>> = rook::rook(board.clone(), x, y);
-                    rook_moves.remove(0);
-                    bishop_moves.extend(rook_moves);
-                    piece_moves = bishop_moves;
-                }
-                'K' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
-                'k' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
-                _ =>
-                {
-                    println!("Invalid move");
-                    continue;
+                    'p' => piece_moves = pawn::pawn(board.clone(), x, y, Some(passant)),
+                    'r' => piece_moves = rook::rook(board.clone(), x, y),
+                    'n' => piece_moves = knight::knight(board.clone(), x, y),
+                    'b' => piece_moves = bishop::bishop(board.clone(), x, y),
+                    'q' =>
+                    {
+                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board.clone(), x, y);
+                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(board.clone(), x, y);
+                        rook_moves.remove(0);
+                        bishop_moves.extend(rook_moves);
+                        piece_moves = bishop_moves;
+                    }
+                    'k' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
+                    _ =>
+                    {
+                        println!("Invalid move");
+                        continue;
+                    }
                 }
             }
             piece_moves.remove(0);
@@ -516,7 +531,7 @@ fn write_all_turns(all_turns:&Vec<Vec<char>>)
     std::process::exit(0);
 }
 #[cfg(unix)]
-pub fn read_single_char() -> char
+fn read_single_char() -> char
 {
     let stdin_fd = std::io::stdin().as_raw_fd();
     let orig_termios = unsafe {

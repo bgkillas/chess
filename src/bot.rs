@@ -10,7 +10,7 @@ pub fn gen_move(board:Vec<Vec<char>>) -> String
 }
 fn negamax(board:Vec<Vec<char>> /*depth:u8, min:i8, max:i8*/) -> Vec<u8>
 {
-    let possible_moves = crate::possible_moves::possible_moves(board);
+    let possible_moves = crate::possible_moves::possible_moves(&board);
     let mut score:Vec<usize> = vec![0, 0];
     for i in 0..2
     {

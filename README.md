@@ -9,7 +9,7 @@ Usage: chess [OPTION]...
 --file CSV will load a board from a csv file
 --black will make you play as black
 --ip IP will connect to a server at IP:port
---no_bot will not play against a bot
+--bot will play against a bot
 ```
 8x8.csv is an example which is just the default board
 

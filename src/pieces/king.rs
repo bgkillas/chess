@@ -22,8 +22,30 @@ pub fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) ->
     }
     let ymin = if y == 0 { 0 } else { y - 1 };
     let ymax = if y == board.len() - 1 { board.len() - 1 } else { y + 1 };
-    let xmax = if x == board.len() - 1 { board.len() - 1 } else { x + 1 };
-    let xmin = if x == 0 { 0 } else { x - 1 };
+    let xmax = if x == board.len() - 1
+    {
+        board.len() - 1
+    }
+    else if x == 4
+    {
+        x + 2
+    }
+    else
+    {
+        x + 1
+    };
+    let xmin = if x == 0
+    {
+        0
+    }
+    else if x == 4
+    {
+        x - 2
+    }
+    else
+    {
+        x - 1
+    };
     for x2 in xmin..=xmax
     {
         for y2 in ymin..=ymax
@@ -36,7 +58,9 @@ pub fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) ->
             //allow castling
             if let Some(ref castle) = castle
             {
-                if y == row && y2 == y && x == 4 && (x2 == 2 || x2 == 6) && castle[first] && castle[second] && castle[third]
+                let mut copy = board.clone();
+                copy[if x2 == 2 { 3 } else { 5 }][y2] = piece;
+                if y == row && y2 == y && x == 4 && (x2 == 2 || x2 == 6) && castle[first] && castle[second] && castle[third] && piece2 == ' ' && crate::check::check(&copy, 1, false) == 0
                 {
                     possible_moves.push(vec![x2 as u8, y2 as u8]);
                 }

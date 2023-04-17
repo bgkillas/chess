@@ -1,4 +1,4 @@
-pub fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
+pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
 {
     // if no_check
     //     return 0
@@ -13,7 +13,7 @@ pub fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     let mut white_check = false;
     let mut black_check = false;
     let mut possible_moves:Vec<Vec<u8>> = vec![];
-    let moves = crate::possible_moves::possible_moves(board.clone());
+    let moves = crate::possible_moves::possible_moves(&board);
     for mov in &moves
     {
         for mo in mov
@@ -66,7 +66,7 @@ pub fn check(board:Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                         copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize];
                                     copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize] = ' ';
                                     num_of_checks[0] += 1;
-                                    if check(copy, turn, false) == (1 + color) as u8
+                                    if check(&copy, turn, false) == (1 + color) as u8
                                     {
                                         num_of_checks[1] += 1;
                                     }

@@ -1,5 +1,5 @@
 use crate::pieces::*;
-pub fn possible_moves(board:Vec<Vec<char>>) -> Vec<Vec<Vec<Vec<Vec<u8>>>>>
+pub fn possible_moves(board:&Vec<Vec<char>>) -> Vec<Vec<Vec<Vec<Vec<u8>>>>>
 {
     let mut moves:Vec<Vec<Vec<Vec<Vec<u8>>>>> = vec![vec![vec![]; 6], vec![vec![]; 6]];
     //moves[0] = white
