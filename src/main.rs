@@ -1,7 +1,4 @@
-#[cfg(unix)]
-use std::os::unix::io::AsRawFd;
-#[cfg(unix)]
-use libc::{tcgetattr, tcsetattr, ECHO, ICANON, TCSANOW, VMIN, VTIME};
+use console::{Key, Term};
 use std::io::BufRead;
 use std::io::Read;
 use std::io::Write;
@@ -168,14 +165,7 @@ fn main()
         //println!("{}", instant.elapsed().as_nanos());
         if are_you_moving
         {
-            #[cfg(target_os = "windows")]
-            {
-                std::io::stdin().read_line(&mut input).unwrap();
-            }
-            #[cfg(unix)]
-            {
-                get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input);
-            }
+            get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input);
         }
         else if !ip.is_empty()
         {
@@ -365,7 +355,6 @@ fn main()
         print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
     }
 }
-#[cfg(unix)]
 fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>], turn:usize, castle:&[bool], passant:[usize; 3], input:&mut String)
 {
     loop
@@ -373,7 +362,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
         let move_char = read_single_char();
         print!("{}", move_char);
         std::io::stdout().flush().unwrap();
-        if input.len() == 1 && move_char != '\u{7f}'
+        if input.len() == 1 && move_char != '\x08'
         {
             let mut piece_moves:Vec<Vec<u8>>;
             let x:usize = input.chars()
@@ -478,7 +467,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
             print!("{}{}", input, move_char);
             std::io::stdout().flush().unwrap();
         }
-        if move_char == '\u{7f}'
+        if move_char == '\x08'
         {
             print!("\x08");
             std::io::stdout().flush().unwrap();
@@ -530,28 +519,17 @@ fn write_all_turns(all_turns:&Vec<Vec<char>>)
     println!();
     std::process::exit(0);
 }
-#[cfg(unix)]
 fn read_single_char() -> char
 {
-    let stdin_fd = std::io::stdin().as_raw_fd();
-    let orig_termios = unsafe {
-        let mut termios = std::mem::zeroed();
-        tcgetattr(stdin_fd, &mut termios);
-        termios
-    };
-    let mut new_termios = orig_termios;
-    new_termios.c_lflag &= !(ICANON | ECHO);
-    new_termios.c_cc[VMIN] = 1;
-    new_termios.c_cc[VTIME] = 0;
-    unsafe {
-        tcsetattr(stdin_fd, TCSANOW, &new_termios);
+    let term = Term::stdout();
+    let key = term.read_key().unwrap();
+    match key
+    {
+        Key::Char(c) => c,
+        Key::Enter => '\n',
+        Key::Backspace => '\x08',
+        _ => panic!("Invalid key"),
     }
-    let mut input = [0u8; 1];
-    std::io::stdin().read_exact(&mut input).unwrap();
-    unsafe {
-        tcsetattr(stdin_fd, TCSANOW, &orig_termios);
-    }
-    input[0] as char
 }
 fn send_data(moves:String, addr:&str) -> std::io::Result<String>
 {

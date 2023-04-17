@@ -1,7 +1,5 @@
 # chess
 a cli chess implementation written in rust
-
-showing possible moves is disabled for windows since im too lazy to implement it right now
 ```
 Usage: chess [OPTION]...
 --flip will flip the board each move
