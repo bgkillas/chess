@@ -13,7 +13,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     let mut white_check = false;
     let mut black_check = false;
     let mut possible_moves:Vec<Vec<u8>> = vec![];
-    let moves = crate::possible_moves::possible_moves(&board);
+    let moves = crate::possible_moves::possible_moves(board);
     for mov in &moves
     {
         for mo in mov
