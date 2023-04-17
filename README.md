@@ -17,6 +17,4 @@ typing EXIT returns all the moves and exits
 
 TODO: implement bots
 
-![image](https://user-images.githubusercontent.com/55570525/232333924-c73a0562-666c-4da3-adff-68ece5d24b05.png)
-
-![image](https://user-images.githubusercontent.com/55570525/232333893-d7dfb21e-ba6b-486d-b528-bcd8bf56f960.png)
+![image](https://user-images.githubusercontent.com/55570525/232359818-9bd4c39c-a1d3-457b-9bee-fc4b5409390e.png)
