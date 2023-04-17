@@ -1,4 +1,4 @@
-use crate::pieces::*;
+use crate::pieces::{bishop, king, knight, pawn, rook};
 pub fn possible_moves(board:&Vec<Vec<char>>) -> Vec<Vec<Vec<Vec<Vec<u8>>>>>
 {
     let mut moves:Vec<Vec<Vec<Vec<Vec<u8>>>>> = vec![vec![vec![]; 6], vec![vec![]; 6]];

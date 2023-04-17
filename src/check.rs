@@ -1,4 +1,4 @@
-use crate::possible_moves::possible_moves;
+use crate::pieces::{bishop, knight, rook};
 pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
 {
     // if no_check
@@ -13,18 +13,6 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     //     return 4
     let mut white_check = false;
     let mut black_check = false;
-    let mut all_possible_moves:Vec<Vec<u8>> = vec![];
-    let moves = possible_moves(board);
-    for mov in &moves
-    {
-        for mo in mov
-        {
-            for m in mo
-            {
-                all_possible_moves.extend(m[1..].to_vec());
-            }
-        }
-    }
     for x in 0..board.len()
     {
         for y in 0..board.len()
@@ -32,27 +20,36 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
             if board[x][y].eq_ignore_ascii_case(&'k')
             {
                 //check for check
-                for row in all_possible_moves.iter()
+                let moves_from_king:Vec<Vec<Vec<u8>>> = vec![rook::rook(board.clone(), x, y), bishop::bishop(board.clone(), x, y), knight::knight(board.clone(), x, y)];
+                for piece in moves_from_king
                 {
-                    let mut iter = row.iter().peekable();
-                    while let Some(&value) = iter.next()
+                    for i in &piece[1..]
                     {
-                        if value == x as u8 && iter.peek() == Some(&&(y as u8))
+                        if board[i[0] as usize][i[1] as usize].is_uppercase() && board[x][y].is_lowercase()
                         {
-                            if board[x][y].is_uppercase()
-                            {
-                                white_check = true;
-                            }
-                            else
-                            {
-                                black_check = true;
-                            }
-                            break;
+                            black_check = true;
+                        }
+                        else if board[i[0] as usize][i[1] as usize].is_lowercase() && board[x][y].is_uppercase()
+                        {
+                            white_check = true;
                         }
                     }
                 }
                 if checkmate
                 {
+                    use crate::possible_moves::possible_moves;
+                    let mut all_possible_moves:Vec<Vec<u8>> = vec![];
+                    let moves = possible_moves(board);
+                    for mov in &moves
+                    {
+                        for mo in mov
+                        {
+                            for m in mo
+                            {
+                                all_possible_moves.extend(m[1..].to_vec());
+                            }
+                        }
+                    }
                     for color in 0..2
                     {
                         let mut num_of_checks:Vec<u8> = vec![0, 0];
