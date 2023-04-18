@@ -119,7 +119,8 @@ fn main()
     let mut copy:Vec<Vec<char>>;
     //en passant stuff
     let mut passant = [0; 3];
-    //let mut instant = std::time::Instant::now();
+    #[cfg(debug_assertions)]
+    let mut instant = std::time::Instant::now();
     loop
     {
         //dont allow en passant on a piece after a turn
@@ -148,7 +149,7 @@ fn main()
                 2 => println!("Black is in check"),
                 3 =>
                 {
-                    println!("Checkmate {} wins", if turn % 2 == 0 { "White" } else { "Black" });
+                    println!("Checkmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
                     write_all_turns(&all_turns);
                 }
                 4 =>
@@ -169,7 +170,8 @@ fn main()
             are_you_moving = false;
         }
         let mut input = String::new();
-        //println!("{}", instant.elapsed().as_nanos());
+        #[cfg(debug_assertions)]
+        println!("{}", instant.elapsed().as_nanos());
         if are_you_moving
         {
             get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input);
@@ -190,7 +192,10 @@ fn main()
                 Err(e) => println!("Error: {}", e),
             }
         }
-        //instant = std::time::Instant::now();
+        #[cfg(debug_assertions)]
+        {
+            instant = std::time::Instant::now();
+        }
         let moves:Vec<u8> = input.chars()
                                  .filter_map(|c| {
                                      match c

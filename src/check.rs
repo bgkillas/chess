@@ -21,17 +21,118 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
             {
                 //check for check
                 let moves_from_king:Vec<Vec<Vec<u8>>> = vec![rook::rook(board.clone(), x, y), bishop::bishop(board.clone(), x, y), knight::knight(board.clone(), x, y)];
-                for piece in moves_from_king
+                'outer: for piece in moves_from_king
                 {
                     for i in &piece[1..]
                     {
-                        if board[i[0] as usize][i[1] as usize].is_uppercase() && board[x][y].is_lowercase()
+                        let x2 = i[0] as i8;
+                        let y2 = i[1] as i8;
+                        let piece2 = board[x2 as usize][y2 as usize];
+                        if piece2.is_uppercase() && board[x][y].is_lowercase()
                         {
                             black_check = true;
                         }
-                        else if board[i[0] as usize][i[1] as usize].is_lowercase() && board[x][y].is_uppercase()
+                        else if piece2.is_lowercase() && board[x][y].is_uppercase()
                         {
                             white_check = true;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        match piece2
+                        {
+                            'P' =>
+                            {
+                                if y2 == y as i8 + 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
+                                {
+                                    break 'outer;
+                                }
+                                else
+                                {
+                                    black_check = false;
+                                    white_check = false;
+                                }
+                            }
+                            'p' =>
+                            {
+                                if y2 == y as i8 - 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
+                                {
+                                    break 'outer;
+                                }
+                                else
+                                {
+                                    black_check = false;
+                                    white_check = false;
+                                }
+                            }
+                            _ =>
+                            {}
+                        }
+                        match piece2.to_ascii_lowercase()
+                        {
+                            'q' =>
+                            {
+                                if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs() || x2 == x as i8 || y2 == y as i8
+                                {
+                                    break 'outer;
+                                }
+                                else
+                                {
+                                    black_check = false;
+                                    white_check = false;
+                                }
+                            }
+                            'r' =>
+                            {
+                                if x2 == x as i8 || y2 == y as i8
+                                {
+                                    break 'outer;
+                                }
+                                else
+                                {
+                                    black_check = false;
+                                    white_check = false;
+                                }
+                            }
+                            'b' =>
+                            {
+                                if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs()
+                                {
+                                    break 'outer;
+                                }
+                                else
+                                {
+                                    black_check = false;
+                                    white_check = false;
+                                }
+                            }
+                            'n' =>
+                            {
+                                if ((x2 as i8 - x as i8).abs() == 2 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 2)
+                                {
+                                    break 'outer;
+                                }
+                                else
+                                {
+                                    black_check = false;
+                                    white_check = false;
+                                }
+                            }
+                            'k' =>
+                            {
+                                if (x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1
+                                {
+                                    break 'outer;
+                                }
+                                else
+                                {
+                                    black_check = false;
+                                    white_check = false;
+                                }
+                            }
+                            _ =>
+                            {}
                         }
                     }
                 }
@@ -73,24 +174,23 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                         }
                         if num_of_checks[0] == num_of_checks[1]
                         {
-                            if !white_check && !black_check
-                            {
-                                return 4;
-                            }
-                            return 3;
+                            return if !white_check && !black_check { 4 } else { 3 };
                         }
                     }
                 }
             }
         }
     }
-    if turn % 2 == 1 && white_check
+    return if turn % 2 == 1 && white_check
     {
-        return 1;
+        1
     }
     else if turn % 2 == 0 && black_check
     {
-        return 2;
+        2
     }
-    0
+    else
+    {
+        0
+    };
 }

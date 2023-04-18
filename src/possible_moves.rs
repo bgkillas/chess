@@ -32,33 +32,22 @@ pub fn possible_moves(board:&Vec<Vec<char>>) -> Vec<Vec<Vec<Vec<Vec<u8>>>>>
                 {
                     num = 1;
                 }
-                if board[x][y].eq_ignore_ascii_case(&'p')
+                match board[x][y].to_ascii_lowercase()
                 {
-                    moves[num][0].push(pawn::pawn(board.clone(), x, y, None));
-                }
-                else if board[x][y].eq_ignore_ascii_case(&'r')
-                {
-                    moves[num][1].push(rook::rook(board.clone(), x, y));
-                }
-                else if board[x][y].eq_ignore_ascii_case(&'n')
-                {
-                    moves[num][2].push(knight::knight(board.clone(), x, y));
-                }
-                else if board[x][y].eq_ignore_ascii_case(&'b')
-                {
-                    moves[num][3].push(bishop::bishop(board.clone(), x, y));
-                }
-                else if board[x][y].eq_ignore_ascii_case(&'q')
-                {
-                    let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board.clone(), x, y);
-                    let mut rook_moves:Vec<Vec<u8>> = rook::rook(board.clone(), x, y);
-                    rook_moves.remove(0);
-                    bishop_moves.extend(rook_moves);
-                    moves[num][4].push(bishop_moves);
-                }
-                else if board[x][y].eq_ignore_ascii_case(&'k')
-                {
-                    moves[num][5].push(king::king(board.clone(), x, y, None));
+                    'p' => moves[num][0].push(pawn::pawn(board.clone(), x, y, None)),
+                    'r' => moves[num][1].push(rook::rook(board.clone(), x, y)),
+                    'n' => moves[num][2].push(knight::knight(board.clone(), x, y)),
+                    'b' => moves[num][3].push(bishop::bishop(board.clone(), x, y)),
+                    'q' =>
+                    {
+                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board.clone(), x, y);
+                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(board.clone(), x, y);
+                        rook_moves.remove(0);
+                        bishop_moves.extend(rook_moves);
+                        moves[num][4].push(bishop_moves);
+                    }
+                    'k' => moves[num][5].push(king::king(board.clone(), x, y, None)),
+                    _ => (),
                 }
             }
         }
