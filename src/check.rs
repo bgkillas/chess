@@ -73,7 +73,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                         {
                             'q' =>
                             {
-                                if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs() || x2 == x as i8 || y2 == y as i8
+                                if (x2 - x as i8).abs() == (y2 - y as i8).abs() || x2 == x as i8 || y2 == y as i8
                                 {
                                     break 'outer;
                                 }
@@ -97,7 +97,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                             }
                             'b' =>
                             {
-                                if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs()
+                                if (x2 - x as i8).abs() == (y2 - y as i8).abs()
                                 {
                                     break 'outer;
                                 }
@@ -109,7 +109,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                             }
                             'n' =>
                             {
-                                if ((x2 as i8 - x as i8).abs() == 2 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 2)
+                                if ((x2 - x as i8).abs() == 2 && (y2 - y as i8).abs() == 1) || ((x2 - x as i8).abs() == 1 && (y2 - y as i8).abs() == 2)
                                 {
                                     break 'outer;
                                 }
@@ -121,7 +121,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                             }
                             'k' =>
                             {
-                                if (x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 1
+                                if (x2 - x as i8).abs() == 1 && (y2 - y as i8).abs() == 1
                                 {
                                     break 'outer;
                                 }
@@ -181,7 +181,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
             }
         }
     }
-    return if turn % 2 == 1 && white_check
+    if turn % 2 == 1 && white_check
     {
         1
     }
@@ -192,5 +192,5 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     else
     {
         0
-    };
+    }
 }

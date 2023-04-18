@@ -21,10 +21,10 @@ fn negamax(board:Vec<Vec<char>> /*depth:u8, min:i8, max:i8*/) -> Vec<u8>
         score[i] += possible_moves[i][3].len() * 3;
         score[i] += possible_moves[i][4].len() * 9;
     }
-    let x = possible_moves[1][0][0][0][0];
-    let y = possible_moves[1][0][0][0][1];
-    let x2 = possible_moves[1][0][0][1][0];
-    let y2 = possible_moves[1][0][0][1][1];
+    let x = possible_moves[1][2][0][0][0];
+    let y = possible_moves[1][2][0][0][1];
+    let x2 = possible_moves[1][2][0][1][0];
+    let y2 = possible_moves[1][2][0][1][1];
     vec![x, y, x2, y2]
 }
 //moves[0][0] = white pawns

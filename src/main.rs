@@ -194,7 +194,7 @@ fn main()
         }
         #[cfg(debug_assertions)]
         {
-            instant = std::time::Instant::now();
+            instant = std::time::Instant::now()
         }
         let moves:Vec<u8> = input.chars()
                                  .filter_map(|c| {
