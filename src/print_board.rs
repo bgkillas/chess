@@ -1,5 +1,6 @@
 use crate::check::check;
-pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:bool, keep_flip:bool, turn:usize, moves:Option<Vec<Vec<u8>>>)
+use crate::write_all_turns;
+pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:bool, keep_flip:bool, turn:usize, all_turns:&Vec<Vec<char>>, moves:Option<Vec<Vec<u8>>>)
 {
     let mut mov:Vec<Vec<u8>> = vec![];
     if let Some(moves) = moves
@@ -18,8 +19,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         }
         mov.remove(0);
     }
-    //clear line and move cursor to top left
-    print!("\n{esc}[2J{esc}[1;1H", esc = 27 as char);
+    let mut output = String::new();
     for x in 0..board.len()
     {
         let res;
@@ -65,11 +65,11 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         }
         if board.len() > 8
         {
-            print!("{} ", (res as u8 + 96) as char);
+            output += &format!("{} ", (res as u8 + 96) as char);
         }
         else
         {
-            print!("{} ", res);
+            output += &format!("{} ", res);
         }
         let mut fg_color:&str;
         let mut bg_color:&str;
@@ -106,7 +106,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                     }
                     if mo[0] == y as u8 && mo[1] == x2 as u8
                     {
-                        print!("{}{} {} \x1b[0m", bg_color, fg_color, board[y][ind]);
+                        output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y][ind]);
                         continue 'inner;
                     }
                 }
@@ -119,25 +119,69 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             {
                 bg_color = "\x1b[48;2;240;217;181m";
             }
-            print!("{}{} {} \x1b[0m", bg_color, fg_color, board[y][ind]);
+            output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y][ind]);
         }
-        println!(" {} {}{}{}{}", col, turns[x][0], turns[x][1], turns[x][2], turns[x][3]);
+        output += &format!(" {} {}{}{}{}\n", col, turns[x][0], turns[x][1], turns[x][2], turns[x][3]);
     }
     if numbers
     {
-        print!(" ");
+        output += " ";
         for j in 0..board.len()
         {
-            print!("  {}", j + 1);
+            output += &format!("  {}", j + 1);
         }
     }
     else
     {
-        print!(" ");
+        output += " ";
         for j in 0..board.len()
         {
-            print!("  {}", (j as u8 + 97) as char);
+            output += &format!("  {}", (j as u8 + 97) as char);
         }
     }
-    println!();
+    let mut is_check = 0;
+    if turn > 2
+    {
+        is_check = check(&board, turn, true);
+    }
+    if turn > 2
+    {
+        match is_check
+        {
+            1 => output += "\nWhite is in check",
+            2 => output += "\nBlack is in check",
+            3 =>
+            {
+                output += &format!("\nCheckmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
+                write_all_turns(all_turns);
+            }
+            4 =>
+            {
+                output += "\nStalemate";
+                write_all_turns(all_turns);
+            }
+            _ =>
+            {
+                if turn % 2 == 0
+                {
+                    output += "\nBlack's turn";
+                }
+                else
+                {
+                    output += "\nWhite's turn";
+                }
+            }
+        }
+    }
+    else if turn % 2 == 0
+    {
+        output += "\nBlack's turn";
+    }
+    else
+    {
+        output += "\nWhite's turn";
+    }
+    //clear line and move cursor to top left
+    print!("\n{esc}[2J{esc}[1;1H", esc = 27 as char);
+    println!("{}", output);
 }

@@ -113,7 +113,7 @@ fn main()
     {
         turn = 2;
     }
-    print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
+    //print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
     //castling stuff castle[0]= white left castle, castle[1] = white right castle, castle[2] = black left castle, castle[3] = black right castle, castle[4] = white castle, castle[5] = black castle
     let mut castle:Vec<bool> = vec![true; 6];
     let mut copy:Vec<Vec<char>>;
@@ -130,36 +130,7 @@ fn main()
             passant[1] = 0;
             passant[2] = 0;
         }
-        println!();
         copy = board.clone();
-        if turn % 2 == 0
-        {
-            println!("Black's turn");
-        }
-        else
-        {
-            println!("White's turn");
-        }
-        println!("Enter a move: ");
-        if turn > 2
-        {
-            match check(&board, turn, true)
-            {
-                1 => println!("White is in check"),
-                2 => println!("Black is in check"),
-                3 =>
-                {
-                    println!("Checkmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
-                    write_all_turns(&all_turns);
-                }
-                4 =>
-                {
-                    println!("Stalemate");
-                    write_all_turns(&all_turns);
-                }
-                _ => (),
-            }
-        }
         let mut are_you_moving = false;
         if (ip.is_empty() && !bot) || (turn % 2 == 0 && color == 1) || (turn % 2 == 1 && color == 0)
         {
@@ -170,11 +141,25 @@ fn main()
             are_you_moving = false;
         }
         let mut input = String::new();
-        #[cfg(debug_assertions)]
-        println!("{}", instant.elapsed().as_nanos());
         if are_you_moving
         {
-            get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input);
+            get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input, None);
+            #[cfg(debug_assertions)]
+            get_input(flip,
+                      numbers,
+                      keep_flip,
+                      &board,
+                      &all_turns,
+                      &turns,
+                      turn,
+                      &castle,
+                      passant,
+                      &mut input,
+                      Some(instant.elapsed().as_nanos()));
+            #[cfg(debug_assertions)]
+            {
+                instant = std::time::Instant::now()
+            }
         }
         else if !ip.is_empty()
         {
@@ -191,10 +176,6 @@ fn main()
                 Ok(_) => (),
                 Err(e) => println!("Error: {}", e),
             }
-        }
-        #[cfg(debug_assertions)]
-        {
-            instant = std::time::Instant::now()
         }
         let moves:Vec<u8> = input.chars()
                                  .filter_map(|c| {
@@ -364,11 +345,29 @@ fn main()
         }
         all_turns.push(turn_str);
         turn += 1;
-        print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
+        print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None);
     }
 }
-fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>], turn:usize, castle:&[bool], passant:[usize; 3], input:&mut String)
+fn get_input(flip:bool,
+             numbers:bool,
+             keep_flip:bool,
+             board:&Vec<Vec<char>>,
+             all_turns:&Vec<Vec<char>>,
+             turns:&[Vec<char>],
+             turn:usize,
+             castle:&[bool],
+             passant:[usize; 3],
+             input:&mut String,
+             _instant:Option<u128>)
 {
+    print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None);
+    #[cfg(debug_assertions)]
+    {
+        if let Some(instant) = _instant
+        {
+            println!("{}", instant);
+        }
+    }
     loop
     {
         let move_char = read_single_char();
@@ -412,7 +411,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
             }
             if x >= board.len() || y >= board.len()
             {
-                println!("Invalid move");
+                println!("\nInvalid move");
                 *input = String::new();
                 continue;
             }
@@ -435,7 +434,8 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
                     'K' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
                     _ =>
                     {
-                        println!("Invalid move");
+                        *input = String::new();
+                        println!("\nNot a valid piece");
                         continue;
                     }
                 }
@@ -459,22 +459,20 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
                     'k' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
                     _ =>
                     {
-                        println!("Invalid move");
+                        *input = String::new();
+                        println!("\nNot a valid piece");
                         continue;
                     }
                 }
             }
-            print_board(board.clone(), turns, flip, numbers, keep_flip, turn, Some(piece_moves));
-            println!();
-            if turn % 2 == 0
+            print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, Some(piece_moves));
+            #[cfg(debug_assertions)]
             {
-                println!("Black's turn");
+                if let Some(instant) = _instant
+                {
+                    println!("{}", instant);
+                }
             }
-            else
-            {
-                println!("White's turn");
-            }
-            println!("Enter a move: ");
             print!("{}{}", input, move_char);
             stdout().flush().unwrap();
         }
@@ -514,17 +512,16 @@ fn can_move(board:&mut [Vec<char>], x:usize, y:usize, x2:usize, y2:usize, piece:
 }
 fn write_all_turns(all_turns:&Vec<Vec<char>>)
 {
-    for row in all_turns
+    for row in 0..all_turns.len()
     {
-        if row.is_empty()
+        if row > 1
         {
-            continue;
+            print!("_");
         }
-        for val in row
+        for val in all_turns[row].iter()
         {
             print!("{}", val);
         }
-        print!(" ");
     }
     println!();
     exit(0);
@@ -535,7 +532,17 @@ fn read_single_char() -> char
     let key = term.read_key().unwrap();
     match key
     {
-        Key::Char(c) => c,
+        Key::Char(c) =>
+        {
+            if c == '_'
+            {
+                '\n'
+            }
+            else
+            {
+                c
+            }
+        }
         Key::Enter => '\n',
         Key::Backspace => '\x08',
         _ => '\x08',
