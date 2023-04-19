@@ -1,5 +1,23 @@
+use crate::check::check;
 pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:bool, keep_flip:bool, turn:usize, moves:Option<Vec<Vec<u8>>>)
 {
+    let mut mov:Vec<Vec<u8>> = vec![];
+    if let Some(moves) = moves
+    {
+        mov = moves.clone();
+        for i in 1..moves.len()
+        {
+            let mut boa = board.clone();
+            boa[moves[i][0] as usize][moves[i][1] as usize] = boa[moves[0][0] as usize][moves[0][1] as usize];
+            boa[moves[0][0] as usize][moves[0][1] as usize] = ' ';
+            let num = check(&boa, turn, false);
+            if ((num == 1) && (turn % 2 == 1)) || ((num == 2) && (turn % 2 == 0))
+            {
+                mov[i] = vec![];
+            }
+        }
+        mov.remove(0);
+    }
     //clear line and move cursor to top left
     print!("\n{esc}[2J{esc}[1;1H", esc = 27 as char);
     for x in 0..board.len()
@@ -65,10 +83,14 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             {
                 fg_color = "\x1b[38;2;0;0;0m";
             }
-            if let Some(ref moves) = moves
+            if !mov.is_empty()
             {
-                for mov in moves
+                for mo in &mov
                 {
+                    if mo.is_empty()
+                    {
+                        continue;
+                    }
                     let mut x2 = x;
                     if keep_flip
                     {
@@ -82,7 +104,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                     {
                         bg_color = "\x1b[48;2;235;230;205m";
                     }
-                    if mov[0] == y as u8 && mov[1] == x2 as u8
+                    if mo[0] == y as u8 && mo[1] == x2 as u8
                     {
                         print!("{}{} {} \x1b[0m", bg_color, fg_color, board[y][ind]);
                         continue 'inner;

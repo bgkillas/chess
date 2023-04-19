@@ -376,7 +376,7 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
         stdout().flush().unwrap();
         if input.len() == 1 && move_char != '\x08'
         {
-            let mut piece_moves:Vec<Vec<u8>>;
+            let piece_moves:Vec<Vec<u8>>;
             let x:usize = input.chars()
                                .filter_map(|c| {
                                    match c
@@ -464,7 +464,6 @@ fn get_input(flip:bool, numbers:bool, keep_flip:bool, board:&Vec<Vec<char>>, all
                     }
                 }
             }
-            piece_moves.remove(0);
             print_board(board.clone(), turns, flip, numbers, keep_flip, turn, Some(piece_moves));
             println!();
             if turn % 2 == 0
