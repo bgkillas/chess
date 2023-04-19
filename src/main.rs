@@ -27,6 +27,7 @@ use print_board::print_board;
 use bot::gen_move;
 fn main()
 {
+    stdout().write_all(b"\x1B[?25l").unwrap();
     let mut flip = false;
     let mut numbers = false;
     let mut keep_flip = false;
@@ -470,6 +471,7 @@ fn get_input(flip:bool,
         }
         if move_char == '\x08'
         {
+            print!(" \x08");
             stdout().flush().unwrap();
             input.pop();
         }
