@@ -151,31 +151,29 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                             }
                         }
                     }
-                    for color in 0..2
+                    let color = if turn % 2 == 1 { 0 } else { 1 };
+                    let mut num_of_checks:Vec<u8> = vec![0, 0];
+                    for piece in 0..6
                     {
-                        let mut num_of_checks:Vec<u8> = vec![0, 0];
-                        for piece in 0..6
+                        for piece_moves in 0..moves[color][piece].len()
                         {
-                            for piece_moves in 0..moves[color][piece].len()
+                            for i in 1..moves[color][piece][piece_moves].len()
                             {
-                                for i in 1..moves[color][piece][piece_moves].len()
+                                let mut copy = board.clone();
+                                copy[moves[color][piece][piece_moves][i][0] as usize][moves[color][piece][piece_moves][i][1] as usize] =
+                                    copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize];
+                                copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize] = ' ';
+                                num_of_checks[0] += 1;
+                                if check(&copy, turn, false) == (1 + color) as u8
                                 {
-                                    let mut copy = board.clone();
-                                    copy[moves[color][piece][piece_moves][i][0] as usize][moves[color][piece][piece_moves][i][1] as usize] =
-                                        copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize];
-                                    copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize] = ' ';
-                                    num_of_checks[0] += 1;
-                                    if check(&copy, turn, false) == (1 + color) as u8
-                                    {
-                                        num_of_checks[1] += 1;
-                                    }
+                                    num_of_checks[1] += 1;
                                 }
                             }
                         }
-                        if num_of_checks[0] == num_of_checks[1]
-                        {
-                            return if !white_check && !black_check { 4 } else { 3 };
-                        }
+                    }
+                    if num_of_checks[0] == num_of_checks[1]
+                    {
+                        return if !white_check && !black_check { 4 } else { 3 };
                     }
                 }
             }

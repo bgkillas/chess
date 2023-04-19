@@ -102,7 +102,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                     }
                     else
                     {
-                        bg_color = "\x1b[48;2;235;230;205m";
+                        bg_color = "\x1b[48;2;255;250;225m";
                     }
                     if mo[0] == y as u8 && mo[1] == x2 as u8
                     {
@@ -152,12 +152,12 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             2 => output += "\nBlack is in check",
             3 =>
             {
-                output += &format!("\nCheckmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
+                println!("\nCheckmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
                 write_all_turns(all_turns);
             }
             4 =>
             {
-                output += "\nStalemate";
+                println!("\nStalemate");
                 write_all_turns(all_turns);
             }
             _ =>
