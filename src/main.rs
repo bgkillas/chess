@@ -143,19 +143,11 @@ fn main()
         let mut input = String::new();
         if are_you_moving
         {
-            get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input, None);
+            #[cfg(not(debug_assertions))]
+            let arg = None;
             #[cfg(debug_assertions)]
-            get_input(flip,
-                      numbers,
-                      keep_flip,
-                      &board,
-                      &all_turns,
-                      &turns,
-                      turn,
-                      &castle,
-                      passant,
-                      &mut input,
-                      Some(instant.elapsed().as_nanos()));
+            let arg = Some(instant.elapsed().as_nanos());
+            get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input, arg);
             #[cfg(debug_assertions)]
             {
                 instant = std::time::Instant::now()
