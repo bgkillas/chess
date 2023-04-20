@@ -1,5 +1,5 @@
 use crate::pieces::{bishop, knight, rook};
-pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
+pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool, king:char) -> u8
 {
     // if no_check
     //     return 0
@@ -13,16 +13,16 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     //     return 4
     let mut white_check = false;
     let mut black_check = false;
-    for x in 0..board.len()
+    'outer: for x in 0..board.len()
     {
         for y in 0..board.len()
         {
             let piece1 = board[x][y];
-            if piece1.eq_ignore_ascii_case(&'k')
+            if piece1 == king
             {
                 //check for check
                 let moves_from_king:Vec<Vec<Vec<u8>>> = vec![rook::rook(board.clone(), x, y), bishop::bishop(board.clone(), x, y), knight::knight(board.clone(), x, y)];
-                'outer: for piece in moves_from_king
+                for piece in moves_from_king
                 {
                     for i in &piece[1..]
                     {
@@ -51,16 +51,13 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                     {
                                         break 'outer;
                                     }
+                                    else if piece1.is_uppercase()
+                                    {
+                                        white_check = false;
+                                    }
                                     else
                                     {
-                                        if piece1.is_uppercase()
-                                        {
-                                            white_check = false;
-                                        }
-                                        else
-                                        {
-                                            black_check = false;
-                                        }
+                                        black_check = false;
                                     }
                                 }
                                 'p' =>
@@ -69,16 +66,13 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                     {
                                         break 'outer;
                                     }
+                                    else if piece1.is_uppercase()
+                                    {
+                                        white_check = false;
+                                    }
                                     else
                                     {
-                                        if piece1.is_uppercase()
-                                        {
-                                            white_check = false;
-                                        }
-                                        else
-                                        {
-                                            black_check = false;
-                                        }
+                                        black_check = false;
                                     }
                                 }
                                 _ =>
@@ -95,16 +89,13 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                     {
                                         break 'outer;
                                     }
+                                    else if piece1.is_uppercase()
+                                    {
+                                        white_check = false;
+                                    }
                                     else
                                     {
-                                        if piece1.is_uppercase()
-                                        {
-                                            white_check = false;
-                                        }
-                                        else
-                                        {
-                                            black_check = false;
-                                        }
+                                        black_check = false;
                                     }
                                 }
                                 'r' =>
@@ -113,16 +104,13 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                     {
                                         break 'outer;
                                     }
+                                    else if piece1.is_uppercase()
+                                    {
+                                        white_check = false;
+                                    }
                                     else
                                     {
-                                        if piece1.is_uppercase()
-                                        {
-                                            white_check = false;
-                                        }
-                                        else
-                                        {
-                                            black_check = false;
-                                        }
+                                        black_check = false;
                                     }
                                 }
                                 'b' =>
@@ -131,16 +119,13 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                     {
                                         break 'outer;
                                     }
+                                    else if piece1.is_uppercase()
+                                    {
+                                        white_check = false;
+                                    }
                                     else
                                     {
-                                        if piece1.is_uppercase()
-                                        {
-                                            white_check = false;
-                                        }
-                                        else
-                                        {
-                                            black_check = false;
-                                        }
+                                        black_check = false;
                                     }
                                 }
                                 'n' =>
@@ -149,16 +134,13 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                     {
                                         break 'outer;
                                     }
+                                    else if piece1.is_uppercase()
+                                    {
+                                        white_check = false;
+                                    }
                                     else
                                     {
-                                        if piece1.is_uppercase()
-                                        {
-                                            white_check = false;
-                                        }
-                                        else
-                                        {
-                                            black_check = false;
-                                        }
+                                        black_check = false;
                                     }
                                 }
                                 'k' =>
@@ -167,16 +149,13 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                                     {
                                         break 'outer;
                                     }
+                                    else if piece1.is_uppercase()
+                                    {
+                                        white_check = false;
+                                    }
                                     else
                                     {
-                                        if piece1.is_uppercase()
-                                        {
-                                            white_check = false;
-                                        }
-                                        else
-                                        {
-                                            black_check = false;
-                                        }
+                                        black_check = false;
                                     }
                                 }
                                 _ =>
@@ -216,7 +195,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                         copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize];
                     copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize] = ' ';
                     num_of_checks[0] += 1;
-                    if check(&copy, turn, false) == (1 + color) as u8
+                    if check(&copy, turn, false, king) == (1 + color) as u8
                     {
                         num_of_checks[1] += 1;
                     }

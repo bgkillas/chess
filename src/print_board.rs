@@ -11,7 +11,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             let mut boa = board.clone();
             boa[moves[i][0] as usize][moves[i][1] as usize] = boa[moves[0][0] as usize][moves[0][1] as usize];
             boa[moves[0][0] as usize][moves[0][1] as usize] = ' ';
-            let num = check(&boa, turn, false);
+            let num = check(&boa, turn, false, if turn % 2 == 1 { 'K' } else { 'k' });
             if ((num == 1) && (turn % 2 == 1)) || ((num == 2) && (turn % 2 == 0))
             {
                 mov[i] = vec![];
@@ -142,7 +142,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
     let mut is_check = 0;
     if turn > 2
     {
-        is_check = check(&board, turn, true);
+        is_check = check(&board, turn, true, if turn % 2 == 1 { 'K' } else { 'k' });
     }
     if !end
     {
@@ -154,13 +154,13 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                 2 => output += "\nBlack is in check",
                 3 =>
                 {
-                    print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None, true);
+                    print_board(board, turns, flip, numbers, keep_flip, turn, all_turns, None, true);
                     println!("Checkmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
                     write_all_turns(all_turns);
                 }
                 4 =>
                 {
-                    print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None, true);
+                    print_board(board, turns, flip, numbers, keep_flip, turn, all_turns, None, true);
                     println!("Stalemate");
                     write_all_turns(all_turns);
                 }

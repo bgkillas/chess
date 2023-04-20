@@ -61,7 +61,7 @@ pub fn king(board:Vec<Vec<char>>, x:usize, y:usize, castle:Option<Vec<bool>>) ->
             {
                 let mut copy = board.clone();
                 copy[if x2 == 2 { 3 } else { 5 }][y2] = piece;
-                if y == row && y2 == y && x == 4 && (x2 == 2 || x2 == 6) && castle[first] && castle[second] && castle[third] && piece2 == ' ' && check(&copy, 1, false) == 0
+                if y == row && y2 == y && x == 4 && (x2 == 2 || x2 == 6) && castle[first] && castle[second] && castle[third] && piece2 == ' ' && check(&copy, 1, false, board[x][y]) == 0
                 {
                     possible_moves.push(vec![x2 as u8, y2 as u8]);
                 }

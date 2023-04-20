@@ -33,52 +33,45 @@ fn main()
     let mut file = String::new();
     let mut color = 0;
     let mut ip = String::new();
-    let mut bot = false;
+    let mut bot = true;
+    let mut debug = false;
     for i in 0..args().len()
     {
-        if args().nth(i).unwrap() == "--help"
+        match args().nth(i).unwrap().as_str()
         {
-            println!("Usage: chess [OPTION]...");
-            println!("to move a piece type the coordinates of the piece you want to move and the coordinates of where you want to move it");
-            println!("for example: e2e4 or 5254");
-            println!("--flip will flip the board each move");
-            println!("--keep_flip will have black on the bottom and white on the top");
-            println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
-            println!("--file CSV will load a board from a csv file");
-            println!("--black will make you play as black");
-            println!("--ip IP will connect to a server at IP:port");
-            println!("--bot will play against a bot");
-            exit(0);
-        }
-        else if args().nth(i).unwrap() == "--flip"
-        {
-            flip = true;
-        }
-        else if args().nth(i).unwrap() == "--keep_flip"
-        {
-            keep_flip = true;
-        }
-        else if args().nth(i).unwrap() == "--numbers"
-        {
-            numbers = true;
-        }
-        else if args().nth(i).unwrap() == "--file"
-        {
-            file = args().nth(i + 1).unwrap();
-        }
-        else if args().nth(i).unwrap() == "--black"
-        {
-            color = 1;
-            keep_flip = true;
-        }
-        else if args().nth(i).unwrap() == "--ip"
-        {
-            bot = false;
-            ip = args().nth(i + 1).unwrap();
-        }
-        else if args().nth(i).unwrap() == "--bot"
-        {
-            bot = true;
+            "--help" =>
+            {
+                println!("Usage: chess [OPTION]...");
+                println!("to move a piece type the coordinates of the piece you want to move and the coordinates of where you want to move it");
+                println!("for example: e2e4 or 5254");
+                println!("--flip will flip the board each move");
+                println!("--keep_flip will have black on the bottom and white on the top");
+                println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
+                println!("--file CSV will load a board from a csv file");
+                println!("--black will make you play as black");
+                println!("--ip IP will connect to a server at IP:port");
+                println!("--no_bot will disable playing against a bot");
+                println!("--debug will show time to calculate moves");
+                exit(0);
+            }
+            "--flip" => flip = true,
+            "--keep_flip" => keep_flip = true,
+            "--numbers" => numbers = true,
+            "--file" => file = args().nth(i + 1).unwrap(),
+            "--black" =>
+            {
+                color = 1;
+                keep_flip = true;
+            }
+            "--ip" =>
+            {
+                bot = false;
+                ip = args().nth(i + 1).unwrap();
+            }
+            "--no_bot" => bot = false,
+            "--debug" => debug = true,
+            _ =>
+            {}
         }
     }
     //disable line blinking
@@ -122,7 +115,6 @@ fn main()
     let mut copy:Vec<Vec<char>>;
     //en passant stuff
     let mut passant = [0; 3];
-    #[cfg(debug_assertions)]
     let mut instant = std::time::Instant::now();
     loop
     {
@@ -146,12 +138,9 @@ fn main()
         let mut input = String::new();
         if are_you_moving
         {
-            #[cfg(not(debug_assertions))]
-            let arg = None;
-            #[cfg(debug_assertions)]
-            let arg = Some(instant.elapsed().as_nanos());
+            let arg = if debug { Some(instant.elapsed().as_nanos()) } else { None };
             input = get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, arg);
-            #[cfg(debug_assertions)]
+            if debug
             {
                 instant = std::time::Instant::now()
             }
@@ -233,7 +222,7 @@ fn main()
                 println!("Invalid move");
                 continue;
             }
-            pawn::promotion(&mut board, x2, y2, piece);
+            pawn::promotion(&mut board, x2, y2, piece, bot);
             //if pawn moved 2 spaces
             if y + 2 == y2 || (y > 1 && y - 2 == y2)
             {
@@ -320,7 +309,7 @@ fn main()
             continue;
         }
         //ensure that the player is not in check after move
-        let is_check = check(&board, turn, false);
+        let is_check = check(&board, turn, false, if turn % 2 == 1 { 'K' } else { 'k' });
         if (turn % 2 == 0 && is_check == 2) || (turn % 2 == 1 && is_check == 1)
         {
             println!("cant move in check");
@@ -352,17 +341,14 @@ fn get_input(flip:bool,
              turn:usize,
              castle:&[bool],
              passant:[usize; 3],
-             _instant:Option<u128>)
+             instant:Option<u128>)
              -> String
 {
     let mut input = String::new();
     print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, false);
-    #[cfg(debug_assertions)]
+    if let Some(instant) = instant
     {
-        if let Some(instant) = _instant
-        {
-            println!("{}", instant);
-        }
+        println!("{}", instant);
     }
     loop
     {
@@ -461,12 +447,9 @@ fn get_input(flip:bool,
                 }
             }
             print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, Some(piece_moves), false);
-            #[cfg(debug_assertions)]
+            if let Some(instant) = instant
             {
-                if let Some(instant) = _instant
-                {
-                    println!("{}", instant);
-                }
+                println!("{}", instant);
             }
             print!("{}{}", input, move_char);
             stdout().flush().unwrap();
@@ -479,12 +462,9 @@ fn get_input(flip:bool,
             if input.len() == 1
             {
                 print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, false);
-                #[cfg(debug_assertions)]
+                if let Some(instant) = instant
                 {
-                    if let Some(instant) = _instant
-                    {
-                        println!("{}", instant);
-                    }
+                    println!("{}", instant);
                 }
                 print!("{}", input);
                 stdout().flush().unwrap();
