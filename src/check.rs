@@ -17,7 +17,8 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
     {
         for y in 0..board.len()
         {
-            if board[x][y].eq_ignore_ascii_case(&'k')
+            let piece1 = board[x][y];
+            if piece1.eq_ignore_ascii_case(&'k')
             {
                 //check for check
                 let moves_from_king:Vec<Vec<Vec<u8>>> = vec![rook::rook(board.clone(), x, y), bishop::bishop(board.clone(), x, y), knight::knight(board.clone(), x, y)];
@@ -28,11 +29,11 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                         let x2 = i[0] as i8;
                         let y2 = i[1] as i8;
                         let piece2 = board[x2 as usize][y2 as usize];
-                        if piece2.is_uppercase() && board[x][y].is_lowercase()
+                        if piece2.is_uppercase() && piece1.is_lowercase()
                         {
                             black_check = true;
                         }
-                        else if piece2.is_lowercase() && board[x][y].is_uppercase()
+                        else if piece2.is_lowercase() && piece1.is_uppercase()
                         {
                             white_check = true;
                         }
@@ -40,99 +41,105 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool) -> u8
                         {
                             continue;
                         }
-                        match piece2
+                        if piece2.eq_ignore_ascii_case(&'p')
                         {
-                            'P' =>
+                            match piece2
                             {
-                                if y2 == y as i8 + 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
+                                'P' =>
                                 {
-                                    break 'outer;
+                                    if y2 == y as i8 + 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
+                                    {
+                                        break 'outer;
+                                    }
+                                    else
+                                    {
+                                        black_check = false;
+                                        white_check = false;
+                                    }
                                 }
-                                else
+                                'p' =>
                                 {
-                                    black_check = false;
-                                    white_check = false;
+                                    if y2 == y as i8 - 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
+                                    {
+                                        break 'outer;
+                                    }
+                                    else
+                                    {
+                                        black_check = false;
+                                        white_check = false;
+                                    }
                                 }
+                                _ =>
+                                {}
                             }
-                            'p' =>
-                            {
-                                if y2 == y as i8 - 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
-                                {
-                                    break 'outer;
-                                }
-                                else
-                                {
-                                    black_check = false;
-                                    white_check = false;
-                                }
-                            }
-                            _ =>
-                            {}
                         }
-                        match piece2.to_ascii_lowercase()
+                        else
                         {
-                            'q' =>
+                            match piece2.to_ascii_lowercase()
                             {
-                                if (x2 - x as i8).abs() == (y2 - y as i8).abs() || x2 == x as i8 || y2 == y as i8
+                                'q' =>
                                 {
-                                    break 'outer;
+                                    if ((x2 - x as i8).abs() == (y2 - y as i8).abs()) || (x2 == x as i8 || y2 == y as i8)
+                                    {
+                                        break 'outer;
+                                    }
+                                    else
+                                    {
+                                        black_check = false;
+                                        white_check = false;
+                                    }
                                 }
-                                else
+                                'r' =>
                                 {
-                                    black_check = false;
-                                    white_check = false;
+                                    if x2 == x as i8 || y2 == y as i8
+                                    {
+                                        break 'outer;
+                                    }
+                                    else
+                                    {
+                                        black_check = false;
+                                        white_check = false;
+                                    }
                                 }
+                                'b' =>
+                                {
+                                    if (x2 - x as i8).abs() == (y2 - y as i8).abs()
+                                    {
+                                        break 'outer;
+                                    }
+                                    else
+                                    {
+                                        black_check = false;
+                                        white_check = false;
+                                    }
+                                }
+                                'n' =>
+                                {
+                                    if ((x2 - x as i8).abs() == 2 && (y2 - y as i8).abs() == 1) || ((x2 - x as i8).abs() == 1 && (y2 - y as i8).abs() == 2)
+                                    {
+                                        break 'outer;
+                                    }
+                                    else
+                                    {
+                                        black_check = false;
+                                        white_check = false;
+                                    }
+                                }
+                                'k' =>
+                                {
+                                    if (x2 - x as i8).abs() == 1 && (y2 - y as i8).abs() == 1
+                                    {
+                                        break 'outer;
+                                    }
+                                    else
+                                    {
+                                        black_check = false;
+                                        white_check = false;
+                                    }
+                                }
+                                _ =>
+                                {}
                             }
-                            'r' =>
-                            {
-                                if x2 == x as i8 || y2 == y as i8
-                                {
-                                    break 'outer;
-                                }
-                                else
-                                {
-                                    black_check = false;
-                                    white_check = false;
-                                }
-                            }
-                            'b' =>
-                            {
-                                if (x2 - x as i8).abs() == (y2 - y as i8).abs()
-                                {
-                                    break 'outer;
-                                }
-                                else
-                                {
-                                    black_check = false;
-                                    white_check = false;
-                                }
-                            }
-                            'n' =>
-                            {
-                                if ((x2 - x as i8).abs() == 2 && (y2 - y as i8).abs() == 1) || ((x2 - x as i8).abs() == 1 && (y2 - y as i8).abs() == 2)
-                                {
-                                    break 'outer;
-                                }
-                                else
-                                {
-                                    black_check = false;
-                                    white_check = false;
-                                }
-                            }
-                            'k' =>
-                            {
-                                if (x2 - x as i8).abs() == 1 && (y2 - y as i8).abs() == 1
-                                {
-                                    break 'outer;
-                                }
-                                else
-                                {
-                                    black_check = false;
-                                    white_check = false;
-                                }
-                            }
-                            _ =>
-                            {}
                         }
                     }
                 }

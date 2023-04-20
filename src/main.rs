@@ -27,7 +27,6 @@ use print_board::print_board;
 use bot::gen_move;
 fn main()
 {
-    stdout().write_all(b"\x1B[?25l").unwrap();
     let mut flip = false;
     let mut numbers = false;
     let mut keep_flip = false;
@@ -82,6 +81,9 @@ fn main()
             bot = true;
         }
     }
+    //disable line blinking
+    stdout().write_all(b"\x1B[?25l").unwrap();
+    stdout().flush().unwrap();
     let mut board:Vec<Vec<char>>;
     if !file.is_empty() && File::open(&file).is_ok()
     {
@@ -148,7 +150,7 @@ fn main()
             let arg = None;
             #[cfg(debug_assertions)]
             let arg = Some(instant.elapsed().as_nanos());
-            get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, &mut input, arg);
+            input = get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, arg);
             #[cfg(debug_assertions)]
             {
                 instant = std::time::Instant::now()
@@ -350,9 +352,10 @@ fn get_input(flip:bool,
              turn:usize,
              castle:&[bool],
              passant:[usize; 3],
-             input:&mut String,
              _instant:Option<u128>)
+             -> String
 {
+    let mut input = String::new();
     print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None);
     #[cfg(debug_assertions)]
     {
@@ -400,12 +403,11 @@ fn get_input(flip:bool,
             {
                 println!();
                 write_all_turns(all_turns);
-                exit(0);
             }
             if x >= board.len() || y >= board.len()
             {
                 println!("\nInvalid move");
-                *input = String::new();
+                input = String::new();
                 continue;
             }
             if turn % 2 == 1
@@ -427,7 +429,7 @@ fn get_input(flip:bool,
                     'K' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
                     _ =>
                     {
-                        *input = String::new();
+                        input = String::new();
                         println!("\nNot a valid piece");
                         continue;
                     }
@@ -452,7 +454,7 @@ fn get_input(flip:bool,
                     'k' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
                     _ =>
                     {
-                        *input = String::new();
+                        input = String::new();
                         println!("\nNot a valid piece");
                         continue;
                     }
@@ -474,16 +476,30 @@ fn get_input(flip:bool,
             print!(" \x08");
             stdout().flush().unwrap();
             input.pop();
+            if input.len() == 1
+            {
+                print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None);
+                #[cfg(debug_assertions)]
+                {
+                    if let Some(instant) = _instant
+                    {
+                        println!("{}", instant);
+                    }
+                }
+                print!("{}", input);
+                stdout().flush().unwrap();
+            }
         }
         else
         {
-            *input += &move_char.to_string();
+            input += &move_char.to_string();
         }
         if move_char == '\n'
         {
             break;
         }
     }
+    input
 }
 fn can_move(board:&mut [Vec<char>], x:usize, y:usize, x2:usize, y2:usize, piece:char, possible_moves:Vec<Vec<u8>>) -> bool
 {
@@ -518,6 +534,8 @@ fn write_all_turns(all_turns:&Vec<Vec<char>>)
         }
     }
     println!();
+    stdout().write_all(b"\x1B[?25h").unwrap();
+    stdout().flush().unwrap();
     exit(0);
 }
 fn read_single_char() -> char
@@ -532,6 +550,10 @@ fn read_single_char() -> char
             {
                 '\n'
             }
+            else if !c.is_alphanumeric()
+            {
+                read_single_char()
+            }
             else
             {
                 c
@@ -539,7 +561,7 @@ fn read_single_char() -> char
         }
         Key::Enter => '\n',
         Key::Backspace => '\x08',
-        _ => '\x08',
+        _ => read_single_char(),
     }
 }
 fn send_data(moves:String, addr:&str) -> Result<String>
