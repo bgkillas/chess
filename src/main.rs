@@ -340,7 +340,7 @@ fn main()
         }
         all_turns.push(turn_str);
         turn += 1;
-        print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None);
+        print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None, false);
     }
 }
 fn get_input(flip:bool,
@@ -356,7 +356,7 @@ fn get_input(flip:bool,
              -> String
 {
     let mut input = String::new();
-    print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None);
+    print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, false);
     #[cfg(debug_assertions)]
     {
         if let Some(instant) = _instant
@@ -460,7 +460,7 @@ fn get_input(flip:bool,
                     }
                 }
             }
-            print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, Some(piece_moves));
+            print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, Some(piece_moves), false);
             #[cfg(debug_assertions)]
             {
                 if let Some(instant) = _instant
@@ -478,7 +478,7 @@ fn get_input(flip:bool,
             input.pop();
             if input.len() == 1
             {
-                print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None);
+                print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, false);
                 #[cfg(debug_assertions)]
                 {
                     if let Some(instant) = _instant

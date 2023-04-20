@@ -1,6 +1,6 @@
 use crate::check::check;
 use crate::write_all_turns;
-pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:bool, keep_flip:bool, turn:usize, all_turns:&Vec<Vec<char>>, moves:Option<Vec<Vec<u8>>>)
+pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:bool, keep_flip:bool, turn:usize, all_turns:&Vec<Vec<char>>, moves:Option<Vec<Vec<u8>>>, end:bool)
 {
     let mut mov:Vec<Vec<u8>> = vec![];
     if let Some(moves) = moves
@@ -144,42 +144,47 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
     {
         is_check = check(&board, turn, true);
     }
-    if turn > 2
+    if !end
     {
-        match is_check
+        if turn > 2
         {
-            1 => output += "\nWhite is in check",
-            2 => output += "\nBlack is in check",
-            3 =>
+            match is_check
             {
-                println!("\nCheckmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
-                write_all_turns(all_turns);
-            }
-            4 =>
-            {
-                println!("\nStalemate");
-                write_all_turns(all_turns);
-            }
-            _ =>
-            {
-                if turn % 2 == 0
+                1 => output += "\nWhite is in check",
+                2 => output += "\nBlack is in check",
+                3 =>
                 {
-                    output += "\nBlack's turn";
+                    print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None, true);
+                    println!("Checkmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
+                    write_all_turns(all_turns);
                 }
-                else
+                4 =>
                 {
-                    output += "\nWhite's turn";
+                    print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None, true);
+                    println!("Stalemate");
+                    write_all_turns(all_turns);
+                }
+                _ =>
+                {
+                    if turn % 2 == 0
+                    {
+                        output += "\nBlack's turn";
+                    }
+                    else
+                    {
+                        output += "\nWhite's turn";
+                    }
                 }
             }
         }
-    }
-    else if turn % 2 == 0
-    {
-        output += "\nBlack's turn";
-    }
-    else
-    {
-        output += "\nWhite's turn";
+        else if turn % 2 == 0
+        {
+            output += "\nBlack's turn";
+        }
+        else
+        {
+            output += "\nWhite's turn";
+        }
     }
     //clear line and move cursor to top left
     print!("\n{esc}[2J{esc}[1;1H", esc = 27 as char);
