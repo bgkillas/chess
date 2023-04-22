@@ -13,7 +13,7 @@ pub fn gen_move(board:Vec<Vec<char>>) -> String
 }
 fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
 {
-    // from https://www.chessprogramming.org/Simplified_Evaluation_Function might be used wrong
+    // from https://www.chessprogramming.org/Simplified_Evaluation_Function ,might be used wrong
     const TABLE:[[i16; 64]; 6] = [// pawn
                                   [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 70, 70, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0,
                                    -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],
