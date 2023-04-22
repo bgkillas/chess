@@ -86,8 +86,12 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
             {
                 let mut board2 = board.clone();
                 let piece = board2[possible_move[i][j][k][0][0] as usize][possible_move[i][j][k][0][1] as usize];
-                board2[possible_move[i][j][k][m][0] as usize][possible_move[i][j][k][m][1] as usize] = piece;
-                board2[possible_move[i][j][k][0][0] as usize][possible_move[i][j][k][0][1] as usize] = ' ';
+                let x = possible_move[i][j][k][0][0] as f64;
+                let y = possible_move[i][j][k][0][1] as f64;
+                let x2 = possible_move[i][j][k][m][0] as f64;
+                let y2 = possible_move[i][j][k][m][1] as f64;
+                board2[x2 as usize][y2 as usize] = piece;
+                board2[x as usize][y as usize] = ' ';
                 if check(&board2, 0, false, 'k') != 0
                 {
                     continue;
@@ -99,39 +103,35 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                             + possible_move2[n][2].len() as f64 * 3.2
                             + possible_move2[n][3].len() as f64 * 3.33
                             + possible_move2[n][4].len() as f64 * 8.8;
-                let x = possible_move[i][j][k][0][0] as f64;
-                let y = possible_move[i][j][k][0][1] as f64;
-                let x2 = possible_move[i][j][k][m][0] as f64;
-                let y2 = possible_move[i][j][k][m][1] as f64;
-                let piece_score:f64 = match piece
-                {
-                    'p' => 1.0,
-                    'r' => 5.1,
-                    'n' => 3.2,
-                    'b' => 3.33,
-                    'q' => 8.8,
-                    'k' => 10.0,
-                    _ => 0.0,
-                };
-                if attackable(&board2, x2, y2)
-                {
-                    let piece2_score:f64 = match board[x2 as usize][y2 as usize]
-                    {
-                        'P' => 1.0,
-                        'R' => 5.1,
-                        'N' => 3.2,
-                        'B' => 3.33,
-                        'Q' => 8.8,
-                        'K' => 10.0,
-                        _ => 0.0,
-                    };
-                    if piece_score > piece2_score
-                    {
-                        continue 'outer;
-                    }
-                }
                 if score < max[i][0]
                 {
+                    let piece_score:f64 = match piece
+                    {
+                        'p' => 1.0,
+                        'r' => 5.1,
+                        'n' => 3.2,
+                        'b' => 3.33,
+                        'q' => 8.8,
+                        'k' => 10.0,
+                        _ => 0.0,
+                    };
+                    if attackable(&board2, x2, y2)
+                    {
+                        let piece2_score:f64 = match board[x2 as usize][y2 as usize]
+                        {
+                            'P' => 1.0,
+                            'R' => 5.1,
+                            'N' => 3.2,
+                            'B' => 3.33,
+                            'Q' => 8.8,
+                            'K' => 10.0,
+                            _ => 0.0,
+                        };
+                        if piece_score > piece2_score
+                        {
+                            continue 'outer;
+                        }
+                    }
                     max[i][0] = score;
                     max[i][2] = x;
                     max[i][3] = y;
@@ -140,6 +140,33 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                 }
                 if start_score == max[0][0] && board[x2 as usize][y2 as usize].is_uppercase() || board[x2 as usize][y2 as usize] == ' '
                 {
+                    let piece_score:f64 = match piece
+                    {
+                        'p' => 1.0,
+                        'r' => 5.1,
+                        'n' => 3.2,
+                        'b' => 3.33,
+                        'q' => 8.8,
+                        'k' => 10.0,
+                        _ => 0.0,
+                    };
+                    if attackable(&board2, x2, y2)
+                    {
+                        let piece2_score:f64 = match board[x2 as usize][y2 as usize]
+                        {
+                            'P' => 1.0,
+                            'R' => 5.1,
+                            'N' => 3.2,
+                            'B' => 3.33,
+                            'Q' => 8.8,
+                            'K' => 10.0,
+                            _ => 0.0,
+                        };
+                        if piece_score > piece2_score
+                        {
+                            continue 'outer;
+                        }
+                    }
                     let mut n = 0;
                     match board[x as usize][y as usize]
                     {
