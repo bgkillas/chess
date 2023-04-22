@@ -155,7 +155,7 @@ fn main()
         }
         else if bot
         {
-            input = gen_move(board.clone());
+            input = gen_move(&board, &castle, passant, &all_turns);
         }
         if !ip.is_empty()
         {

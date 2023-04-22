@@ -145,7 +145,7 @@ pub fn check(board:&[Vec<char>], turn:usize, checkmate:bool, king:char) -> u8
                                 }
                                 'k' =>
                                 {
-                                    if (x2 - x as i8).abs() == 1 && (y2 - y as i8).abs() == 1
+                                    if (x2 - x as i8).abs() <= 1 && (y2 - y as i8).abs() <= 1
                                     {
                                         break 'outer;
                                     }
@@ -171,7 +171,7 @@ pub fn check(board:&[Vec<char>], turn:usize, checkmate:bool, king:char) -> u8
     {
         use crate::possible_moves::possible_moves;
         let mut all_possible_moves:Vec<Vec<u8>> = vec![];
-        let moves = possible_moves(board);
+        let moves = possible_moves(board, None, None);
         for mov in &moves
         {
             for mo in mov
