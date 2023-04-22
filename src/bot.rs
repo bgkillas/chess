@@ -83,9 +83,6 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                                   20, 30, 10,  0,  0, 10, 30, 20
                                   ]
                                  ];
-    // white max, black max,white x1,black x1,white y1,black y1,white x2,black x2,white y2,black y2
-    // let mut min = vec![40, 40, 0, 0, 0, 0, 0, 0, 0, 0];
-    // white min, black min,white x1,black x1,white y1,black y1,white x2,black x2,white y2,black y2
     let mut max = vec![[500f64, -1000f64, 0f64, 0f64, 0f64, 0f64]; 2];
     let mut is_check = false;
     let possible_move = possible_moves(&board);
@@ -115,7 +112,7 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                     continue;
                 }
                 let possible_move2 = possible_moves(&board2);
-                let n = if i == 0 { 1 } else { 0 };
+                let n = 0;
                 let score = possible_move2[n][0].len() as f64
                             + possible_move2[n][1].len() as f64 * 5.1
                             + possible_move2[n][2].len() as f64 * 3.2
@@ -159,7 +156,7 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                     max[i][4] = x2;
                     max[i][5] = y2;
                 }
-                if start_score == max[0][0] && board[x2 as usize][y2 as usize].is_uppercase() || board[x2 as usize][y2 as usize] == ' '
+                if start_score == max[i][0] && (board[x2 as usize][y2 as usize].is_uppercase() || board[x2 as usize][y2 as usize] == ' ')
                 {
                     if !is_check
                     {
