@@ -103,35 +103,35 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                 let y = possible_move[i][j][k][0][1] as f64;
                 let x2 = possible_move[i][j][k][m][0] as f64;
                 let y2 = possible_move[i][j][k][m][1] as f64;
-                if score < max[i][0]
+                let piece_score:f64 = match piece
                 {
-                    let piece_score:f64 = match piece
+                    'p' => 1.0,
+                    'r' => 5.1,
+                    'n' => 3.2,
+                    'b' => 3.33,
+                    'q' => 8.8,
+                    'k' => 10.0,
+                    _ => 0.0,
+                };
+                if attackable(&board2, x2, y2)
+                {
+                    let piece2_score:f64 = match board[x2 as usize][y2 as usize]
                     {
-                        'p' => 1.0,
-                        'r' => 5.1,
-                        'n' => 3.2,
-                        'b' => 3.33,
-                        'q' => 8.8,
-                        'k' => 10.0,
+                        'P' => 1.0,
+                        'R' => 5.1,
+                        'N' => 3.2,
+                        'B' => 3.33,
+                        'Q' => 8.8,
+                        'K' => 10.0,
                         _ => 0.0,
                     };
-                    if attackable(&board2, x2, y2)
+                    if piece_score > piece2_score
                     {
-                        let piece2_score:f64 = match board[x2 as usize][y2 as usize]
-                        {
-                            'P' => 1.0,
-                            'R' => 5.1,
-                            'N' => 3.2,
-                            'B' => 3.33,
-                            'Q' => 8.8,
-                            'K' => 10.0,
-                            _ => 0.0,
-                        };
-                        if piece_score > piece2_score
-                        {
-                            continue 'outer;
-                        }
+                        continue 'outer;
                     }
+                }
+                if score < max[i][0]
+                {
                     max[i][0] = score;
                     max[i][2] = x;
                     max[i][3] = y;
