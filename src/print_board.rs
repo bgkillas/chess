@@ -156,13 +156,13 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                 {
                     print_board(board, turns, flip, numbers, keep_flip, turn, all_turns, None, true);
                     println!("Checkmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
-                    write_all_turns(all_turns);
+                    write_all_turns(all_turns, false);
                 }
                 4 =>
                 {
                     print_board(board, turns, flip, numbers, keep_flip, turn, all_turns, None, true);
                     println!("Stalemate");
-                    write_all_turns(all_turns);
+                    write_all_turns(all_turns, false);
                 }
                 _ =>
                 {

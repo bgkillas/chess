@@ -183,7 +183,7 @@ fn main()
         }
         if moves[0] == 31 && moves[1] == 50 && moves[2] == 35 && moves[3] == 46
         {
-            write_all_turns(&all_turns);
+            write_all_turns(&all_turns, bot);
         }
         // ensure the input is in range
         if moves.len() != 4
@@ -415,7 +415,7 @@ fn get_input(flip:bool,
             if input == "E" && move_char == 'X'
             {
                 println!();
-                write_all_turns(all_turns);
+                write_all_turns(all_turns, bot);
             }
             if x >= board.len() || y >= board.len()
             {
@@ -527,10 +527,14 @@ fn can_move(board:&mut [Vec<char>], x:usize, y:usize, x2:usize, y2:usize, piece:
     }
     success
 }
-fn write_all_turns(all_turns:&Vec<Vec<char>>)
+fn write_all_turns(all_turns:&Vec<Vec<char>>, bot:bool)
 {
     for row in 0..all_turns.len()
     {
+        if bot && row % 2 == 0
+        {
+            continue;
+        }
         if row > 1
         {
             print!("_");
