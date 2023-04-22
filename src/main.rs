@@ -78,7 +78,7 @@ fn main()
             {}
         }
     }
-    //disable line blinking
+    // disable line blinking
     stdout().write_all(b"\x1B[?25l").unwrap();
     stdout().flush().unwrap();
     let mut board:Vec<Vec<char>>;
@@ -97,15 +97,15 @@ fn main()
                      vec!['k', 'p', ' ', ' ', ' ', ' ', 'P', 'K'],
                      vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
                      vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
-                     vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R']];
+                     vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],];
     }
-    //ensure the board is a square
+    // ensure the board is a square
     if board[0].len() != board.len()
     {
         println!("Board must be a square");
         exit(1);
     }
-    //turn tracker
+    // turn tracker
     let mut all_turns:Vec<Vec<char>> = vec![vec![]];
     let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
@@ -113,16 +113,16 @@ fn main()
     {
         turn = 2;
     }
-    //print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
-    //castling stuff castle[0]= white left castle, castle[1] = white right castle, castle[2] = black left castle, castle[3] = black right castle, castle[4] = white castle, castle[5] = black castle
+    // print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
+    // castling stuff castle[0]= white left castle, castle[1] = white right castle, castle[2] = black left castle, castle[3] = black right castle, castle[4] = white castle, castle[5] = black castle
     let mut castle:Vec<bool> = vec![true; 6];
     let mut copy:Vec<Vec<char>>;
-    //en passant stuff
+    // en passant stuff
     let mut passant = [0; 3];
     let mut instant = std::time::Instant::now();
     loop
     {
-        //dont allow en passant on a piece after a turn
+        // dont allow en passant on a piece after a turn
         if turn != passant[2] + 1
         {
             passant[0] = 0;
@@ -185,7 +185,7 @@ fn main()
         {
             write_all_turns(&all_turns);
         }
-        //ensure the input is in range
+        // ensure the input is in range
         if moves.len() != 4
            || moves[0] < 1
            || moves[0] > (board.len() + 2) as u8
@@ -205,19 +205,19 @@ fn main()
         let y2 = (moves[3] as i8 - board.len() as i8).unsigned_abs() as usize;
         let piece = board[x][y];
         let piece2 = board[x2][y2];
-        //dont move if the piece is the same color as the piece you are moving to
+        // dont move if the piece is the same color as the piece you are moving to
         if piece.is_uppercase() && piece2.is_uppercase() || piece.is_lowercase() && piece2.is_lowercase()
         {
             println!("Invalid move");
             continue;
         }
-        //allow only white/black piece to move if its white's/black's turn
+        // allow only white/black piece to move if its white's/black's turn
         if (turn % 2 == 0 && piece.is_uppercase()) || (turn % 2 == 1 && piece.is_lowercase())
         {
             println!("Invalid move");
             continue;
         }
-        //pawn movement
+        // pawn movement
         if piece.eq_ignore_ascii_case(&'p')
         {
             let possible_moves = pawn::pawn(board.clone(), x, y, Some(passant));
@@ -227,7 +227,7 @@ fn main()
                 continue;
             }
             pawn::promotion(&mut board, x2, y2, piece, bot);
-            //if pawn moved 2 spaces
+            // if pawn moved 2 spaces
             if y + 2 == y2 || (y > 1 && y - 2 == y2)
             {
                 passant[0] = x2;
@@ -239,7 +239,7 @@ fn main()
                 board[passant[0]][passant[1]] = ' ';
             }
         }
-        //if rook
+        // if rook
         else if piece.eq_ignore_ascii_case(&'r')
         {
             let possible_moves = rook::rook(board.clone(), x, y);
@@ -250,22 +250,22 @@ fn main()
             }
             if x == 0 && piece == 'R'
             {
-                castle[0] = false; //disable white left castle
+                castle[0] = false; // disable white left castle
             }
             else if x == 7 && piece == 'R'
             {
-                castle[1] = false; //disable white right castle
+                castle[1] = false; // disable white right castle
             }
             else if x == 0 && piece == 'r'
             {
-                castle[2] = false; //disable black left castle
+                castle[2] = false; // disable black left castle
             }
             else if x == 7 && piece == 'r'
             {
-                castle[3] = false; //disable black right castle
+                castle[3] = false; // disable black right castle
             }
         }
-        //if bishop
+        // if bishop
         else if piece.eq_ignore_ascii_case(&'b')
         {
             let possible_moves = bishop::bishop(board.clone(), x, y);
@@ -275,7 +275,7 @@ fn main()
                 continue;
             }
         }
-        //if knight
+        // if knight
         else if piece.eq_ignore_ascii_case(&'n')
         {
             let possible_moves = knight::knight(board.clone(), x, y);
@@ -285,10 +285,10 @@ fn main()
                 continue;
             }
         }
-        //if queen
+        // if queen
         else if piece.eq_ignore_ascii_case(&'q')
         {
-            //just use rook and bishop logic together
+            // just use rook and bishop logic together
             let mut possible_moves = bishop::bishop(board.clone(), x, y);
             possible_moves.extend(rook::rook(board.clone(), x, y));
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
@@ -297,7 +297,7 @@ fn main()
                 continue;
             }
         }
-        //if king
+        // if king
         else if piece.eq_ignore_ascii_case(&'k')
         {
             let possible_moves = king::king(board.clone(), x, y, Some(castle.clone()));
@@ -312,7 +312,7 @@ fn main()
             println!("Invalid move");
             continue;
         }
-        //ensure that the player is not in check after move
+        // ensure that the player is not in check after move
         let is_check = check(&board, turn, false, if turn % 2 == 1 { 'K' } else { 'k' });
         if (turn % 2 == 0 && is_check == 2) || (turn % 2 == 1 && is_check == 1)
         {
@@ -321,7 +321,7 @@ fn main()
             continue;
         }
         let turn_str:Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
-        //delete the first turn of the turn tracker if there are too many to display
+        // delete the first turn of the turn tracker if there are too many to display
         if turn > board.len()
         {
             turns.remove(0);

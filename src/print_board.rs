@@ -186,7 +186,6 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             output += "\nWhite's turn";
         }
     }
-    //clear line and move cursor to top left
-    print!("\n{esc}[2J{esc}[1;1H", esc = 27 as char);
-    println!("{}", output);
+    // clear line and move cursor to top left and print board
+    println!("{esc}[2J{esc}[1H{output}", esc = 27 as char);
 }
