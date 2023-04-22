@@ -1,4 +1,4 @@
-pub fn knight(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
+pub fn knight(board:&[Vec<char>], x:usize, y:usize) -> Vec<Vec<u8>>
 {
     let piece = board[x][y];
     let mut possible_moves:Vec<Vec<u8>> = vec![vec![x as u8, y as u8]];
@@ -15,7 +15,7 @@ pub fn knight(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
             {
                 continue;
             }
-            //only allow moving in an L shape
+            // only allow moving in an L shape
             if ((x2 as i8 - x as i8).abs() == 2 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 2)
             {
                 possible_moves.push(vec![x2 as u8, y2 as u8]);

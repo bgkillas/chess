@@ -1,6 +1,6 @@
-pub fn bishop(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
+pub fn bishop(board:&[Vec<char>], x:usize, y:usize) -> Vec<Vec<u8>>
 {
-    fn is_path_blocked(board:Vec<Vec<char>>, start:(usize, usize), end:(usize, usize)) -> bool
+    fn is_path_blocked(board:&[Vec<char>], start:(usize, usize), end:(usize, usize)) -> bool
     {
         let (x1, y1) = start;
         let (x2, y2) = end;
@@ -30,7 +30,7 @@ pub fn bishop(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
             {
                 continue;
             }
-            if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs() && !is_path_blocked(board.clone(), (x, y), (x2, y2))
+            if (x2 as i8 - x as i8).abs() == (y2 as i8 - y as i8).abs() && !is_path_blocked(board, (x, y), (x2, y2))
             {
                 possible_moves.push(vec![x2 as u8, y2 as u8]);
             }

@@ -1,4 +1,4 @@
-pub fn rook(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
+pub fn rook(board:&[Vec<char>], x:usize, y:usize) -> Vec<Vec<u8>>
 {
     let piece = board[x][y];
     let mut possible_moves:Vec<Vec<u8>> = vec![vec![x as u8, y as u8]];
@@ -11,7 +11,7 @@ pub fn rook(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
             {
                 continue;
             }
-            //dont allow moving horizontally if piece is in the path
+            // dont allow moving horizontally if piece is in the path
             for i in 1..(x2 as i8 - x as i8).abs()
             {
                 match x2 > x
@@ -32,7 +32,7 @@ pub fn rook(board:Vec<Vec<char>>, x:usize, y:usize) -> Vec<Vec<u8>>
                     }
                 }
             }
-            //dont allow moving vertically if piece is in the path
+            // dont allow moving vertically if piece is in the path
             for i in 1..(y2 as i8 - y as i8).abs()
             {
                 match y2 > y

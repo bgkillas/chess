@@ -1,5 +1,5 @@
 use crate::pieces::{bishop, knight, rook};
-pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool, king:char) -> u8
+pub fn check(board:&[Vec<char>], turn:usize, checkmate:bool, king:char) -> u8
 {
     // if no_check
     //     return 0
@@ -20,8 +20,8 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool, king:char) -> u8
             let piece1 = board[x][y];
             if piece1 == king
             {
-                //check for check
-                let moves_from_king:Vec<Vec<Vec<u8>>> = vec![rook::rook(board.clone(), x, y), bishop::bishop(board.clone(), x, y), knight::knight(board.clone(), x, y)];
+                // check for check
+                let moves_from_king:Vec<Vec<Vec<u8>>> = vec![rook::rook(board, x, y), bishop::bishop(board, x, y), knight::knight(board, x, y)];
                 for piece in moves_from_king
                 {
                     for i in &piece[1..]
@@ -190,7 +190,7 @@ pub fn check(board:&Vec<Vec<char>>, turn:usize, checkmate:bool, king:char) -> u8
             {
                 for i in 1..moves[color][piece][piece_moves].len()
                 {
-                    let mut copy = board.clone();
+                    let mut copy = board.to_vec();
                     copy[moves[color][piece][piece_moves][i][0] as usize][moves[color][piece][piece_moves][i][1] as usize] =
                         copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize];
                     copy[moves[color][piece][piece_moves][0][0] as usize][moves[color][piece][piece_moves][0][1] as usize] = ' ';

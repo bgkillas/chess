@@ -97,7 +97,7 @@ fn main()
                      vec!['k', 'p', ' ', ' ', ' ', ' ', 'P', 'K'],
                      vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
                      vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
-                     vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],];
+                     vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R']];
     }
     // ensure the board is a square
     if board[0].len() != board.len()
@@ -220,7 +220,7 @@ fn main()
         // pawn movement
         if piece.eq_ignore_ascii_case(&'p')
         {
-            let possible_moves = pawn::pawn(board.clone(), x, y, Some(passant));
+            let possible_moves = pawn::pawn(&*board, x, y, Some(passant));
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
                 println!("Invalid move");
@@ -242,7 +242,7 @@ fn main()
         // if rook
         else if piece.eq_ignore_ascii_case(&'r')
         {
-            let possible_moves = rook::rook(board.clone(), x, y);
+            let possible_moves = rook::rook(&*board, x, y);
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
                 println!("Invalid move");
@@ -268,7 +268,7 @@ fn main()
         // if bishop
         else if piece.eq_ignore_ascii_case(&'b')
         {
-            let possible_moves = bishop::bishop(board.clone(), x, y);
+            let possible_moves = bishop::bishop(&*board, x, y);
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
                 println!("Invalid move");
@@ -278,7 +278,7 @@ fn main()
         // if knight
         else if piece.eq_ignore_ascii_case(&'n')
         {
-            let possible_moves = knight::knight(board.clone(), x, y);
+            let possible_moves = knight::knight(&*board, x, y);
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
                 println!("Invalid move");
@@ -289,8 +289,8 @@ fn main()
         else if piece.eq_ignore_ascii_case(&'q')
         {
             // just use rook and bishop logic together
-            let mut possible_moves = bishop::bishop(board.clone(), x, y);
-            possible_moves.extend(rook::rook(board.clone(), x, y));
+            let mut possible_moves = bishop::bishop(&*board, x, y);
+            possible_moves.extend(rook::rook(&*board, x, y));
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
                 println!("Invalid move");
@@ -300,7 +300,7 @@ fn main()
         // if king
         else if piece.eq_ignore_ascii_case(&'k')
         {
-            let possible_moves = king::king(board.clone(), x, y, Some(castle.clone()));
+            let possible_moves = king::king(&*board, x, y, Some(castle.clone()));
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
                 println!("Invalid move");
@@ -335,7 +335,7 @@ fn main()
         turn += 1;
         if !(bot && turn % 2 == 1)
         {
-            print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None, if bot { true } else { false });
+            print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None, bot);
         }
     }
 }
@@ -353,7 +353,7 @@ fn get_input(flip:bool,
              -> String
 {
     let mut input = String::new();
-    print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, if bot { true } else { false });
+    print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, bot);
     if let Some(instant) = instant
     {
         println!("{}", instant);
@@ -408,19 +408,19 @@ fn get_input(flip:bool,
             {
                 match board[x][y]
                 {
-                    'P' => piece_moves = pawn::pawn(board.clone(), x, y, Some(passant)),
-                    'R' => piece_moves = rook::rook(board.clone(), x, y),
-                    'N' => piece_moves = knight::knight(board.clone(), x, y),
-                    'B' => piece_moves = bishop::bishop(board.clone(), x, y),
+                    'P' => piece_moves = pawn::pawn(&*board, x, y, Some(passant)),
+                    'R' => piece_moves = rook::rook(&*board, x, y),
+                    'N' => piece_moves = knight::knight(&*board, x, y),
+                    'B' => piece_moves = bishop::bishop(&*board, x, y),
                     'Q' =>
                     {
-                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board.clone(), x, y);
-                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(board.clone(), x, y);
+                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(&*board, x, y);
+                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(&*board, x, y);
                         rook_moves.remove(0);
                         bishop_moves.extend(rook_moves);
                         piece_moves = bishop_moves;
                     }
-                    'K' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
+                    'K' => piece_moves = king::king(&*board, x, y, Some(castle.to_owned())),
                     _ =>
                     {
                         input = String::new();
@@ -433,19 +433,19 @@ fn get_input(flip:bool,
             {
                 match board[x][y]
                 {
-                    'p' => piece_moves = pawn::pawn(board.clone(), x, y, Some(passant)),
-                    'r' => piece_moves = rook::rook(board.clone(), x, y),
-                    'n' => piece_moves = knight::knight(board.clone(), x, y),
-                    'b' => piece_moves = bishop::bishop(board.clone(), x, y),
+                    'p' => piece_moves = pawn::pawn(&*board, x, y, Some(passant)),
+                    'r' => piece_moves = rook::rook(&*board, x, y),
+                    'n' => piece_moves = knight::knight(&*board, x, y),
+                    'b' => piece_moves = bishop::bishop(&*board, x, y),
                     'q' =>
                     {
-                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board.clone(), x, y);
-                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(board.clone(), x, y);
+                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(&*board, x, y);
+                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(&*board, x, y);
                         rook_moves.remove(0);
                         bishop_moves.extend(rook_moves);
                         piece_moves = bishop_moves;
                     }
-                    'k' => piece_moves = king::king(board.clone(), x, y, Some(castle.to_owned())),
+                    'k' => piece_moves = king::king(&*board, x, y, Some(castle.to_owned())),
                     _ =>
                     {
                         input = String::new();
@@ -454,7 +454,7 @@ fn get_input(flip:bool,
                     }
                 }
             }
-            print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, Some(piece_moves), if bot { true } else { false });
+            print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, Some(piece_moves), bot);
             if let Some(instant) = instant
             {
                 println!("{}", instant);
@@ -469,7 +469,7 @@ fn get_input(flip:bool,
             input.pop();
             if input.len() == 1
             {
-                print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, if bot { true } else { false });
+                print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, bot);
                 if let Some(instant) = instant
                 {
                     println!("{}", instant);

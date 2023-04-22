@@ -13,64 +13,30 @@ pub fn gen_move(board:Vec<Vec<char>>) -> String
 }
 fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
 {
-    const TABLE:[[i8; 64]; 6] = [// pawn
-                                 [0, 0, 0, 0, 0, 0, 0, 0, // 1st rank
-                                  5, 10, 10, -20, -20, 10, 10, 5, // 2nd rank
-                                  5, -5, -10, 0, 0, -10, -5, 5, // 3rd rank
-                                  0, 0, 0, 20, 20, 0, 0, 0, // 4th rank
-                                  5, 5, 10, 25, 25, 10, 5, 5, // 5th rank
-                                  10, 10, 20, 30, 30, 20, 10, 10, // 6th rank
-                                  50, 50, 50, 50, 50, 50, 50, 50, // 7th rank
-                                  0, 0, 0, 0, 0, 0, 0, 0 /* 8th rank */],
-                                 // rook
-                                 [0, 0, 0, 0, 0, 0, 0, 0, // 1st rank
-                                  5, 10, 10, 10, 10, 10, 10, 5, // 2nd rank
-                                  -5, 0, 0, 0, 0, 0, 0, -5, // 3rd rank
-                                  -5, 0, 0, 0, 0, 0, 0, -5, // 4th rank
-                                  -5, 0, 0, 0, 0, 0, 0, -5, // 5th rank
-                                  -5, 0, 0, 0, 0, 0, 0, -5, // 6th rank
-                                  -5, 0, 0, 0, 0, 0, 0, -5, // 7th rank
-                                  0, 0, 0, 5, 5, 0, 0, 0 /* 8th rank */],
-                                 // knight
-                                 [-50, -40, -30, -30, -30, -30, -40, -50, // 1st rank
-                                  -40, -20, 0, 0, 0, 0, -20, -40, // 2nd rank
-                                  -30, 0, 10, 15, 15, 10, 0, -30, // 3rd rank
-                                  -30, 5, 15, 20, 20, 15, 5, -30, // 4th rank
-                                  -30, 0, 15, 20, 20, 15, 0, -30, // 5th rank
-                                  -30, 5, 10, 15, 15, 10, 5, -30, // 6th rank
-                                  -40, -20, 0, 5, 5, 0, -20, -40, // 7th rank
-                                  -50, -40, -30, -30, -30, -30, -40, -50 /* 8th rank */],
-                                 // bishop
-                                 [-20, -10, -10, -10, -10, -10, -10, -20, // 1st rank
-                                  -10, 0, 0, 0, 0, 0, 5, -10, // 2nd rank
-                                  -10, 0, 5, 10, 10, 5, 0, -10, // 3rd rank
-                                  -10, 5, 5, 10, 10, 5, 5, -10, // 4th rank
-                                  -10, 0, 10, 10, 10, 10, 0, -10, // 5th rank
-                                  -10, 10, 10, 10, 10, 10, 10, -10, // 6th rank
-                                  -10, 5, 0, 0, 0, 0, 5, -10, // 7th rank
-                                  -20, -10, -10, -10, -10, -10, -10, -20 /* 8th rank */],
-                                 // queen
-                                 [-20, -10, -10, -5, -5, -10, -10, -20, // 1st rank
-                                  -10, 0, 0, 0, 0, 0, 0, -10, // 2nd rank
-                                  -10, 0, 5, 5, 5, 5, 0, -10, // 3rd rank
-                                  -5, 0, 5, 5, 5, 5, 0, -5, // 4th rank
-                                  0, 0, 5, 5, 5, 5, 0, -5, // 5th rank
-                                  -10, 5, 5, 5, 5, 5, 0, -10, // 6th rank
-                                  -10, 0, 5, 0, 0, 0, 0, -10, // 7th rank
-                                  -20, -10, -10, -5, -5, -10, -10, -20 /* 8th rank */],
-                                 // king
-                                 [-30, -40, -40, -50, -50, -40, -40, -30, // 1st rank
-                                  -30, -40, -40, -50, -50, -40, -40, -30, // 2nd rank
-                                  -30, -40, -40, -50, -50, -40, -40, -30, // 3rd rank
-                                  -30, -40, -40, -50, -50, -40, -40, -30, // 4th rank
-                                  -20, -30, -30, -40, -40, -30, -30, -20, // 5th rank
-                                  -10, -20, -20, -20, -20, -20, -20, -10, // 6th rank
-                                  20, 20, 0, 0, 0, 0, 20, 20, // 7th rank
-                                  20, 30, 10, 0, 0, 10, 30, 20 /* 8th rank */]];
+    // from https://www.chessprogramming.org/Simplified_Evaluation_Function might be used wrong
+    const TABLE:[[i16; 64]; 6] = [// pawn
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 50, 50, 50, 50, 50, 50, 50, 50, 10, 10, 20, 30, 30, 20, 10, 10, 5, 5, 10, 70, 70, 10, 5, 5, 0, 0, 0, 20, 20, 0, 0, 0, 5, -5, -10, 0, 0,
+                                   -10, -5, 5, 5, 10, 10, -20, -20, 10, 10, 5, 0, 0, 0, 0, 0, 0, 0, 0],
+                                  // rook
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5, 0, 0, 0, 0, 0, 0, -5, -5,
+                                   0, 0, 0, 0, 0, 0, -5, 0, 0, 0, 5, 5, 0, 0, 0],
+                                  // knight
+                                  [-20, -10, -10, -10, -10, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 10, 10, 5, 0, -10, -10, 5, 5, 10, 10, 5, 5, -10, -10, 0, 10, 10, 10, 10, 0, -10,
+                                   -10, 10, 10, 10, 10, 10, 10, -10, -10, 5, 0, 0, 0, 0, 5, -10, -20, -10, -10, -10, -10, -10, -10, -20],
+                                  // bishop
+                                  [-29, 4, -82, -37, -25, -42, 7, -8, -26, 16, -18, -13, 30, 59, 18, -47, -16, 37, 43, 40, 35, 50, 37, -2, -4, 5, 19, 50, 37, 37, 7, -2, -6, 13, 13, 26, 34, 12, 10,
+                                   4, 0, 15, 15, 15, 14, 27, 18, 10, 4, 15, 16, 0, 7, 21, 33, 1, -33, -3, -14, -21, -13, -12, -39, -21],
+                                  // queen
+                                  [-20, -10, -10, -5, -5, -10, -10, -20, -10, 0, 0, 0, 0, 0, 0, -10, -10, 0, 5, 5, 5, 5, 0, -10, -5, 0, 5, 5, 5, 5, 0, -5, 0, 0, 5, 5, 5, 5, 0, -5, -10, 5, 5, 5, 5,
+                                   5, 0, -10, -10, 0, 5, 0, 0, 0, 0, -10, -20, -10, -10, -5, -5, -10, -10, -20],
+                                  // king
+                                  [-30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30, -30, -40, -40, -50, -50, -40, -40, -30,
+                                   -20, -30, -30, -40, -40, -30, -30, -20, -10, -20, -20, -20, -20, -20, -20, -10, 20, 20, 0, 0, 0, 0, 20, 20, 20, 30, 10, 0, 0, 10, 30, 20]];
     // white max, black max,white x1,black x1,white y1,black y1,white x2,black x2,white y2,black y2
     // let mut min = vec![40, 40, 0, 0, 0, 0, 0, 0, 0, 0];
     // white min, black min,white x1,black x1,white y1,black y1,white x2,black x2,white y2,black y2
-    let mut max = vec![[50f64, -100f64, 0f64, 0f64, 0f64, 0f64]; 2];
+    let mut max = vec![[500f64, -1000f64, 0f64, 0f64, 0f64, 0f64]; 2];
+    let mut is_check = false;
     let possible_move = possible_moves(&board);
     let start_score = possible_move[0][0].len() as f64
                       + possible_move[0][1].len() as f64 * 5.1
@@ -94,6 +60,7 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                 board2[x as usize][y as usize] = ' ';
                 if check(&board2, 0, false, 'k') != 0
                 {
+                    is_check = true;
                     continue;
                 }
                 let possible_move2 = possible_moves(&board2);
@@ -105,31 +72,34 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                             + possible_move2[n][4].len() as f64 * 8.8;
                 if score < max[i][0]
                 {
-                    let piece_score:f64 = match piece
+                    if !is_check
                     {
-                        'p' => 1.0,
-                        'r' => 5.1,
-                        'n' => 3.2,
-                        'b' => 3.33,
-                        'q' => 8.8,
-                        'k' => 10.0,
-                        _ => 0.0,
-                    };
-                    if attackable(&board2, x2, y2)
-                    {
-                        let piece2_score:f64 = match board[x2 as usize][y2 as usize]
+                        let piece_score:f64 = match piece
                         {
-                            'P' => 1.0,
-                            'R' => 5.1,
-                            'N' => 3.2,
-                            'B' => 3.33,
-                            'Q' => 8.8,
-                            'K' => 10.0,
+                            'p' => 1.0,
+                            'r' => 5.1,
+                            'n' => 3.2,
+                            'b' => 3.33,
+                            'q' => 8.8,
+                            'k' => 10.0,
                             _ => 0.0,
                         };
-                        if piece_score > piece2_score
+                        if attackable(&board2, x2, y2)
                         {
-                            continue 'outer;
+                            let piece2_score:f64 = match board[x2 as usize][y2 as usize]
+                            {
+                                'P' => 1.0,
+                                'R' => 5.1,
+                                'N' => 3.2,
+                                'B' => 3.33,
+                                'Q' => 8.8,
+                                'K' => 10.0,
+                                _ => 0.0,
+                            };
+                            if piece_score > piece2_score
+                            {
+                                continue 'outer;
+                            }
                         }
                     }
                     max[i][0] = score;
@@ -140,31 +110,34 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                 }
                 if start_score == max[0][0] && board[x2 as usize][y2 as usize].is_uppercase() || board[x2 as usize][y2 as usize] == ' '
                 {
-                    let piece_score:f64 = match piece
+                    if !is_check
                     {
-                        'p' => 1.0,
-                        'r' => 5.1,
-                        'n' => 3.2,
-                        'b' => 3.33,
-                        'q' => 8.8,
-                        'k' => 10.0,
-                        _ => 0.0,
-                    };
-                    if attackable(&board2, x2, y2)
-                    {
-                        let piece2_score:f64 = match board[x2 as usize][y2 as usize]
+                        let piece_score:f64 = match piece
                         {
-                            'P' => 1.0,
-                            'R' => 5.1,
-                            'N' => 3.2,
-                            'B' => 3.33,
-                            'Q' => 8.8,
-                            'K' => 10.0,
+                            'p' => 1.0,
+                            'r' => 5.1,
+                            'n' => 3.2,
+                            'b' => 3.33,
+                            'q' => 8.8,
+                            'k' => 10.0,
                             _ => 0.0,
                         };
-                        if piece_score > piece2_score
+                        if attackable(&board2, x2, y2)
                         {
-                            continue 'outer;
+                            let piece2_score:f64 = match board[x2 as usize][y2 as usize]
+                            {
+                                'P' => 1.0,
+                                'R' => 5.1,
+                                'N' => 3.2,
+                                'B' => 3.33,
+                                'Q' => 8.8,
+                                'K' => 10.0,
+                                _ => 0.0,
+                            };
+                            if piece_score > piece2_score
+                            {
+                                continue 'outer;
+                            }
                         }
                     }
                     let mut n = 0;
@@ -179,7 +152,7 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
                         'k' => n = 5,
                         _ => continue,
                     }
-                    let score2 = TABLE[n][(y2 * 8.0 + x2 + 1.0) as usize] as f64 - TABLE[n][(y * 8.0 + x + 1.0) as usize] as f64;
+                    let score2 = TABLE[n][(y2 * 8.0 + x2) as usize] as f64 - TABLE[n][(y * 8.0 + x) as usize] as f64;
                     if score2 > max[i][1]
                     {
                         max[i][1] = score2;
@@ -200,10 +173,9 @@ fn best(board:Vec<Vec<char>> /* depth:u8, min:i8, max:i8 */) -> Vec<u8>
 // moves[0][3] = white bishops
 // moves[0][4] = white queens
 // moves[0][5] = white kings
-fn attackable(board:&Vec<Vec<char>>, x:f64, y:f64) -> bool
+fn attackable(board:&[Vec<char>], x:f64, y:f64) -> bool
 {
-    let moves_from_piece:Vec<Vec<Vec<u8>>> =
-        vec![rook::rook(board.clone(), x as usize, y as usize), bishop::bishop(board.clone(), x as usize, y as usize), knight::knight(board.clone(), x as usize, y as usize)];
+    let moves_from_piece:Vec<Vec<Vec<u8>>> = vec![rook::rook(board, x as usize, y as usize), bishop::bishop(board, x as usize, y as usize), knight::knight(board, x as usize, y as usize)];
     for piece in moves_from_piece
     {
         for i in &piece[1..]
