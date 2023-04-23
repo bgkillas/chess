@@ -88,9 +88,22 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         }
         let mut fg_color:&str;
         let mut bg_color:&str;
-        'inner: for y in 0..board.len()
+        let mut y:i8 = 0;
+        let mut ende:i8 = board.len() as i8;
+        let mut dir:i8 = 1;
+        if keep_flip
         {
-            if board[y][ind].is_uppercase()
+            dir = -1;
+            y = board.len() as i8 - 1;
+            ende = -1;
+        }
+        'inner: loop
+        {
+            if y == ende
+            {
+                break;
+            }
+            if board[y as usize][ind].is_uppercase()
             {
                 fg_color = "\x1b[38;2;0;0;139m";
             }
@@ -111,7 +124,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                     {
                         x2 = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
                     }
-                    if (y + ((x + 1) % 2)) % 2 == 0
+                    if (y as usize + ((x + 1) % 2)) % 2 == 0
                     {
                         bg_color = "\x1b[48;2;110;80;50m";
                     }
@@ -121,12 +134,13 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                     }
                     if mo[0] == y as u8 && mo[1] == x2 as u8
                     {
-                        output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y][ind]);
+                        output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y as usize][ind]);
+                        y += dir;
                         continue 'inner;
                     }
                 }
             }
-            if (y + ((x + 1) % 2)) % 2 == 0
+            if (y as usize + ((x + 1) % 2)) % 2 == 0
             {
                 bg_color = "\x1b[48;2;181;136;99m";
             }
@@ -134,11 +148,14 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             {
                 bg_color = "\x1b[48;2;240;217;181m";
             }
-            if !last_move.is_empty() && y == last_move[2] as usize && if keep_flip { x + 1 } else { ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize } == last_move[3] as usize
+            if !last_move.is_empty()
+               && y as usize == last_move[2] as usize
+               && if keep_flip { x + 1 } else { ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize } == last_move[3] as usize
             {
                 bg_color = "\x1b[48;2;247;247;105m";
             }
-            output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y][ind]);
+            output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y as usize][ind]);
+            y += dir;
         }
         output += &format!(" {} {}{}{}{}\n", col, turns[x][0], turns[x][1], turns[x][2], turns[x][3]);
     }
@@ -147,7 +164,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         output += " ";
         for j in 0..board.len()
         {
-            output += &format!("  {}", j + 1);
+            output += &format!("  {}", if keep_flip { (j as i8 - board.len() as i8 + 1).abs() as u8 } else { j as u8 } + 1);
         }
     }
     else
@@ -155,7 +172,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         output += " ";
         for j in 0..board.len()
         {
-            output += &format!("  {}", (j as u8 + 97) as char);
+            output += &format!("  {}", (if keep_flip { (j as i8 - board.len() as i8 + 1).abs() as u8 } else { j as u8 } + 97) as char);
         }
     }
     let mut is_check = 0;
