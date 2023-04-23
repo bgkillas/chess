@@ -134,16 +134,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             {
                 bg_color = "\x1b[48;2;240;217;181m";
             }
-            if !last_move.is_empty()
-               && y == last_move[2] as usize
-               && if keep_flip
-               {
-                   x + 1 as usize
-               }
-               else
-               {
-                   ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize
-               } == last_move[3] as usize
+            if !last_move.is_empty() && y == last_move[2] as usize && if keep_flip { x + 1 } else { ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize } == last_move[3] as usize
             {
                 bg_color = "\x1b[48;2;247;247;105m";
             }
@@ -204,16 +195,13 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                         "\nBlack's turn"
                     }
                 }
+                else if turn % 2 == 1 || end
+                {
+                    "\nBlack's turn"
+                }
                 else
                 {
-                    if turn % 2 == 1 || end
-                    {
-                        "\nBlack's turn"
-                    }
-                    else
-                    {
-                        "\nWhite's turn"
-                    }
+                    "\nWhite's turn"
                 };
             }
         }
@@ -231,16 +219,13 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                 "\nBlack's turn"
             }
         }
+        else if turn % 2 == 1 || end
+        {
+            "\nBlack's turn"
+        }
         else
         {
-            if turn % 2 == 1 || end
-            {
-                "\nBlack's turn"
-            }
-            else
-            {
-                "\nWhite's turn"
-            }
+            "\nWhite's turn"
         };
     }
     // clear line and move cursor to top left and print board

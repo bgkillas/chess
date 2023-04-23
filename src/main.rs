@@ -55,7 +55,7 @@ fn main()
                 exit(0);
             }
             "--flip" => flip = true,
-            "--keep_flip" => keep_flip = true,
+            "--keep_flip" => keep_flip = !keep_flip,
             "--numbers" => numbers = true,
             "--file" =>
             {
@@ -65,7 +65,7 @@ fn main()
             "--black" =>
             {
                 color = 1;
-                keep_flip = true;
+                keep_flip = !keep_flip;
             }
             "--ip" =>
             {

@@ -195,17 +195,16 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                             continue 'inner;
                         }
                     }
-                    let num;
-                    match board[x as usize][y as usize].to_ascii_lowercase()
+                    let num = match board[x as usize][y as usize].to_ascii_lowercase()
                     {
-                        'p' => num = 0,
-                        'r' => num = 1,
-                        'n' => num = 2,
-                        'b' => num = 3,
-                        'q' => num = 4,
-                        'k' => num = 5,
+                        'p' => 0,
+                        'r' => 1,
+                        'n' => 2,
+                        'b' => 3,
+                        'q' => 4,
+                        'k' => 5,
                         _ => continue,
-                    }
+                    };
                     let mut offset = -7.0;
                     if i == 0
                     {
