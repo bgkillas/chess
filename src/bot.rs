@@ -91,7 +91,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                       + possible_move[0][3].len() as f64 * 3.33
                       + possible_move[0][4].len() as f64 * 8.8;
     let mut pieces_attacked = false;
-    let i = 1;
+    let i = if all_turns.len() % 2 == 0 { 1 } else { 0 };
     let mut j = 0;
     while j < 6
     {
