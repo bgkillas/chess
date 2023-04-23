@@ -35,6 +35,7 @@ fn main()
     let mut ip = String::new();
     let mut bot = true;
     let mut debug = false;
+    let mut double = false;
     for i in 0..args().len()
     {
         match args().nth(i).unwrap().as_str()
@@ -74,6 +75,7 @@ fn main()
             }
             "--no_bot" => bot = false,
             "--debug" => debug = true,
+            "--double" => double = true,
             _ =>
             {}
         }
@@ -134,6 +136,10 @@ fn main()
         if (ip.is_empty() && !bot) || (turn % 2 == 0 && color == 1) || (turn % 2 == 1 && color == 0)
         {
             are_you_moving = true;
+        }
+        if double
+        {
+            are_you_moving = false;
         }
         let mut input = String::new();
         if are_you_moving
