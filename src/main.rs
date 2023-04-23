@@ -109,7 +109,7 @@ fn main()
     let mut all_turns:Vec<Vec<char>> = vec![vec![]];
     let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
-    if color == 1 && ip.is_empty()
+    if color == 1 && ip.is_empty() && !bot
     {
         turn = 2;
     }
@@ -134,10 +134,6 @@ fn main()
         if (ip.is_empty() && !bot) || (turn % 2 == 0 && color == 1) || (turn % 2 == 1 && color == 0)
         {
             are_you_moving = true;
-        }
-        else if (turn % 2 == 1 && color == 1) || (turn % 2 == 0 && color == 0)
-        {
-            are_you_moving = false;
         }
         let mut input = String::new();
         if are_you_moving

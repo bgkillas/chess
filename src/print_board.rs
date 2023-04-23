@@ -134,7 +134,16 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             {
                 bg_color = "\x1b[48;2;240;217;181m";
             }
-            if !last_move.is_empty() && y == last_move[2] as usize && ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize == last_move[3] as usize
+            if !last_move.is_empty()
+               && y == last_move[2] as usize
+               && if keep_flip
+               {
+                   x + 1 as usize
+               }
+               else
+               {
+                   ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize
+               } == last_move[3] as usize
             {
                 bg_color = "\x1b[48;2;247;247;105m";
             }
@@ -184,24 +193,55 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             }
             _ =>
             {
-                if turn % 2 == 0 && !end
+                output += if !keep_flip
                 {
-                    output += "\nBlack's turn";
+                    if turn % 2 == 1 || end
+                    {
+                        "\nWhite's turn"
+                    }
+                    else
+                    {
+                        "\nBlack's turn"
+                    }
                 }
                 else
                 {
-                    output += "\nWhite's turn";
-                }
+                    if turn % 2 == 1 || end
+                    {
+                        "\nBlack's turn"
+                    }
+                    else
+                    {
+                        "\nWhite's turn"
+                    }
+                };
             }
         }
     }
-    else if turn % 2 == 0 && !end
-    {
-        output += "\nBlack's turn";
-    }
     else
     {
-        output += "\nWhite's turn";
+        output += if !keep_flip
+        {
+            if turn % 2 == 1 || end
+            {
+                "\nWhite's turn"
+            }
+            else
+            {
+                "\nBlack's turn"
+            }
+        }
+        else
+        {
+            if turn % 2 == 1 || end
+            {
+                "\nBlack's turn"
+            }
+            else
+            {
+                "\nWhite's turn"
+            }
+        };
     }
     // clear line and move cursor to top left and print board
     println!("{esc}[2J{esc}[1H{output}", esc = 27 as char);

@@ -84,12 +84,13 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                                   ]
                                  ];
     let mut max = vec![[500f64, -1000f64, 0f64, 0f64, 0f64, 0f64]; 2];
+    let n = if all_turns.len() % 2 == 1 { 1 } else { 0 };
     let possible_move = possible_moves(board, Some(castle), Some(passant));
-    let start_score = possible_move[0][0].len() as f64
-                      + possible_move[0][1].len() as f64 * 5.1
-                      + possible_move[0][2].len() as f64 * 3.2
-                      + possible_move[0][3].len() as f64 * 3.33
-                      + possible_move[0][4].len() as f64 * 8.8;
+    let start_score = possible_move[n][0].len() as f64
+                      + possible_move[n][1].len() as f64 * 5.1
+                      + possible_move[n][2].len() as f64 * 3.2
+                      + possible_move[n][3].len() as f64 * 3.33
+                      + possible_move[n][4].len() as f64 * 8.8;
     let mut pieces_attacked = false;
     let i = if all_turns.len() % 2 == 0 { 1 } else { 0 };
     let mut j = 0;
@@ -100,6 +101,16 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
             let x = possible_move[i][j][k][0][0] as f64;
             let y = possible_move[i][j][k][0][1] as f64;
             let piece = board[x as usize][y as usize];
+            let piece_score:f64 = match piece.to_ascii_lowercase()
+            {
+                'p' => 1.0,
+                'r' => 5.1,
+                'n' => 3.2,
+                'b' => 3.33,
+                'q' => 8.8,
+                'k' => 10.0,
+                _ => 0.0,
+            };
             let mut is_attacked = false;
             if j != 0 && attackable(board, x, y)
             {
@@ -107,13 +118,17 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                 is_attacked = true;
                 max[i][0] = 500f64;
                 max[i][1] = -1000f64;
-                // j = 0;
             }
             'inner: for m in 1..possible_move[i][j][k].len()
             {
                 let mut board2 = board.to_vec();
                 let x2 = possible_move[i][j][k][m][0] as f64;
                 let y2 = possible_move[i][j][k][m][1] as f64;
+                let piece2 = board[x2 as usize][y2 as usize];
+                if !((piece2.is_ascii_uppercase() && piece.is_ascii_lowercase()) || (piece2.is_ascii_lowercase() && piece.is_ascii_uppercase()) || piece2 == ' ')
+                {
+                    continue;
+                }
                 board2[x2 as usize][y2 as usize] = piece;
                 board2[x as usize][y as usize] = ' ';
                 if check(&board2, 0, false, 'k') != 0
@@ -121,7 +136,6 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                     continue;
                 }
                 let possible_move2 = possible_moves(&board2, Some(castle), Some(passant));
-                let n = 0;
                 let score = possible_move2[n][0].len() as f64
                             + possible_move2[n][1].len() as f64 * 5.1
                             + possible_move2[n][2].len() as f64 * 3.2
@@ -129,19 +143,9 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                             + possible_move2[n][4].len() as f64 * 8.8;
                 if (score < max[i][0] || max[i][0] == 500f64) && !(is_attacked ^ pieces_attacked)
                 {
-                    let piece_score:f64 = match piece
-                    {
-                        'p' => 1.0,
-                        'r' => 5.1,
-                        'n' => 3.2,
-                        'b' => 3.33,
-                        'q' => 8.8,
-                        'k' => 10.0,
-                        _ => 0.0,
-                    };
                     if attackable(&board2, x2, y2)
                     {
-                        let piece2_score:f64 = match board[x2 as usize][y2 as usize]
+                        let piece2_score:f64 = match piece2.to_ascii_uppercase()
                         {
                             'P' => 1.0,
                             'R' => 5.1,
@@ -162,9 +166,9 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                     max[i][4] = x2;
                     max[i][5] = y2;
                 }
-                if start_score == max[i][0] && (board[x2 as usize][y2 as usize].is_uppercase() || board[x2 as usize][y2 as usize] == ' ') && !(is_attacked ^ pieces_attacked)
+                if start_score == max[i][0] && !(is_attacked ^ pieces_attacked)
                 {
-                    let piece_score:f64 = match piece
+                    let piece_score:f64 = match piece.to_ascii_lowercase()
                     {
                         'p' => 1.0,
                         'r' => 5.1,
@@ -176,7 +180,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                     };
                     if attackable(&board2, x2, y2)
                     {
-                        let piece2_score:f64 = match board[x2 as usize][y2 as usize]
+                        let piece2_score:f64 = match piece2.to_ascii_uppercase()
                         {
                             'P' => 1.0,
                             'R' => 5.1,
@@ -191,21 +195,25 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                             continue 'inner;
                         }
                     }
-                    let mut n = 0;
-                    match board[x as usize][y as usize]
+                    let num;
+                    match board[x as usize][y as usize].to_ascii_lowercase()
                     {
-                        'p' =>
-                        {}
-                        'r' => n = 1,
-                        'n' => n = 2,
-                        'b' => n = 3,
-                        'q' => n = 4,
-                        'k' => n = 5,
+                        'p' => num = 0,
+                        'r' => num = 1,
+                        'n' => num = 2,
+                        'b' => num = 3,
+                        'q' => num = 4,
+                        'k' => num = 5,
                         _ => continue,
                     }
-                    let t1 = ((y - 7.0).abs() * 8.0 + x) as usize;
-                    let t2 = ((y2 - 7.0).abs() * 8.0 + x2) as usize;
-                    let score2 = table[n][t2] as f64 - table[n][t1] as f64;
+                    let mut offset = -7.0;
+                    if i == 0
+                    {
+                        offset += 7.0;
+                    }
+                    let t1 = ((y + offset).abs() * 8.0 + x) as usize;
+                    let t2 = ((y2 + offset).abs() * 8.0 + x2) as usize;
+                    let score2 = table[num][t2] as f64 - table[num][t1] as f64;
                     if score2 > max[i][1]
                     {
                         max[i][1] = score2;
@@ -219,13 +227,13 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
         }
         j += 1;
     }
-    if max[1][2] == 0f64 && max[1][3] == 0f64 && max[1][4] == 0f64 && max[1][5] == 0f64
+    if max[i][2] == 0f64 && max[i][3] == 0f64 && max[i][4] == 0f64 && max[i][5] == 0f64
     {
-        println!("Checkmate. White wins");
+        println!("Checkmate. {} wins", if i == 1 { "White" } else { "Black" });
         crate::write_all_turns(all_turns, true);
         std::process::exit(0);
     }
-    vec![max[1][2] as u8, max[1][3] as u8, max[1][4] as u8, max[1][5] as u8]
+    vec![max[i][2] as u8, max[i][3] as u8, max[i][4] as u8, max[i][5] as u8]
 }
 // moves[0][0] = white pawns
 // moves[0][1] = white rooks
@@ -243,7 +251,9 @@ fn attackable(board:&[Vec<char>], x:f64, y:f64) -> bool
             let x2 = i[0] as i8;
             let y2 = i[1] as i8;
             let piece2 = board[x2 as usize][y2 as usize];
-            if piece2.is_lowercase()
+            if !((piece2.is_ascii_uppercase() && board[x as usize][y as usize].is_ascii_lowercase())
+                 || (piece2.is_ascii_lowercase() && board[x as usize][y as usize].is_ascii_uppercase())
+                 || piece2 == ' ')
             {
                 continue;
             }
@@ -256,6 +266,18 @@ fn attackable(board:&[Vec<char>], x:f64, y:f64) -> bool
                         return true;
                     }
                 }
+                'p' =>
+                {
+                    if y2 == y as i8 - 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
+                    {
+                        return true;
+                    }
+                }
+                _ =>
+                {}
+            }
+            match piece2.to_ascii_uppercase()
+            {
                 'Q' =>
                 {
                     if ((x2 - x as i8).abs() == (y2 - y as i8).abs()) || (x2 == x as i8 || y2 == y as i8)
