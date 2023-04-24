@@ -167,17 +167,7 @@ fn main()
                 Err(e) => println!("Error: {}", e),
             }
         }
-        let moves:Vec<u8> = input.chars()
-                                 .filter_map(|c| {
-                                     match c
-                                     {
-                                         'a'..='t' => Some(c as u8 - b'a' + 1),
-                                         'A'..='Z' => Some(c as u8 - b'A' + 27),
-                                         '0'..='9' => c.to_digit(10).map(|d| d as u8),
-                                         _ => None,
-                                     }
-                                 })
-                                 .collect();
+        let moves:Vec<u8> = convert_to_num(input.clone());
         if moves.is_empty()
         {
             println!("Invalid input");
@@ -360,6 +350,21 @@ fn main()
         }
     }
 }
+
+fn convert_to_num(input:String) -> Vec<u8>
+{
+    return input.chars()
+                .filter_map(|c| {
+                    match c
+                    {
+                        'a'..='t' => Some(c as u8 - b'a' + 1),
+                        'A'..='Z' => Some(c as u8 - b'A' + 27),
+                        '0'..='9' => c.to_digit(10).map(|d| d as u8),
+                        _ => None,
+                    }
+                })
+                .collect();
+}
 fn get_input(flip:bool,
              numbers:bool,
              keep_flip:bool,
@@ -379,6 +384,7 @@ fn get_input(flip:bool,
     {
         println!("{}", instant);
     }
+    let mut piece_moves:Vec<Vec<u8>>;
     loop
     {
         let move_char = read_single_char();
@@ -386,34 +392,8 @@ fn get_input(flip:bool,
         stdout().flush().unwrap();
         if input.len() == 1 && move_char != '\x08'
         {
-            let piece_moves:Vec<Vec<u8>>;
-            let x:usize = input.chars()
-                               .filter_map(|c| {
-                                   match c
-                                   {
-                                       'a'..='t' => Some(c as u8 - b'a' + 1),
-                                       'A'..='Z' => Some(c as u8 - b'A' + 27),
-                                       '0'..='9' => c.to_digit(10).map(|d| d as u8),
-                                       _ => None,
-                                   }
-                               })
-                               .next()
-                               .map(|val| val as usize - 1)
-                               .unwrap_or_default();
-            let y:usize = (move_char.to_string()
-                                    .chars()
-                                    .filter_map(|c| {
-                                        match c
-                                        {
-                                            'a'..='t' => Some(c as u8 - b'a' + 1),
-                                            'A'..='Z' => Some(c as u8 - b'A' + 27),
-                                            '0'..='9' => c.to_digit(10).map(|d| d as u8),
-                                            _ => None,
-                                        }
-                                    })
-                                    .next()
-                                    .map(|val| val as i8 - board.len() as i8)
-                                    .unwrap_or_default()).unsigned_abs() as usize;
+            let x:usize = convert_to_num(input.clone()).first().map(|val| *val as usize - 1).unwrap_or_default();
+            let y:usize = (convert_to_num(move_char.to_string()).first().map(|val| *val as i8 - board.len() as i8).unwrap_or_default()).unsigned_abs() as usize;
             if input == "E" && move_char == 'X'
             {
                 println!();
@@ -425,54 +405,32 @@ fn get_input(flip:bool,
                 input = String::new();
                 continue;
             }
-            if turn % 2 == 1
+            if turn % 2 == 1 && board[x][y].is_lowercase() || turn % 2 == 0 && board[x][y].is_uppercase()
             {
-                match board[x][y]
-                {
-                    'P' => piece_moves = pawn::pawn(board, x, y, Some(passant)),
-                    'R' => piece_moves = rook::rook(board, x, y),
-                    'N' => piece_moves = knight::knight(board, x, y),
-                    'B' => piece_moves = bishop::bishop(board, x, y),
-                    'Q' =>
-                    {
-                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board, x, y);
-                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(board, x, y);
-                        rook_moves.remove(0);
-                        bishop_moves.extend(rook_moves);
-                        piece_moves = bishop_moves;
-                    }
-                    'K' => piece_moves = king::king(board, x, y, Some(castle.to_owned())),
-                    _ =>
-                    {
-                        input = String::new();
-                        println!("\nNot a valid piece");
-                        continue;
-                    }
-                }
+                println!("\nInvalid move");
+                input = String::new();
+                continue;
             }
-            else
+            match board[x][y].to_ascii_uppercase()
             {
-                match board[x][y]
+                'P' => piece_moves = pawn::pawn(board, x, y, Some(passant)),
+                'R' => piece_moves = rook::rook(board, x, y),
+                'N' => piece_moves = knight::knight(board, x, y),
+                'B' => piece_moves = bishop::bishop(board, x, y),
+                'Q' =>
                 {
-                    'p' => piece_moves = pawn::pawn(board, x, y, Some(passant)),
-                    'r' => piece_moves = rook::rook(board, x, y),
-                    'n' => piece_moves = knight::knight(board, x, y),
-                    'b' => piece_moves = bishop::bishop(board, x, y),
-                    'q' =>
-                    {
-                        let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board, x, y);
-                        let mut rook_moves:Vec<Vec<u8>> = rook::rook(board, x, y);
-                        rook_moves.remove(0);
-                        bishop_moves.extend(rook_moves);
-                        piece_moves = bishop_moves;
-                    }
-                    'k' => piece_moves = king::king(board, x, y, Some(castle.to_owned())),
-                    _ =>
-                    {
-                        input = String::new();
-                        println!("\nNot a valid piece");
-                        continue;
-                    }
+                    let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board, x, y);
+                    let mut rook_moves:Vec<Vec<u8>> = rook::rook(board, x, y);
+                    rook_moves.remove(0);
+                    bishop_moves.extend(rook_moves);
+                    piece_moves = bishop_moves;
+                }
+                'K' => piece_moves = king::king(board, x, y, Some(castle.to_owned())),
+                _ =>
+                {
+                    input = String::new();
+                    println!("\nNot a valid piece");
+                    continue;
                 }
             }
             print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, Some(piece_moves), bot);

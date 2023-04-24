@@ -86,11 +86,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
     let mut max = vec![[500f64, -1000f64, 0f64, 0f64, 0f64, 0f64]; 2];
     let n = if all_turns.len() % 2 == 1 { 1 } else { 0 };
     let possible_move = possible_moves(board, Some(castle), Some(passant));
-    let start_score = possible_move[n][0].len() as f64
-                      + possible_move[n][1].len() as f64 * 5.1
-                      + possible_move[n][2].len() as f64 * 3.2
-                      + possible_move[n][3].len() as f64 * 3.33
-                      + possible_move[n][4].len() as f64 * 8.8;
+    let start_score = get_score(n, &possible_move);
     let mut pieces_attacked = false;
     let i = if all_turns.len() % 2 == 0 { 1 } else { 0 };
     let mut j = 0;
@@ -114,10 +110,13 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
             let mut is_attacked = false;
             if j != 0 && attackable(board, x, y)
             {
-                pieces_attacked = true;
                 is_attacked = true;
-                max[i][0] = 500f64;
-                max[i][1] = -1000f64;
+                if !pieces_attacked
+                {
+                    pieces_attacked = true;
+                    max[i][0] = 500f64;
+                    max[i][1] = -1000f64;
+                }
             }
             'inner: for m in 1..possible_move[i][j][k].len()
             {
@@ -135,12 +134,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                 {
                     continue;
                 }
-                let possible_move2 = possible_moves(&board2, Some(castle), Some(passant));
-                let score = possible_move2[n][0].len() as f64
-                            + possible_move2[n][1].len() as f64 * 5.1
-                            + possible_move2[n][2].len() as f64 * 3.2
-                            + possible_move2[n][3].len() as f64 * 3.33
-                            + possible_move2[n][4].len() as f64 * 8.8;
+                let score = get_score(n, &possible_moves(&board2, Some(castle), Some(passant)));
                 if (score < max[i][0] || max[i][0] == 500f64) && !(is_attacked ^ pieces_attacked)
                 {
                     if attackable(&board2, x2, y2)
@@ -233,6 +227,15 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
         std::process::exit(0);
     }
     vec![max[i][2] as u8, max[i][3] as u8, max[i][4] as u8, max[i][5] as u8]
+}
+
+fn get_score(n:usize, possible_move:&[Vec<Vec<Vec<Vec<u8>>>>]) -> f64
+{
+    possible_move[n][0].len() as f64
+    + possible_move[n][1].len() as f64 * 5.1
+    + possible_move[n][2].len() as f64 * 3.2
+    + possible_move[n][3].len() as f64 * 3.33
+    + possible_move[n][4].len() as f64 * 8.8
 }
 // moves[0][0] = white pawns
 // moves[0][1] = white rooks

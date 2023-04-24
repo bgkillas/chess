@@ -164,7 +164,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         output += " ";
         for j in 0..board.len()
         {
-            output += &format!("  {}", if keep_flip { (j as i8 - board.len() as i8 + 1).abs() as u8 } else { j as u8 } + 1);
+            output += &format!("  {}", if keep_flip { (j as i8 - board.len() as i8 + 1).unsigned_abs() } else { j as u8 } + 1);
         }
     }
     else
@@ -172,7 +172,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         output += " ";
         for j in 0..board.len()
         {
-            output += &format!("  {}", (if keep_flip { (j as i8 - board.len() as i8 + 1).abs() as u8 } else { j as u8 } + 97) as char);
+            output += &format!("  {}", (if keep_flip { (j as i8 - board.len() as i8 + 1).unsigned_abs() } else { j as u8 } + 97) as char);
         }
     }
     let mut is_check = 0;
