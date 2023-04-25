@@ -9,6 +9,7 @@ use std::io::BufReader;
 use std::io::stdout;
 use std::io::Result;
 use std::fs::File;
+use std::time::Instant;
 mod pieces
 {
     pub mod bishop;
@@ -123,7 +124,7 @@ fn main()
     let mut copy:Vec<Vec<char>>;
     // en passant stuff
     let mut passant = [0; 3];
-    let mut instant = std::time::Instant::now();
+    let mut instant:Option<Instant> = if arg[3] { Some(Instant::now()) } else { None };
     loop
     {
         // dont allow en passant on a piece after a turn
@@ -146,10 +147,10 @@ fn main()
         let mut input = String::new();
         if are_you_moving
         {
-            input = get_input(&board, &all_turns, &turns, &castle, passant, if arg[3] { Some(instant.elapsed().as_nanos()) } else { None }, arg);
+            input = get_input(&board, &all_turns, &turns, &castle, passant, instant.map(|d| d.elapsed().as_nanos()), arg);
             if arg[3]
             {
-                instant = std::time::Instant::now()
+                instant = Some(Instant::now())
             }
         }
         else if !ip.is_empty()
