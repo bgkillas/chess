@@ -124,8 +124,16 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
                     if arg[5]
                     {
                         x2 = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
+                        if (y as usize + ((x + 1) % 2)) % 2 == 0
+                        {
+                            bg_color = "\x1b[48;2;255;250;225m";
+                        }
+                        else
+                        {
+                            bg_color = "\x1b[48;2;110;80;50m";
+                        }
                     }
-                    if (y as usize + ((x + 1) % 2)) % 2 == 0
+                    else if (y as usize + ((x + 1) % 2)) % 2 == 0
                     {
                         bg_color = "\x1b[48;2;110;80;50m";
                     }
@@ -141,7 +149,18 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
                     }
                 }
             }
-            if (y as usize + ((x + 1) % 2)) % 2 == 0
+            if arg[5]
+            {
+                if (y as usize + ((x + 1) % 2)) % 2 == 0
+                {
+                    bg_color = "\x1b[48;2;240;217;181m";
+                }
+                else
+                {
+                    bg_color = "\x1b[48;2;181;136;99m";
+                }
+            }
+            else if (y as usize + ((x + 1) % 2)) % 2 == 0
             {
                 bg_color = "\x1b[48;2;181;136;99m";
             }
@@ -149,7 +168,16 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
             {
                 bg_color = "\x1b[48;2;240;217;181m";
             }
-            if !last_move.is_empty() && y as usize == last_move[2] as usize && if arg[5] { x + 1 } else { ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize } == last_move[3] as usize
+            if !last_move.is_empty()
+               && y as usize == last_move[2] as usize
+               && if arg[5] || (arg[1] && turn % 2 == 0)
+               {
+                   x + 1
+               }
+               else
+               {
+                   ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize
+               } == last_move[3] as usize
             {
                 bg_color = "\x1b[48;2;247;247;105m";
             }
