@@ -27,15 +27,17 @@ use print_board::print_board;
 use bot::gen_move;
 fn main()
 {
-    let mut flip = false;
-    let mut numbers = false;
-    let mut keep_flip = false;
+    // 0=bot
+    // 1=flip
+    // 2=numbers
+    // 3=debug
+    // 4=color
+    // 5=keep_flip
+    // 6=double
+    let mut arg = [false; 7];
+    arg[0] = true;
     let mut file = String::new();
-    let mut color = 0;
     let mut ip = String::new();
-    let mut bot = true;
-    let mut debug = false;
-    let mut double = false;
     for i in 0..args().len()
     {
         match args().nth(i).unwrap().as_str()
@@ -55,27 +57,27 @@ fn main()
                 println!("--debug will show time to calculate moves");
                 exit(0);
             }
-            "--flip" => flip = true,
-            "--keep_flip" => keep_flip = !keep_flip,
-            "--numbers" => numbers = true,
+            "--flip" => arg[1] = true,
+            "--keep_flip" => arg[5] = !arg[5],
+            "--numbers" => arg[2] = true,
             "--file" =>
             {
-                bot = false;
+                arg[0] = false;
                 file = args().nth(i + 1).unwrap()
             }
             "--black" =>
             {
-                color = 1;
-                keep_flip = !keep_flip;
+                arg[4] = true;
+                arg[5] = !arg[5];
             }
             "--ip" =>
             {
-                bot = false;
+                arg[0] = false;
                 ip = args().nth(i + 1).unwrap();
             }
-            "--no_bot" => bot = false,
-            "--debug" => debug = true,
-            "--double" => double = true,
+            "--no_bot" => arg[0] = false,
+            "--debug" => arg[3] = true,
+            "--double" => arg[6] = true,
             _ =>
             {}
         }
@@ -111,7 +113,7 @@ fn main()
     let mut all_turns:Vec<Vec<char>> = vec![vec![]];
     let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
-    if color == 1 && ip.is_empty() && !bot
+    if arg[4] && ip.is_empty() && !arg[0]
     {
         turn = 2;
     }
@@ -133,20 +135,19 @@ fn main()
         }
         copy = board.clone();
         let mut are_you_moving = false;
-        if (ip.is_empty() && !bot) || (turn % 2 == 0 && color == 1) || (turn % 2 == 1 && color == 0)
+        if (ip.is_empty() && !arg[0]) || (turn % 2 == 0 && arg[4]) || (turn % 2 == 1 && !arg[4])
         {
             are_you_moving = true;
         }
-        if double
+        if arg[6]
         {
             are_you_moving = false;
         }
         let mut input = String::new();
         if are_you_moving
         {
-            let arg = if debug { Some(instant.elapsed().as_nanos()) } else { None };
-            input = get_input(flip, numbers, keep_flip, &board, &all_turns, &turns, turn, &castle, passant, arg, bot);
-            if debug
+            input = get_input(&board, &all_turns, &turns, &castle, passant, if arg[3] { Some(instant.elapsed().as_nanos()) } else { None }, arg);
+            if arg[3]
             {
                 instant = std::time::Instant::now()
             }
@@ -155,7 +156,7 @@ fn main()
         {
             input = receive_data(ip.split_once(':').unwrap().1.parse::<u16>().unwrap()).unwrap();
         }
-        else if bot
+        else if arg[0]
         {
             input = gen_move(&board, &castle, passant, &all_turns);
         }
@@ -175,7 +176,7 @@ fn main()
         }
         if moves[0] == 31 && moves[1] == 50 && moves[2] == 35 && moves[3] == 46
         {
-            write_all_turns(&all_turns, bot);
+            write_all_turns(&all_turns, arg[0]);
         }
         // ensure the input is in range
         if moves.len() != 4
@@ -218,7 +219,7 @@ fn main()
                 println!("Invalid move");
                 continue;
             }
-            pawn::promotion(&mut board, x2, y2, piece, bot);
+            pawn::promotion(&mut board, x2, y2, piece, arg[0]);
             // if pawn moved 2 spaces
             if y + 2 == y2 || (y > 1 && y - 2 == y2)
             {
@@ -344,13 +345,12 @@ fn main()
         }
         all_turns.push(turn_str);
         turn += 1;
-        if !(bot && turn % 2 == 1)
+        if !(arg[0] && turn % 2 == 1)
         {
-            print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, &all_turns, None, bot);
+            print_board(board.clone(), &turns, &all_turns, None, arg);
         }
     }
 }
-
 fn convert_to_num(input:String) -> Vec<u8>
 {
     return input.chars()
@@ -365,21 +365,11 @@ fn convert_to_num(input:String) -> Vec<u8>
                 })
                 .collect();
 }
-fn get_input(flip:bool,
-             numbers:bool,
-             keep_flip:bool,
-             board:&Vec<Vec<char>>,
-             all_turns:&Vec<Vec<char>>,
-             turns:&[Vec<char>],
-             turn:usize,
-             castle:&[bool],
-             passant:[usize; 3],
-             instant:Option<u128>,
-             bot:bool)
-             -> String
+fn get_input(board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>], castle:&[bool], passant:[usize; 3], instant:Option<u128>, arg:[bool; 7]) -> String
 {
+    let turn = if all_turns.len() % 2 == 1 { 1 } else { 2 };
     let mut input = String::new();
-    print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, bot);
+    print_board(board.clone(), turns, all_turns, None, arg);
     if let Some(instant) = instant
     {
         println!("{}", instant);
@@ -397,7 +387,7 @@ fn get_input(flip:bool,
             if input == "E" && move_char == 'X'
             {
                 println!();
-                write_all_turns(all_turns, bot);
+                write_all_turns(all_turns, arg[0]);
             }
             if x >= board.len() || y >= board.len()
             {
@@ -433,7 +423,7 @@ fn get_input(flip:bool,
                     continue;
                 }
             }
-            print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, Some(piece_moves), bot);
+            print_board(board.clone(), turns, all_turns, Some(piece_moves), arg);
             if let Some(instant) = instant
             {
                 println!("{}", instant);
@@ -448,7 +438,7 @@ fn get_input(flip:bool,
             input.pop();
             if input.len() == 1
             {
-                print_board(board.clone(), turns, flip, numbers, keep_flip, turn, all_turns, None, bot);
+                print_board(board.clone(), turns, all_turns, None, arg);
                 if let Some(instant) = instant
                 {
                     println!("{}", instant);
@@ -489,17 +479,17 @@ fn can_move(board:&mut [Vec<char>], x:usize, y:usize, x2:usize, y2:usize, piece:
 }
 fn write_all_turns(all_turns:&Vec<Vec<char>>, bot:bool)
 {
-    for row in 0..all_turns.len()
+    for (x, row) in all_turns.iter().enumerate().take(all_turns.len())
     {
-        if bot && row % 2 == 0
+        if bot && x % 2 == 0
         {
             continue;
         }
-        if row > 1
+        if x > 1
         {
             print!("_");
         }
-        for val in all_turns[row].iter()
+        for val in row.iter()
         {
             print!("{}", val);
         }

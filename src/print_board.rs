@@ -1,7 +1,8 @@
 use crate::check::check;
 use crate::write_all_turns;
-pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:bool, keep_flip:bool, turn:usize, all_turns:&Vec<Vec<char>>, moves:Option<Vec<Vec<u8>>>, end:bool)
+pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<char>>, moves:Option<Vec<Vec<u8>>>, arg:[bool; 7])
 {
+    let turn = if all_turns.len() % 2 == 1 { 1 } else { 0 };
     let mut last_move = vec![];
     if !all_turns.is_empty()
     {
@@ -35,11 +36,11 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         mov.remove(0);
     }
     let mut output = String::new();
-    for x in 0..board.len()
+    for (x, tur) in turns.iter().enumerate().take(board.len())
     {
         let res;
         let ind;
-        if flip
+        if arg[1]
         {
             if turn == 1 || turn % 2 == 1
             {
@@ -52,7 +53,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                 ind = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
             }
         }
-        else if keep_flip
+        else if arg[5]
         {
             res = x as i8 + 1;
             ind = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
@@ -91,7 +92,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         let mut y:i8 = 0;
         let mut ende:i8 = board.len() as i8;
         let mut dir:i8 = 1;
-        if keep_flip
+        if arg[5]
         {
             dir = -1;
             y = board.len() as i8 - 1;
@@ -120,7 +121,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                         continue;
                     }
                     let mut x2 = x;
-                    if keep_flip
+                    if arg[5]
                     {
                         x2 = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
                     }
@@ -148,23 +149,21 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             {
                 bg_color = "\x1b[48;2;240;217;181m";
             }
-            if !last_move.is_empty()
-               && y as usize == last_move[2] as usize
-               && if keep_flip { x + 1 } else { ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize } == last_move[3] as usize
+            if !last_move.is_empty() && y as usize == last_move[2] as usize && if arg[5] { x + 1 } else { ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize } == last_move[3] as usize
             {
                 bg_color = "\x1b[48;2;247;247;105m";
             }
             output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y as usize][ind]);
             y += dir;
         }
-        output += &format!(" {} {}{}{}{}\n", col, turns[x][0], turns[x][1], turns[x][2], turns[x][3]);
+        output += &format!(" {} {}{}{}{}\n", col, tur[0], tur[1], tur[2], tur[3]);
     }
-    if numbers
+    if arg[2]
     {
         output += " ";
         for j in 0..board.len()
         {
-            output += &format!("  {}", if keep_flip { (j as i8 - board.len() as i8 + 1).unsigned_abs() } else { j as u8 } + 1);
+            output += &format!("  {}", if arg[5] { (j as i8 - board.len() as i8 + 1).unsigned_abs() } else { j as u8 } + 1);
         }
     }
     else
@@ -172,7 +171,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
         output += " ";
         for j in 0..board.len()
         {
-            output += &format!("  {}", (if keep_flip { (j as i8 - board.len() as i8 + 1).unsigned_abs() } else { j as u8 } + 97) as char);
+            output += &format!("  {}", (if arg[5] { (j as i8 - board.len() as i8 + 1).unsigned_abs() } else { j as u8 } + 97) as char);
         }
     }
     let mut is_check = 0;
@@ -189,21 +188,21 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
             2 => output += "\nBlack is in check",
             3 =>
             {
-                print_board(board, turns, flip, numbers, keep_flip, turn, all_turns, None, true);
+                print_board(board, turns, all_turns, None, arg);
                 println!("Checkmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
                 write_all_turns(all_turns, false);
             }
             4 =>
             {
-                print_board(board, turns, flip, numbers, keep_flip, turn, all_turns, None, true);
+                print_board(board, turns, all_turns, None, arg);
                 println!("Stalemate");
                 write_all_turns(all_turns, false);
             }
             _ =>
             {
-                output += if !keep_flip
+                output += if !arg[5]
                 {
-                    if turn % 2 == 1 || end
+                    if turn % 2 == 1 || arg[0]
                     {
                         "\nWhite's turn"
                     }
@@ -212,7 +211,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                         "\nBlack's turn"
                     }
                 }
-                else if turn % 2 == 1 || end
+                else if turn % 2 == 1 || arg[0]
                 {
                     "\nBlack's turn"
                 }
@@ -225,9 +224,9 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
     }
     else
     {
-        output += if !keep_flip
+        output += if !arg[5]
         {
-            if turn % 2 == 1 || end
+            if turn % 2 == 1 || arg[0]
             {
                 "\nWhite's turn"
             }
@@ -236,7 +235,7 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], flip:bool, numbers:
                 "\nBlack's turn"
             }
         }
-        else if turn % 2 == 1 || end
+        else if turn % 2 == 1 || arg[0]
         {
             "\nBlack's turn"
         }
