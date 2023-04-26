@@ -168,7 +168,8 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
             {
                 bg_color = "\x1b[48;2;240;217;181m";
             }
-            if !last_move.is_empty()
+            if (!arg[0] || turn % 2 == if arg[4] { 0 } else { 1 })
+               && !last_move.is_empty()
                && y as usize == last_move[2] as usize
                && if arg[5] || (arg[1] && turn % 2 == 0)
                {
@@ -207,7 +208,6 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
     {
         is_check = check(&board, turn, true, if turn % 2 == 1 { 'K' } else { 'k' });
     }
-
     if turn > 2
     {
         match is_check
