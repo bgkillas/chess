@@ -1,15 +1,10 @@
-use console::{Key, Term};
-use std::io::BufRead;
-use std::io::Read;
-use std::io::Write;
 use std::env::args;
-use std::process::exit;
-use std::net::{TcpListener, TcpStream};
-use std::io::BufReader;
-use std::io::stdout;
-use std::io::Result;
 use std::fs::File;
+use std::io::{stdout, BufRead, BufReader, Read, Result, Write};
+use std::net::{TcpListener, TcpStream};
+use std::process::exit;
 use std::time::Instant;
+use console::{Key, Term};
 mod pieces
 {
     pub mod bishop;

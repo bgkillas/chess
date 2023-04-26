@@ -11,8 +11,8 @@ pub fn knight(board:&[Vec<char>], x:usize, y:usize) -> Vec<Vec<u8>>
         for (y2, piece2) in row.iter().enumerate().take(ymax + 1).skip(ymin)
         {
             // only allow moving in an L shape
-            if !(piece2.is_uppercase() && piece.is_uppercase() || piece2.is_lowercase() && piece.is_lowercase()) && ((x2 as i8 - x as i8).abs() == 2 && (y2 as i8 - y as i8).abs() == 1)
-               || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 2)
+            if !((piece2.is_ascii_uppercase() && piece.is_ascii_uppercase()) || (piece2.is_ascii_lowercase() && piece.is_ascii_lowercase()))
+               && (((x2 as i8 - x as i8).abs() == 2 && (y2 as i8 - y as i8).abs() == 1) || ((x2 as i8 - x as i8).abs() == 1 && (y2 as i8 - y as i8).abs() == 2))
             {
                 possible_moves.push(vec![x2 as u8, y2 as u8]);
             }

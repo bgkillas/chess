@@ -15,75 +15,75 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
 {
     // https://www.chessprogramming.org/Simplified_Evaluation_Function
     #[rustfmt::skip]
-        let table: [[i16; 64]; 6] = [
-        // pawn
-        [
-            0, 0, 0, 0, 0, 0, 0, 0,
-            50, 50, 50, 50, 50, 50, 50, 50,
-            10, 10, 20, 30, 30, 20, 10, 10,
-            5, 5, 10, 25, 25, 10, 5, 5,
-            0, 0, 0, 20, 20, 0, 0, 0,
-            5, -5, -10, 0, 0, -10, -5, 5,
-            5, 10, 10, -20, -20, 10, 10, 5,
-            0, 0, 0, 0, 0, 0, 0, 0
-        ],
-        // rook
-        [
-            0, 0, 0, 0, 0, 0, 0, 0,
-            5, 10, 10, 10, 10, 10, 10, 5,
-            -5, 0, 0, 0, 0, 0, 0, -5,
-            -5, 0, 0, 0, 0, 0, 0, -5,
-            -5, 0, 0, 0, 0, 0, 0, -5,
-            -5, 0, 0, 0, 0, 0, 0, -5,
-            -5, 0, 0, 0, 0, 0, 0, -5,
-            0, 0, 0, 5, 5, 0, 0, 0
-        ],
-        // knight
-        [
-            -20, -10, -10, -10, -10, -10, -10, -20,
-            -10, 0, 0, 0, 0, 0, 0, -10,
-            -10, 0, 5, 10, 10, 5, 0, -10,
-            -10, 5, 5, 10, 10, 5, 5, -10,
-            -10, 0, 10, 10, 10, 10, 0, -10,
-            -10, 10, 10, 10, 10, 10, 10, -10,
-            -10, 5, 0, 0, 0, 0, 5, -10,
-            -20, -10, -10, -10, -10, -10, -10, -20
-        ],
-        // bishop
-        [
-            -29, 4, -82, -37, -25, -42, 7, -8,
-            -26, 16, -18, -13, 30, 59, 18, -47,
-            -16, 37, 43, 40, 35, 50, 37, -2,
-            -4, 5, 19, 50, 37, 37, 7, -2,
-            -6, 13, 13, 26, 34, 12, 10, 4,
-            0, 15, 15, 15, 14, 27, 18, 10,
-            4, 15, 16, 0, 7, 21, 33, 1,
-            -33, -3, -14, -21, -13, -12, -39, -21
-        ],
-        // queen
-        [
-            -20, -10, -10, -5, -5, -10, -10, -20,
-            -10, 0, 0, 0, 0, 0, 0, -10,
-            -10, 0, 5, 5, 5, 5, 0, -10,
-            -5, 0, 5, 5, 5, 5, 0, -5,
-            0, 0, 5, 5, 5, 5, 0, -5,
-            -10, 5, 5, 5, 5, 5, 0, -10,
-            -10, 0, 5, 0, 0, 0, 0, -10,
-            -20, -10, -10, -5, -5, -10, -10, -20
-        ],
-        // king
-        [
-            -30, -40, -40, -50, -50, -40, -40, -30,
-            -30, -40, -40, -50, -50, -40, -40, -30,
-            -30, -40, -40, -50, -50, -40, -40, -30,
-            -30, -40, -40, -50, -50, -40, -40, -30,
-            -20, -30, -30, -40, -40, -30, -30, -20,
-            -10, -20, -20, -20, -20, -20, -20, -10,
-            20, 20, 0, 0, 0, 0, 20, 20,
-            20, 30, 10, 0, 0, 10, 30, 20
-        ]
+        let table: [[i8; 64]; 6] = [
+                                  // pawn
+                                  [
+                                   0,  0,  0,  0,  0,  0,  0,  0,
+                                  50, 50, 50, 50, 50, 50, 50, 50,
+                                  10, 10, 20, 30, 30, 20, 10, 10,
+                                   5,  5, 10, 25, 25, 10,  5,  5,
+                                   0,  0,  0, 20, 20,  0,  0,  0,
+                                   5, -5,-10,  0,  0,-10, -5,  5,
+                                   5, 10, 10,-20,-20, 10, 10,  5,
+                                   0,  0,  0,  0,  0,  0,  0,  0
+                                  ],
+                                  // rook
+                                  [
+                                   0,  0,  0,  0,  0,  0,  0,  0,
+                                   5, 10, 10, 10, 10, 10, 10,  5,
+                                  -5,  0,  0,  0,  0,  0,  0, -5,
+                                  -5,  0,  0,  0,  0,  0,  0, -5,
+                                  -5,  0,  0,  0,  0,  0,  0, -5,
+                                  -5,  0,  0,  0,  0,  0,  0, -5,
+                                  -5,  0,  0,  0,  0,  0,  0, -5,
+                                   0,  0,  0,  5,  5,  0,  0,  0
+                                  ],
+                                  // knight
+                                  [
+                                 -20,-10,-10,-10,-10,-10,-10,-20,
+                                 -10,  0,  0,  0,  0,  0,  0,-10,
+                                 -10,  0,  5, 10, 10,  5,  0,-10,
+                                 -10,  5,  5, 10, 10,  5,  5,-10,
+                                 -10,  0, 10, 10, 10, 10,  0,-10,
+                                 -10, 10, 10, 10, 10, 10, 10,-10,
+                                 -10,  5,  0,  0,  0,  0,  5,-10,
+                                 -20,-10,-10,-10,-10,-10,-10,-20
+                                  ],
+                                  // bishop
+                                  [
+                                 -29,  4,-82,-37,-25,-42,  7, -8,
+                                 -26, 16,-18,-13, 30, 59, 18,-47,
+                                 -16, 37, 43, 40, 35, 50, 37, -2,
+                                  -4,  5, 19, 50, 37, 37,  7, -2,
+                                  -6, 13, 13, 26, 34, 12, 10,  4,
+                                   0, 15, 15, 15, 14, 27, 18, 10,
+                                   4, 15, 16,  0,  7, 21, 33,  1,
+                                 -33, -3,-14,-21,-13,-12,-39,-21
+                                  ],
+                                  // queen
+                                  [
+                                 -20,-10,-10, -5, -5,-10,-10,-20,
+                                 -10,  0,  0,  0,  0,  0,  0,-10,
+                                 -10,  0,  5,  5,  5,  5,  0,-10,
+                                  -5,  0,  5,  5,  5,  5,  0, -5,
+                                   0,  0,  5,  5,  5,  5,  0, -5,
+                                 -10,  5,  5,  5,  5,  5,  0,-10,
+                                 -10,  0,  5,  0,  0,  0,  0,-10,
+                                 -20,-10,-10, -5, -5,-10,-10,-20
+                                  ],
+                                  // king
+                                  [
+                                 -30,-40,-40,-50,-50,-40,-40,-30,
+                                 -30,-40,-40,-50,-50,-40,-40,-30,
+                                 -30,-40,-40,-50,-50,-40,-40,-30,
+                                 -30,-40,-40,-50,-50,-40,-40,-30,
+                                 -20,-30,-30,-40,-40,-30,-30,-20,
+                                 -10,-20,-20,-20,-20,-20,-20,-10,
+                                  20, 20,  0,  0,  0,  0, 20, 20,
+                                  20, 30, 10,  0,  0, 10, 30, 20
+                                  ]
     ];
-    let mut max = vec![[500f64, -1000f64, 0f64, 0f64, 0f64, 0f64]; 2];
+    let mut max = vec![[127i8, -128i8, 0, 0, 0, 0]; 2];
     let n = if all_turns.len() % 2 == 1 { 1 } else { 0 };
     let possible_move = possible_moves(board, Some(castle), Some(passant));
     let start_score = get_score(n, &possible_move);
@@ -94,8 +94,8 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
     {
         for k in 0..possible_move[i][j].len()
         {
-            let x = possible_move[i][j][k][0][0] as f64;
-            let y = possible_move[i][j][k][0][1] as f64;
+            let x = possible_move[i][j][k][0][0] as i8;
+            let y = possible_move[i][j][k][0][1] as i8;
             let piece = board[x as usize][y as usize];
             let piece_score = score_of(piece);
             let mut is_attacked = false;
@@ -105,15 +105,15 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                 if !pieces_attacked
                 {
                     pieces_attacked = true;
-                    max[i][0] = 500f64;
-                    max[i][1] = -1000f64;
+                    max[i][0] = 127;
+                    max[i][1] = -128;
                 }
             }
             'inner: for m in 1..possible_move[i][j][k].len()
             {
                 let mut board2 = board.to_vec();
-                let x2 = possible_move[i][j][k][m][0] as f64;
-                let y2 = possible_move[i][j][k][m][1] as f64;
+                let x2 = possible_move[i][j][k][m][0] as i8;
+                let y2 = possible_move[i][j][k][m][1] as i8;
                 let piece2 = board[x2 as usize][y2 as usize];
                 if !((piece2.is_ascii_uppercase() && piece.is_ascii_lowercase()) || (piece2.is_ascii_lowercase() && piece.is_ascii_uppercase()) || piece2 == ' ')
                 {
@@ -126,7 +126,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                     continue;
                 }
                 let score = get_score(n, &possible_moves(&board2, Some(castle), Some(passant)));
-                if (score < max[i][0] || max[i][0] == 500f64) && !(is_attacked ^ pieces_attacked)
+                if (score < max[i][0] || max[i][0] == 127) && !(is_attacked ^ pieces_attacked)
                 {
                     if attackable(&board2, x2, y2) && piece_score > score_of(piece2)
                     {
@@ -154,14 +154,14 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                         'k' => 5,
                         _ => continue,
                     };
-                    let mut offset = -7.0;
+                    let mut offset = -7;
                     if i == 0
                     {
-                        offset += 7.0;
+                        offset += 7;
                     }
-                    let t1 = ((y + offset).abs() * 8.0 + x) as usize;
-                    let t2 = ((y2 + offset).abs() * 8.0 + x2) as usize;
-                    let score2 = table[num][t2] as f64 - table[num][t1] as f64;
+                    let t1 = ((y + offset).abs() * 8 + x) as usize;
+                    let t2 = ((y2 + offset).abs() * 8 + x2) as usize;
+                    let score2 = table[num][t2] - table[num][t1];
                     if score2 > max[i][1]
                     {
                         max[i][1] = score2;
@@ -175,7 +175,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
         }
         j += 1;
     }
-    if max[i][2] == 0f64 && max[i][3] == 0f64 && max[i][4] == 0f64 && max[i][5] == 0f64
+    if max[i][2] == 0 && max[i][3] == 0 && max[i][4] == 0 && max[i][5] == 0
     {
         println!("Checkmate. {} wins", if i == 1 { "White" } else { "Black" });
         crate::write_all_turns(all_turns, true);
@@ -183,28 +183,24 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
     }
     vec![max[i][2] as u8, max[i][3] as u8, max[i][4] as u8, max[i][5] as u8]
 }
-fn score_of(piece:char) -> f64
+fn score_of(piece:char) -> i8
 {
     match piece.to_ascii_uppercase()
     {
-        'P' => 1.0,
-        'R' => 5.1,
-        'N' => 3.2,
-        'B' => 3.33,
-        'Q' => 8.8,
-        'K' => 10.0,
-        _ => 0.0,
+        'P' => 1,
+        'R' => 5,
+        'N' => 3,
+        'B' => 4,
+        'Q' => 9,
+        'K' => 10,
+        _ => 0,
     }
 }
-fn get_score(n:usize, possible_move:&[Vec<Vec<Vec<Vec<u8>>>>]) -> f64
+fn get_score(n:usize, possible_move:&[Vec<Vec<Vec<Vec<u8>>>>]) -> i8
 {
-    possible_move[n][0].len() as f64
-    + possible_move[n][1].len() as f64 * 5.1
-    + possible_move[n][2].len() as f64 * 3.2
-    + possible_move[n][3].len() as f64 * 3.33
-    + possible_move[n][4].len() as f64 * 8.8
+    (possible_move[n][0].len() + possible_move[n][1].len() * 5 + possible_move[n][2].len() * 3 + possible_move[n][3].len() * 4 + possible_move[n][4].len() * 9) as i8
 }
-fn attackable(board:&[Vec<char>], x:f64, y:f64) -> bool
+fn attackable(board:&[Vec<char>], x:i8, y:i8) -> bool
 {
     let moves_from_piece:Vec<Vec<Vec<u8>>> = vec![rook::rook(board, x as usize, y as usize), bishop::bishop(board, x as usize, y as usize), knight::knight(board, x as usize, y as usize)];
     for piece in moves_from_piece
@@ -214,9 +210,8 @@ fn attackable(board:&[Vec<char>], x:f64, y:f64) -> bool
             let x2 = i[0] as i8;
             let y2 = i[1] as i8;
             let piece2 = board[x2 as usize][y2 as usize];
-            if !((piece2.is_ascii_uppercase() && board[x as usize][y as usize].is_ascii_lowercase())
-                 || (piece2.is_ascii_lowercase() && board[x as usize][y as usize].is_ascii_uppercase())
-                 || piece2 == ' ')
+            if !((piece2.is_ascii_uppercase() && board[x as usize][y as usize].is_ascii_lowercase()) || (piece2.is_ascii_lowercase() && board[x as usize][y as usize].is_ascii_uppercase()))
+               || piece2 == ' '
             {
                 continue;
             }
@@ -224,14 +219,14 @@ fn attackable(board:&[Vec<char>], x:f64, y:f64) -> bool
             {
                 'P' =>
                 {
-                    if y2 == y as i8 + 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
+                    if y2 == y + 1 && (x2 == x - 1 || x2 == x + 1)
                     {
                         return true;
                     }
                 }
                 'p' =>
                 {
-                    if y2 == y as i8 - 1 && (x2 == x as i8 - 1 || x2 == x as i8 + 1)
+                    if y2 == y - 1 && (x2 == x - 1 || x2 == x + 1)
                     {
                         return true;
                     }
@@ -243,35 +238,35 @@ fn attackable(board:&[Vec<char>], x:f64, y:f64) -> bool
             {
                 'Q' =>
                 {
-                    if ((x2 - x as i8).abs() == (y2 - y as i8).abs()) || (x2 == x as i8 || y2 == y as i8)
+                    if ((x2 - x).abs() == (y2 - y).abs()) || (x2 == x || y2 == y)
                     {
                         return true;
                     }
                 }
                 'R' =>
                 {
-                    if x2 == x as i8 || y2 == y as i8
+                    if x2 == x || y2 == y
                     {
                         return true;
                     }
                 }
                 'B' =>
                 {
-                    if (x2 - x as i8).abs() == (y2 - y as i8).abs()
+                    if (x2 - x).abs() == (y2 - y).abs()
                     {
                         return true;
                     }
                 }
                 'N' =>
                 {
-                    if ((x2 - x as i8).abs() == 2 && (y2 - y as i8).abs() == 1) || ((x2 - x as i8).abs() == 1 && (y2 - y as i8).abs() == 2)
+                    if ((x2 - x).abs() == 2 && (y2 - y).abs() == 1) || ((x2 - x).abs() == 1 && (y2 - y).abs() == 2)
                     {
                         return true;
                     }
                 }
                 'K' =>
                 {
-                    if (x2 - x as i8).abs() <= 1 && (y2 - y as i8).abs() <= 1
+                    if (x2 - x).abs() <= 1 && (y2 - y).abs() <= 1
                     {
                         return true;
                     }
