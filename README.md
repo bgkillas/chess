@@ -3,7 +3,7 @@ a cli chess implementation written in rust
 ```
 Usage: chess [OPTION]...
 --flip will flip the board each move
---numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h
+--numbers will show on the bottom instead of letters
 --file CSV will load a board from a csv file
 --black will make you play as black
 --ip IP will connect to a server at IP:port
