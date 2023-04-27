@@ -16,6 +16,4 @@ Usage: chess [OPTION]...
 
 typing EXIT returns all the moves and exits
 
-TODO: implement bots
-
-![image](https://user-images.githubusercontent.com/55570525/232359818-9bd4c39c-a1d3-457b-9bee-fc4b5409390e.png)
+![image](https://user-images.githubusercontent.com/55570525/234728501-b547f6a7-7e7a-4850-80b0-306d1b17dba4.png)
