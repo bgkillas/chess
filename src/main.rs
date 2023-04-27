@@ -45,7 +45,7 @@ fn main()
                 println!("for example: e2e4 or 5254");
                 println!("--flip will flip the board each move");
                 println!("--keep_flip will have black on the bottom and white on the top");
-                println!("--numbers will show 1 2 3 4 5 6 7 8 on the bottom instead of a b c d e f g h");
+                println!("--numbers will show on the bottom instead of letters");
                 println!("--file CSV will load a board from a csv file");
                 println!("--black will make you play as black");
                 println!("--ip IP will connect to a server at IP:port");
