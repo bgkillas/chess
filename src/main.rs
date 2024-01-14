@@ -1,10 +1,12 @@
-use std::env::args;
-use std::fs::File;
-use std::io::{stdout, BufRead, BufReader, Read, Result, Write};
-use std::net::{TcpListener, TcpStream};
-use std::process::exit;
-use std::time::Instant;
 use console::{Key, Term};
+use std::{
+    env::args,
+    fs::File,
+    io::{stdout, BufRead, BufReader, Read, Result, Write},
+    net::{TcpListener, TcpStream},
+    process::exit,
+    time::Instant,
+};
 mod pieces
 {
     pub mod bishop;
@@ -17,10 +19,10 @@ pub mod bot;
 pub mod check;
 pub mod possible_moves;
 pub mod print_board;
-use pieces::{bishop, king, knight, pawn, rook};
-use check::check;
-use print_board::print_board;
 use bot::gen_move;
+use check::check;
+use pieces::{bishop, king, knight, pawn, rook};
+use print_board::print_board;
 fn main()
 {
     // 0=bot
@@ -81,23 +83,33 @@ fn main()
     // disable line blinking
     stdout().write_all(b"\x1B[?25l").unwrap();
     stdout().flush().unwrap();
-    let mut board:Vec<Vec<char>>;
+    let mut board: Vec<Vec<char>>;
     if !file.is_empty() && File::open(&file).is_ok()
     {
         let csv = File::open(file).unwrap();
         let reader = BufReader::new(csv);
-        board = reader.lines().map(|l| l.unwrap().split(',').map(|c| c.chars().next().unwrap()).collect()).collect();
+        board = reader
+            .lines()
+            .map(|l| {
+                l.unwrap()
+                    .split(',')
+                    .map(|c| c.chars().next().unwrap())
+                    .collect()
+            })
+            .collect();
     }
     else
     {
-        board = vec![vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],
-                     vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
-                     vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
-                     vec!['q', 'p', ' ', ' ', ' ', ' ', 'P', 'Q'],
-                     vec!['k', 'p', ' ', ' ', ' ', ' ', 'P', 'K'],
-                     vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
-                     vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
-                     vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R']];
+        board = vec![
+            vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],
+            vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
+            vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
+            vec!['q', 'p', ' ', ' ', ' ', ' ', 'P', 'Q'],
+            vec!['k', 'p', ' ', ' ', ' ', ' ', 'P', 'K'],
+            vec!['b', 'p', ' ', ' ', ' ', ' ', 'P', 'B'],
+            vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
+            vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],
+        ];
     }
     // ensure the board is a square
     if board[0].len() != board.len()
@@ -106,8 +118,8 @@ fn main()
         exit(1);
     }
     // turn tracker
-    let mut all_turns:Vec<Vec<char>> = vec![vec![]];
-    let mut turns:Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
+    let mut all_turns: Vec<Vec<char>> = vec![vec![]];
+    let mut turns: Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
     if arg[4] && ip.is_empty() && !arg[0]
     {
@@ -115,11 +127,11 @@ fn main()
     }
     // print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
     // castling stuff castle[0]= white left castle, castle[1] = white right castle, castle[2] = black left castle, castle[3] = black right castle, castle[4] = white castle, castle[5] = black castle
-    let mut castle:Vec<bool> = vec![true; 6];
-    let mut copy:Vec<Vec<char>>;
+    let mut castle: Vec<bool> = vec![true; 6];
+    let mut copy: Vec<Vec<char>>;
     // en passant stuff
     let mut passant = [0; 3];
-    let mut instant:Option<Instant> = if arg[3] { Some(Instant::now()) } else { None };
+    let mut instant: Option<Instant> = if arg[3] { Some(Instant::now()) } else { None };
     loop
     {
         // dont allow en passant on a piece after a turn
@@ -142,7 +154,15 @@ fn main()
         let mut input = String::new();
         if are_you_moving
         {
-            input = get_input(&board, &all_turns, &turns, &castle, passant, instant.map(|d| d.elapsed().as_nanos()), arg);
+            input = get_input(
+                &board,
+                &all_turns,
+                &turns,
+                &castle,
+                passant,
+                instant.map(|d| d.elapsed().as_nanos()),
+                arg,
+            );
             if arg[3]
             {
                 instant = Some(Instant::now())
@@ -164,7 +184,7 @@ fn main()
                 Err(e) => println!("Error: {}", e),
             }
         }
-        let moves:Vec<u8> = convert_to_num(input.clone());
+        let moves: Vec<u8> = convert_to_num(input.clone());
         if moves.is_empty()
         {
             println!("Invalid input");
@@ -176,14 +196,14 @@ fn main()
         }
         // ensure the input is in range
         if moves.len() != 4
-           || moves[0] < 1
-           || moves[0] > (board.len() + 2) as u8
-           || moves[1] < 1
-           || moves[1] > (board.len() + 2) as u8
-           || moves[2] < 1
-           || moves[2] > (board.len() + 2) as u8
-           || moves[3] < 1
-           || moves[3] > (board.len() + 2) as u8
+            || moves[0] < 1
+            || moves[0] > (board.len() + 2) as u8
+            || moves[1] < 1
+            || moves[1] > (board.len() + 2) as u8
+            || moves[2] < 1
+            || moves[2] > (board.len() + 2) as u8
+            || moves[3] < 1
+            || moves[3] > (board.len() + 2) as u8
         {
             println!("Invalid move");
             continue;
@@ -195,7 +215,8 @@ fn main()
         let piece = board[x][y];
         let piece2 = board[x2][y2];
         // dont move if the piece is the same color as the piece you are moving to
-        if piece.is_uppercase() && piece2.is_uppercase() || piece.is_lowercase() && piece2.is_lowercase()
+        if piece.is_uppercase() && piece2.is_uppercase()
+            || piece.is_lowercase() && piece2.is_lowercase()
         {
             println!("Invalid move");
             continue;
@@ -328,7 +349,7 @@ fn main()
             board = copy.clone();
             continue;
         }
-        let turn_str:Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
+        let turn_str: Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
         // delete the first turn of the turn tracker if there are too many to display
         if turn > board.len()
         {
@@ -347,21 +368,28 @@ fn main()
         }
     }
 }
-fn convert_to_num(input:String) -> Vec<u8>
+fn convert_to_num(input: String) -> Vec<u8>
 {
-    return input.chars()
-                .filter_map(|c| {
-                    match c
-                    {
-                        'a'..='t' => Some(c as u8 - b'a' + 1),
-                        'A'..='Z' => Some(c as u8 - b'A' + 27),
-                        '0'..='9' => c.to_digit(10).map(|d| d as u8),
-                        _ => None,
-                    }
-                })
-                .collect();
+    return input
+        .chars()
+        .filter_map(|c| match c
+        {
+            'a'..='t' => Some(c as u8 - b'a' + 1),
+            'A'..='Z' => Some(c as u8 - b'A' + 27),
+            '0'..='9' => c.to_digit(10).map(|d| d as u8),
+            _ => None,
+        })
+        .collect();
 }
-fn get_input(board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>], castle:&[bool], passant:[usize; 3], instant:Option<u128>, arg:[bool; 7]) -> String
+fn get_input(
+    board: &Vec<Vec<char>>,
+    all_turns: &Vec<Vec<char>>,
+    turns: &[Vec<char>],
+    castle: &[bool],
+    passant: [usize; 3],
+    instant: Option<u128>,
+    arg: [bool; 7],
+) -> String
 {
     let turn = if all_turns.len() % 2 == 1 { 1 } else { 2 };
     let mut input = String::new();
@@ -370,16 +398,21 @@ fn get_input(board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>
     {
         println!("{}", instant);
     }
-    let mut piece_moves:Vec<Vec<u8>>;
+    let mut piece_moves: Vec<Vec<u8>>;
     loop
     {
         let move_char = read_single_char();
-        print!("{}", move_char);
-        stdout().flush().unwrap();
         if input.len() == 1 && move_char != '\x08'
         {
-            let x:usize = convert_to_num(input.clone()).first().map(|val| *val as usize - 1).unwrap_or_default();
-            let y:usize = (convert_to_num(move_char.to_string()).first().map(|val| *val as i8 - board.len() as i8).unwrap_or_default()).unsigned_abs() as usize;
+            let x: usize = convert_to_num(input.clone())
+                .first()
+                .map(|val| *val as usize - 1)
+                .unwrap_or_default();
+            let y: usize = (convert_to_num(move_char.to_string())
+                .first()
+                .map(|val| *val as i8 - board.len() as i8)
+                .unwrap_or_default())
+            .unsigned_abs() as usize;
             if input == "E" && move_char == 'X'
             {
                 println!();
@@ -391,7 +424,8 @@ fn get_input(board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>
                 input = String::new();
                 continue;
             }
-            if turn % 2 == 1 && board[x][y].is_lowercase() || turn % 2 == 0 && board[x][y].is_uppercase()
+            if turn % 2 == 1 && board[x][y].is_lowercase()
+                || turn % 2 == 0 && board[x][y].is_uppercase()
             {
                 println!("\nInvalid move");
                 input = String::new();
@@ -405,8 +439,8 @@ fn get_input(board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>
                 'B' => piece_moves = bishop::bishop(board, x, y),
                 'Q' =>
                 {
-                    let mut bishop_moves:Vec<Vec<u8>> = bishop::bishop(board, x, y);
-                    let mut rook_moves:Vec<Vec<u8>> = rook::rook(board, x, y);
+                    let mut bishop_moves: Vec<Vec<u8>> = bishop::bishop(board, x, y);
+                    let mut rook_moves: Vec<Vec<u8>> = rook::rook(board, x, y);
                     rook_moves.remove(0);
                     bishop_moves.extend(rook_moves);
                     piece_moves = bishop_moves;
@@ -415,7 +449,7 @@ fn get_input(board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>
                 _ =>
                 {
                     input = String::new();
-                    println!("\nNot a valid piece");
+                    println!("\nNot a valid piece\x1b[A\x1b[A  ");
                     continue;
                 }
             }
@@ -429,23 +463,23 @@ fn get_input(board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>
         }
         if move_char == '\x08'
         {
-            print!(" \x08");
-            stdout().flush().unwrap();
             input.pop();
             if input.len() == 1
             {
                 print_board(board.clone(), turns, all_turns, None, arg);
-                if let Some(instant) = instant
-                {
-                    println!("{}", instant);
-                }
-                print!("{}", input);
-                stdout().flush().unwrap();
             }
+            if let Some(instant) = instant
+            {
+                println!("{}", instant);
+            }
+            print!("\x1b[G\x1b[K{}", input);
+            stdout().flush().unwrap();
         }
         else
         {
             input += &move_char.to_string();
+            print!("\x1b[G\x1b[K{}", input);
+            stdout().flush().unwrap();
         }
         if move_char == '\n'
         {
@@ -454,7 +488,15 @@ fn get_input(board:&Vec<Vec<char>>, all_turns:&Vec<Vec<char>>, turns:&[Vec<char>
     }
     input
 }
-fn can_move(board:&mut [Vec<char>], x:usize, y:usize, x2:usize, y2:usize, piece:char, possible_moves:Vec<Vec<u8>>) -> bool
+fn can_move(
+    board: &mut [Vec<char>],
+    x: usize,
+    y: usize,
+    x2: usize,
+    y2: usize,
+    piece: char,
+    possible_moves: Vec<Vec<u8>>,
+) -> bool
 {
     let mut success = false;
     for row in possible_moves
@@ -473,7 +515,7 @@ fn can_move(board:&mut [Vec<char>], x:usize, y:usize, x2:usize, y2:usize, piece:
     }
     success
 }
-fn write_all_turns(all_turns:&Vec<Vec<char>>, bot:bool)
+fn write_all_turns(all_turns: &Vec<Vec<char>>, bot: bool)
 {
     for (x, row) in all_turns.iter().enumerate().take(all_turns.len())
     {
@@ -521,7 +563,7 @@ fn read_single_char() -> char
         _ => read_single_char(),
     }
 }
-fn send_data(moves:String, addr:&str) -> Result<String>
+fn send_data(moves: String, addr: &str) -> Result<String>
 {
     let mut stream = TcpStream::connect(addr)?;
     stream.write_all(moves.as_bytes())?;
@@ -530,7 +572,7 @@ fn send_data(moves:String, addr:&str) -> Result<String>
     let message = String::from_utf8_lossy(&buf).to_string();
     Ok(message)
 }
-fn receive_data(port:u16) -> Result<String>
+fn receive_data(port: u16) -> Result<String>
 {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))?;
     if let Some(stream) = listener.incoming().next()

@@ -83,7 +83,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                                   20, 30, 10,  0,  0, 10, 30, 20
                                   ]
     ];
-    let mut max = vec![[127i8, -128i8, 0, 0, 0, 0]; 2];
+    let mut max = [[127i8, -128i8, 0, 0, 0, 0]; 2];
     let n = if all_turns.len() % 2 == 1 { 1 } else { 0 };
     let possible_move = possible_moves(board, Some(castle), Some(passant));
     let start_score = get_score(n, &possible_move);
