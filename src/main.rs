@@ -425,7 +425,18 @@ fn get_input(
             let x = (n.0.saturating_sub(2)) / 3;
             if (x as usize) < board.len() && x != 0 && (n.1 as usize) < board.len()
             {
-                str = format!("{}{}", (x as u8 + b'a') as char, board.len() - n.1 as usize);
+                str = format!(
+                    "{}{}",
+                    (x as u8 + b'a') as char,
+                    if turn % 2 == 0 && arg[1]
+                    {
+                        n.1 as usize + 1
+                    }
+                    else
+                    {
+                        board.len() - n.1 as usize
+                    }
+                );
                 if input.len() == 2
                 {
                     str += "\n"

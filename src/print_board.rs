@@ -146,7 +146,16 @@ pub fn print_board(
                     {
                         bg_color = "\x1b[48;2;255;250;225m";
                     }
-                    if mo[0] == y as u8 && mo[1] == x2 as u8
+                    if mo[0] == y as u8
+                        && mo[1]
+                            == if arg[1] && turn % 2 == 0
+                            {
+                                board.len() - x2 - 1
+                            }
+                            else
+                            {
+                                x2
+                            } as u8
                     {
                         output += &format!(
                             "{}{} {} \x1b[0m",
