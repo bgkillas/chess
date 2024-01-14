@@ -1,4 +1,11 @@
-use console::{Key, Term};
+use crossterm::{
+    cursor, event,
+    event::{
+        DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers,
+        MouseButton, MouseEvent, MouseEventKind,
+    },
+    terminal, ExecutableCommand,
+};
 use std::{
     env::args,
     fs::File,
@@ -81,8 +88,6 @@ fn main()
         }
     }
     // disable line blinking
-    stdout().write_all(b"\x1B[?25l").unwrap();
-    stdout().flush().unwrap();
     let mut board: Vec<Vec<char>>;
     if !file.is_empty() && File::open(&file).is_ok()
     {
@@ -132,6 +137,11 @@ fn main()
     // en passant stuff
     let mut passant = [0; 3];
     let mut instant: Option<Instant> = if arg[3] { Some(Instant::now()) } else { None };
+    stdout().execute(terminal::EnterAlternateScreen).unwrap();
+    stdout().execute(cursor::Hide).unwrap();
+    stdout().execute(EnableMouseCapture).unwrap();
+    print!("\x1b[H\x1b[J");
+    stdout().flush().unwrap();
     loop
     {
         // dont allow en passant on a piece after a turn
@@ -399,21 +409,41 @@ fn get_input(
         println!("{}", instant);
     }
     let mut piece_moves: Vec<Vec<u8>>;
+    let mut str = String::new();
     loop
     {
-        let move_char = read_single_char();
-        if input.len() == 1 && move_char != '\x08'
+        let move_char = if str.is_empty()
+        {
+            read_input()
+        }
+        else
+        {
+            (str.remove(0), None)
+        };
+        if let Some(n) = move_char.1
+        {
+            let x = (n.0.saturating_sub(2)) / 3;
+            if (x as usize) < board.len() && x != 0 && (n.1 as usize) < board.len()
+            {
+                str = format!("{}{}", (x as u8 + b'a') as char, board.len() - n.1 as usize);
+                if input.len() == 2
+                {
+                    str += "\n"
+                }
+            }
+        }
+        else if input.len() == 1 && move_char.0 != '\x08'
         {
             let x: usize = convert_to_num(input.clone())
                 .first()
                 .map(|val| *val as usize - 1)
                 .unwrap_or_default();
-            let y: usize = (convert_to_num(move_char.to_string())
+            let y: usize = convert_to_num(move_char.0.to_string())
                 .first()
                 .map(|val| *val as i8 - board.len() as i8)
-                .unwrap_or_default())
-            .unsigned_abs() as usize;
-            if input == "E" && move_char == 'X'
+                .unwrap_or_default()
+                .unsigned_abs() as usize;
+            if input == "E" && move_char.0 == 'X'
             {
                 println!();
                 write_all_turns(all_turns, arg[0]);
@@ -458,10 +488,11 @@ fn get_input(
             {
                 println!("{}", instant);
             }
-            print!("{}{}", input, move_char);
+            input += &move_char.0.to_string();
+            print!("\x1b[G\x1b[K{}", input);
             stdout().flush().unwrap();
         }
-        if move_char == '\x08'
+        else if move_char.0 == '\x08'
         {
             input.pop();
             if input.len() == 1
@@ -475,15 +506,15 @@ fn get_input(
             print!("\x1b[G\x1b[K{}", input);
             stdout().flush().unwrap();
         }
-        else
-        {
-            input += &move_char.to_string();
-            print!("\x1b[G\x1b[K{}", input);
-            stdout().flush().unwrap();
-        }
-        if move_char == '\n'
+        else if move_char.0 == '\n'
         {
             break;
+        }
+        else if move_char.0 != '\0'
+        {
+            input += &move_char.0.to_string();
+            print!("\x1b[G\x1b[K{}", input);
+            stdout().flush().unwrap();
         }
     }
     input
@@ -537,30 +568,59 @@ fn write_all_turns(all_turns: &Vec<Vec<char>>, bot: bool)
     stdout().flush().unwrap();
     exit(0);
 }
-fn read_single_char() -> char
+pub fn read_input() -> (char, Option<(u16, u16)>)
 {
-    let term = Term::stdout();
-    let key = term.read_key().unwrap();
-    match key
+    terminal::enable_raw_mode().unwrap();
+    stdout().execute(cursor::Hide).unwrap();
+    loop
     {
-        Key::Char(c) =>
+        let read = event::read().unwrap();
+        match read
         {
-            if c == '_'
+            Event::Key(KeyEvent {
+                code, modifiers, ..
+            }) => match (code, modifiers)
             {
-                '\n'
-            }
-            else if !c.is_alphanumeric()
+                (KeyCode::Char('c'), KeyModifiers::CONTROL) =>
+                {
+                    terminal::disable_raw_mode().unwrap();
+                    stdout().execute(terminal::LeaveAlternateScreen).unwrap();
+                    stdout().execute(DisableMouseCapture).unwrap();
+                    stdout().execute(cursor::Show).unwrap();
+                    stdout().flush().unwrap();
+                    exit(0);
+                }
+                (KeyCode::Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) =>
+                {
+                    terminal::disable_raw_mode().unwrap();
+                    return (c, None);
+                }
+                (KeyCode::Enter, KeyModifiers::NONE) =>
+                {
+                    terminal::disable_raw_mode().unwrap();
+                    return ('\n', None);
+                }
+                (KeyCode::Backspace, KeyModifiers::NONE) =>
+                {
+                    terminal::disable_raw_mode().unwrap();
+                    return ('\x08', None);
+                }
+                _ =>
+                {}
+            },
+            Event::Mouse(MouseEvent {
+                kind, column, row, ..
+            }) =>
             {
-                read_single_char()
+                if kind == MouseEventKind::Down(MouseButton::Left)
+                {
+                    terminal::disable_raw_mode().unwrap();
+                    return ('\0', Some((column, row)));
+                }
             }
-            else
-            {
-                c
-            }
+            _ =>
+            {}
         }
-        Key::Enter => '\n',
-        Key::Backspace => '\x08',
-        _ => read_single_char(),
     }
 }
 fn send_data(moves: String, addr: &str) -> Result<String>

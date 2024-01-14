@@ -1,31 +1,36 @@
-use crate::check::check;
-use crate::write_all_turns;
-pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<char>>, moves:Option<Vec<Vec<u8>>>, arg:[bool; 7])
+use crate::{check::check, write_all_turns};
+pub fn print_board(
+    board: Vec<Vec<char>>,
+    turns: &[Vec<char>],
+    all_turns: &Vec<Vec<char>>,
+    moves: Option<Vec<Vec<u8>>>,
+    arg: [bool; 7],
+)
 {
     let turn = if all_turns.len() % 2 == 1 { 1 } else { 0 };
     let mut last_move = vec![];
     if !all_turns.is_empty()
     {
-        last_move = String::from_iter(&all_turns[all_turns.len() - 1]).chars()
-                                                                      .filter_map(|c| {
-                                                                          match c
-                                                                          {
-                                                                              'a'..='t' => Some(c as u8 - b'a'),
-                                                                              'A'..='Z' => Some(c as u8 - b'A' + 26),
-                                                                              '0'..='9' => c.to_digit(10).map(|d| d as u8),
-                                                                              _ => None,
-                                                                          }
-                                                                      })
-                                                                      .collect();
+        last_move = String::from_iter(&all_turns[all_turns.len() - 1])
+            .chars()
+            .filter_map(|c| match c
+            {
+                'a'..='t' => Some(c as u8 - b'a'),
+                'A'..='Z' => Some(c as u8 - b'A' + 26),
+                '0'..='9' => c.to_digit(10).map(|d| d as u8),
+                _ => None,
+            })
+            .collect();
     }
-    let mut mov:Vec<Vec<u8>> = vec![];
+    let mut mov: Vec<Vec<u8>> = vec![];
     if let Some(moves) = moves
     {
         mov = moves.clone();
         for i in 1..moves.len()
         {
             let mut boa = board.clone();
-            boa[moves[i][0] as usize][moves[i][1] as usize] = boa[moves[0][0] as usize][moves[0][1] as usize];
+            boa[moves[i][0] as usize][moves[i][1] as usize] =
+                boa[moves[0][0] as usize][moves[0][1] as usize];
             boa[moves[0][0] as usize][moves[0][1] as usize] = ' ';
             let num = check(&boa, turn, false, if turn % 2 == 1 { 'K' } else { 'k' });
             if ((num == 1) && (turn % 2 == 1)) || ((num == 2) && (turn % 2 == 0))
@@ -87,11 +92,11 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
         {
             output += &format!("{} ", res);
         }
-        let mut fg_color:&str;
-        let mut bg_color:&str;
-        let mut y:i8 = 0;
-        let mut ende:i8 = board.len() as i8;
-        let mut dir:i8 = 1;
+        let mut fg_color: &str;
+        let mut bg_color: &str;
+        let mut y: i8 = 0;
+        let mut ende: i8 = board.len() as i8;
+        let mut dir: i8 = 1;
         if arg[5]
         {
             dir = -1;
@@ -143,7 +148,10 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
                     }
                     if mo[0] == y as u8 && mo[1] == x2 as u8
                     {
-                        output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y as usize][ind]);
+                        output += &format!(
+                            "{}{} {} \x1b[0m",
+                            bg_color, fg_color, board[y as usize][ind]
+                        );
                         y += dir;
                         continue 'inner;
                     }
@@ -169,20 +177,23 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
                 bg_color = "\x1b[48;2;240;217;181m";
             }
             if (!arg[0] || turn % 2 == if arg[4] { 0 } else { 1 })
-               && !last_move.is_empty()
-               && y as usize == last_move[2] as usize
-               && if arg[5] || (arg[1] && turn % 2 == 0)
-               {
-                   x + 1
-               }
-               else
-               {
-                   ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize
-               } == last_move[3] as usize
+                && !last_move.is_empty()
+                && y as usize == last_move[2] as usize
+                && if arg[5] || (arg[1] && turn % 2 == 0)
+                {
+                    x + 1
+                }
+                else
+                {
+                    ((x as i8 - (board.len() as i8 - 1)).unsigned_abs() + 1) as usize
+                } == last_move[3] as usize
             {
                 bg_color = "\x1b[48;2;247;247;105m";
             }
-            output += &format!("{}{} {} \x1b[0m", bg_color, fg_color, board[y as usize][ind]);
+            output += &format!(
+                "{}{} {} \x1b[0m",
+                bg_color, fg_color, board[y as usize][ind]
+            );
             y += dir;
         }
         output += &format!(" {} {}{}{}{}\n", col, tur[0], tur[1], tur[2], tur[3]);
@@ -192,7 +203,17 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
         output += " ";
         for j in 0..board.len()
         {
-            output += &format!("  {}", if arg[5] { (j as i8 - board.len() as i8 + 1).unsigned_abs() } else { j as u8 } + 1);
+            output += &format!(
+                "  {}",
+                if arg[5]
+                {
+                    (j as i8 - board.len() as i8 + 1).unsigned_abs()
+                }
+                else
+                {
+                    j as u8
+                } + 1
+            );
         }
     }
     else
@@ -200,7 +221,17 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
         output += " ";
         for j in 0..board.len()
         {
-            output += &format!("  {}", (if arg[5] { (j as i8 - board.len() as i8 + 1).unsigned_abs() } else { j as u8 } + 97) as char);
+            output += &format!(
+                "  {}",
+                (if arg[5]
+                {
+                    (j as i8 - board.len() as i8 + 1).unsigned_abs()
+                }
+                else
+                {
+                    j as u8
+                } + 97) as char
+            );
         }
     }
     let mut is_check = 0;
@@ -217,7 +248,10 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
             3 =>
             {
                 print_board(board, turns, all_turns, None, arg);
-                println!("Checkmate. {} wins", if turn % 2 == 0 { "White" } else { "Black" });
+                println!(
+                    "Checkmate. {} wins",
+                    if turn % 2 == 0 { "White" } else { "Black" }
+                );
                 write_all_turns(all_turns, false);
             }
             4 =>
@@ -273,5 +307,5 @@ pub fn print_board(board:Vec<Vec<char>>, turns:&[Vec<char>], all_turns:&Vec<Vec<
         };
     }
     // clear line and move cursor to top left and print board
-    println!("{esc}[2J{esc}[1H{output}", esc = 27 as char);
+    println!("\x1b[J\x1b[H{output}");
 }
