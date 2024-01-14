@@ -4,7 +4,7 @@ pub fn print_board(
     turns: &[Vec<char>],
     all_turns: &Vec<Vec<char>>,
     moves: Option<Vec<Vec<u8>>>,
-    arg: [bool; 7],
+    arg: [bool; 8],
 )
 {
     let turn = if all_turns.len() % 2 == 1 { 1 } else { 0 };
@@ -41,7 +41,7 @@ pub fn print_board(
         mov.remove(0);
     }
     let mut output = String::new();
-    for (x, tur) in turns.iter().enumerate().take(board.len())
+    for x in 0..board.len()
     {
         let res;
         let ind;
@@ -67,22 +67,6 @@ pub fn print_board(
         {
             res = (x as i8 - board.len() as i8).abs();
             ind = x;
-        }
-        let mut col = 'W';
-        if turn > 8 && turn % 2 == 0
-        {
-            col = 'B';
-        }
-        if (x + 1) % 2 == 0
-        {
-            if col == 'W'
-            {
-                col = 'B';
-            }
-            else if col == 'B'
-            {
-                col = 'W';
-            }
         }
         if board.len() > 8
         {
@@ -205,7 +189,7 @@ pub fn print_board(
             );
             y += dir;
         }
-        output += &format!(" {} {}{}{}{}\n", col, tur[0], tur[1], tur[2], tur[3]);
+        output += "\n"
     }
     if arg[2]
     {
@@ -271,49 +255,55 @@ pub fn print_board(
             }
             _ =>
             {
-                output += if !arg[5]
+                if !arg[7]
                 {
-                    if turn % 2 == 1 || arg[0]
+                    output += if !arg[5]
                     {
-                        "\nWhite's turn"
+                        if turn % 2 == 1 || arg[0]
+                        {
+                            "\nWhite's turn"
+                        }
+                        else
+                        {
+                            "\nBlack's turn"
+                        }
                     }
-                    else
+                    else if turn % 2 == 1 || arg[0]
                     {
                         "\nBlack's turn"
                     }
+                    else
+                    {
+                        "\nWhite's turn"
+                    };
                 }
-                else if turn % 2 == 1 || arg[0]
-                {
-                    "\nBlack's turn"
-                }
-                else
-                {
-                    "\nWhite's turn"
-                };
             }
         }
     }
     else
     {
-        output += if !arg[5]
+        if !arg[7]
         {
-            if turn % 2 == 1 || arg[0]
+            output += if !arg[5]
             {
-                "\nWhite's turn"
+                if turn % 2 == 1 || arg[0]
+                {
+                    "\nWhite's turn"
+                }
+                else
+                {
+                    "\nBlack's turn"
+                }
             }
-            else
+            else if turn % 2 == 1 || arg[0]
             {
                 "\nBlack's turn"
             }
+            else
+            {
+                "\nWhite's turn"
+            };
         }
-        else if turn % 2 == 1 || arg[0]
-        {
-            "\nBlack's turn"
-        }
-        else
-        {
-            "\nWhite's turn"
-        };
     }
     // clear line and move cursor to top left and print board
     println!("\x1b[J\x1b[H{output}");

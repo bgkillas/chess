@@ -39,7 +39,7 @@ fn main()
     // 4=color
     // 5=keep_flip
     // 6=double
-    let mut arg = [false; 7];
+    let mut arg = [false; 8];
     arg[0] = true;
     let mut file = String::new();
     let mut ip = String::new();
@@ -83,6 +83,7 @@ fn main()
             "--no_bot" => arg[0] = false,
             "--debug" => arg[3] = true,
             "--double" => arg[6] = true,
+            "--no_extra_output" => arg[7] = true,
             _ =>
             {}
         }
@@ -197,7 +198,10 @@ fn main()
         let moves: Vec<u8> = convert_to_num(input.clone());
         if moves.is_empty()
         {
-            println!("Invalid input");
+            if !arg[7]
+            {
+                println!("Invalid input");
+            }
             continue;
         }
         if moves[0] == 31 && moves[1] == 50 && moves[2] == 35 && moves[3] == 46
@@ -215,7 +219,10 @@ fn main()
             || moves[3] < 1
             || moves[3] > (board.len() + 2) as u8
         {
-            println!("Invalid move");
+            if !arg[7]
+            {
+                println!("Invalid move");
+            }
             continue;
         }
         let x = moves[0] as usize - 1;
@@ -228,13 +235,19 @@ fn main()
         if piece.is_uppercase() && piece2.is_uppercase()
             || piece.is_lowercase() && piece2.is_lowercase()
         {
-            println!("Invalid move");
+            if !arg[7]
+            {
+                println!("Invalid move");
+            }
             continue;
         }
         // allow only white/black piece to move if its white's/black's turn
         if (turn % 2 == 0 && piece.is_uppercase()) || (turn % 2 == 1 && piece.is_lowercase())
         {
-            println!("Invalid move");
+            if !arg[7]
+            {
+                println!("Invalid move");
+            }
             continue;
         }
         // pawn movement
@@ -243,7 +256,10 @@ fn main()
             let possible_moves = pawn::pawn(&board, x, y, Some(passant));
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
-                println!("Invalid move");
+                if !arg[7]
+                {
+                    println!("Invalid move");
+                }
                 continue;
             }
             pawn::promotion(&mut board, x2, y2, piece, arg[0]);
@@ -265,7 +281,10 @@ fn main()
             let possible_moves = rook::rook(&board, x, y);
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
-                println!("Invalid move");
+                if !arg[7]
+                {
+                    println!("Invalid move");
+                }
                 continue;
             }
             if x == 0 && piece == 'R'
@@ -291,7 +310,10 @@ fn main()
             let possible_moves = bishop::bishop(&board, x, y);
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
-                println!("Invalid move");
+                if !arg[7]
+                {
+                    println!("Invalid move");
+                }
                 continue;
             }
         }
@@ -301,7 +323,10 @@ fn main()
             let possible_moves = knight::knight(&board, x, y);
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
-                println!("Invalid move");
+                if !arg[7]
+                {
+                    println!("Invalid move");
+                }
                 continue;
             }
         }
@@ -313,7 +338,10 @@ fn main()
             possible_moves.extend(rook::rook(&board, x, y));
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
-                println!("Invalid move");
+                if !arg[7]
+                {
+                    println!("Invalid move");
+                }
                 continue;
             }
         }
@@ -323,7 +351,10 @@ fn main()
             let possible_moves = king::king(&board, x, y, Some(castle.clone()));
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
             {
-                println!("Invalid move");
+                if !arg[7]
+                {
+                    println!("Invalid move");
+                }
                 continue;
             }
             if (x2 as i8 - x as i8).abs() == 2
@@ -348,7 +379,10 @@ fn main()
         }
         else
         {
-            println!("Invalid move");
+            if !arg[7]
+            {
+                println!("Invalid move");
+            }
             continue;
         }
         // ensure that the player is not in check after move
@@ -398,7 +432,7 @@ fn get_input(
     castle: &[bool],
     passant: [usize; 3],
     instant: Option<u128>,
-    arg: [bool; 7],
+    arg: [bool; 8],
 ) -> String
 {
     let turn = if all_turns.len() % 2 == 1 { 1 } else { 2 };
@@ -461,14 +495,20 @@ fn get_input(
             }
             if x >= board.len() || y >= board.len()
             {
-                println!("\nInvalid move");
+                if !arg[7]
+                {
+                    println!("\nInvalid move");
+                }
                 input = String::new();
                 continue;
             }
             if turn % 2 == 1 && board[x][y].is_lowercase()
                 || turn % 2 == 0 && board[x][y].is_uppercase()
             {
-                println!("\nInvalid move");
+                if !arg[7]
+                {
+                    println!("\nInvalid move");
+                }
                 input = String::new();
                 continue;
             }
@@ -490,7 +530,10 @@ fn get_input(
                 _ =>
                 {
                     input = String::new();
-                    println!("\nNot a valid piece\x1b[A\x1b[A  ");
+                    if !arg[7]
+                    {
+                        println!("\nNot a valid piece\x1b[A\x1b[A  ");
+                    }
                     continue;
                 }
             }
@@ -500,7 +543,10 @@ fn get_input(
                 println!("{}", instant);
             }
             input += &move_char.0.to_string();
-            print!("\x1b[G\x1b[K{}", input);
+            if !arg[7]
+            {
+                print!("\x1b[G\x1b[K{}", input);
+            }
             stdout().flush().unwrap();
         }
         else if move_char.0 == '\x08'
@@ -514,7 +560,10 @@ fn get_input(
             {
                 println!("{}", instant);
             }
-            print!("\x1b[G\x1b[K{}", input);
+            if !arg[7]
+            {
+                print!("\x1b[G\x1b[K{}", input);
+            }
             stdout().flush().unwrap();
         }
         else if move_char.0 == '\n'
@@ -524,7 +573,10 @@ fn get_input(
         else if move_char.0 != '\0'
         {
             input += &move_char.0.to_string();
-            print!("\x1b[G\x1b[K{}", input);
+            if !arg[7]
+            {
+                print!("\x1b[G\x1b[K{}", input);
+            }
             stdout().flush().unwrap();
         }
     }
