@@ -1,17 +1,34 @@
-use crate::check::check;
-use crate::pieces::{bishop, knight, rook};
-use crate::possible_moves::possible_moves;
-pub fn gen_move(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Vec<Vec<char>>) -> String
+use crate::{
+    check::check,
+    pieces::{bishop, knight, rook},
+    possible_moves::possible_moves,
+    write_all_turns,
+};
+pub fn gen_move(
+    board: &[Vec<char>],
+    castle: &Vec<bool>,
+    passant: [usize; 3],
+    all_turns: &Vec<Vec<char>>,
+) -> String
 {
     let mut generated_move;
     let best_move = best(board, castle, passant, all_turns);
-    generated_move = char::from_u32(best_move[0] as u32 + 97).unwrap().to_string();
+    generated_move = char::from_u32(best_move[0] as u32 + 97)
+        .unwrap()
+        .to_string();
     generated_move += &(best_move[1] as i8 - board.len() as i8).abs().to_string();
-    generated_move += &char::from_u32(best_move[2] as u32 + 97).unwrap().to_string();
+    generated_move += &char::from_u32(best_move[2] as u32 + 97)
+        .unwrap()
+        .to_string();
     generated_move += &(best_move[3] as i8 - board.len() as i8).abs().to_string();
     generated_move
 }
-fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Vec<Vec<char>>) -> Vec<u8>
+fn best(
+    board: &[Vec<char>],
+    castle: &Vec<bool>,
+    passant: [usize; 3],
+    all_turns: &Vec<Vec<char>>,
+) -> Vec<u8>
 {
     // https://www.chessprogramming.org/Simplified_Evaluation_Function
     #[rustfmt::skip]
@@ -92,10 +109,10 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
     let mut j = 0;
     while j < 6
     {
-        for k in 0..possible_move[i][j].len()
+        for possible_move in &possible_move[i][j]
         {
-            let x = possible_move[i][j][k][0][0] as i8;
-            let y = possible_move[i][j][k][0][1] as i8;
+            let x = possible_move[0][0] as i8;
+            let y = possible_move[0][1] as i8;
             let piece = board[x as usize][y as usize];
             let piece_score = score_of(piece);
             let mut is_attacked = false;
@@ -109,19 +126,26 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                     max[i][1] = -128;
                 }
             }
-            'inner: for m in 1..possible_move[i][j][k].len()
+            for possible_move in possible_move
             {
                 let mut board2 = board.to_vec();
-                let x2 = possible_move[i][j][k][m][0] as i8;
-                let y2 = possible_move[i][j][k][m][1] as i8;
+                let x2 = possible_move[0] as i8;
+                let y2 = possible_move[1] as i8;
                 let piece2 = board[x2 as usize][y2 as usize];
-                if !((piece2.is_ascii_uppercase() && piece.is_ascii_lowercase()) || (piece2.is_ascii_lowercase() && piece.is_ascii_uppercase()) || piece2 == ' ')
+                if !((piece2.is_ascii_uppercase() && piece.is_ascii_lowercase())
+                    || (piece2.is_ascii_lowercase() && piece.is_ascii_uppercase())
+                    || piece2 == ' ')
                 {
                     continue;
                 }
                 board2[x2 as usize][y2 as usize] = piece;
                 board2[x as usize][y as usize] = ' ';
-                if check(&board2, 0, false, 'k') != 0
+                if check(
+                    &board2,
+                    0,
+                    false,
+                    if all_turns.len() % 2 == 0 { 'k' } else { 'K' },
+                ) != 0
                 {
                     continue;
                 }
@@ -130,7 +154,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                 {
                     if attackable(&board2, x2, y2) && piece_score > score_of(piece2)
                     {
-                        continue 'inner;
+                        continue;
                     }
                     max[i][0] = score;
                     max[i][2] = x;
@@ -142,7 +166,7 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
                 {
                     if attackable(&board2, x2, y2) && piece_score > score_of(piece2)
                     {
-                        continue 'inner;
+                        continue;
                     }
                     let num = match board[x as usize][y as usize].to_ascii_lowercase()
                     {
@@ -178,12 +202,16 @@ fn best(board:&[Vec<char>], castle:&Vec<bool>, passant:[usize; 3], all_turns:&Ve
     if max[i][2] == 0 && max[i][3] == 0 && max[i][4] == 0 && max[i][5] == 0
     {
         println!("Checkmate. {} wins", if i == 1 { "White" } else { "Black" });
-        crate::write_all_turns(all_turns, true);
-        std::process::exit(0);
+        write_all_turns(all_turns, true);
     }
-    vec![max[i][2] as u8, max[i][3] as u8, max[i][4] as u8, max[i][5] as u8]
+    vec![
+        max[i][2] as u8,
+        max[i][3] as u8,
+        max[i][4] as u8,
+        max[i][5] as u8,
+    ]
 }
-fn score_of(piece:char) -> i8
+fn score_of(piece: char) -> i8
 {
     match piece.to_ascii_uppercase()
     {
@@ -196,13 +224,21 @@ fn score_of(piece:char) -> i8
         _ => 0,
     }
 }
-fn get_score(n:usize, possible_move:&[Vec<Vec<Vec<Vec<u8>>>>]) -> i8
+fn get_score(n: usize, possible_move: &[Vec<Vec<Vec<Vec<u8>>>>]) -> i8
 {
-    (possible_move[n][0].len() + possible_move[n][1].len() * 5 + possible_move[n][2].len() * 3 + possible_move[n][3].len() * 4 + possible_move[n][4].len() * 9) as i8
+    (possible_move[n][0].len()
+        + possible_move[n][1].len() * 5
+        + possible_move[n][2].len() * 3
+        + possible_move[n][3].len() * 4
+        + possible_move[n][4].len() * 9) as i8
 }
-fn attackable(board:&[Vec<char>], x:i8, y:i8) -> bool
+fn attackable(board: &[Vec<char>], x: i8, y: i8) -> bool
 {
-    let moves_from_piece:Vec<Vec<Vec<u8>>> = vec![rook::rook(board, x as usize, y as usize), bishop::bishop(board, x as usize, y as usize), knight::knight(board, x as usize, y as usize)];
+    let moves_from_piece: Vec<Vec<Vec<u8>>> = vec![
+        rook::rook(board, x as usize, y as usize),
+        bishop::bishop(board, x as usize, y as usize),
+        knight::knight(board, x as usize, y as usize),
+    ];
     for piece in moves_from_piece
     {
         for i in &piece[1..]
@@ -210,8 +246,11 @@ fn attackable(board:&[Vec<char>], x:i8, y:i8) -> bool
             let x2 = i[0] as i8;
             let y2 = i[1] as i8;
             let piece2 = board[x2 as usize][y2 as usize];
-            if !((piece2.is_ascii_uppercase() && board[x as usize][y as usize].is_ascii_lowercase()) || (piece2.is_ascii_lowercase() && board[x as usize][y as usize].is_ascii_uppercase()))
-               || piece2 == ' '
+            if !((piece2.is_ascii_uppercase()
+                && board[x as usize][y as usize].is_ascii_lowercase())
+                || (piece2.is_ascii_lowercase()
+                    && board[x as usize][y as usize].is_ascii_uppercase()))
+                || piece2 == ' '
             {
                 continue;
             }
@@ -259,7 +298,8 @@ fn attackable(board:&[Vec<char>], x:i8, y:i8) -> bool
                 }
                 'N' =>
                 {
-                    if ((x2 - x).abs() == 2 && (y2 - y).abs() == 1) || ((x2 - x).abs() == 1 && (y2 - y).abs() == 2)
+                    if ((x2 - x).abs() == 2 && (y2 - y).abs() == 1)
+                        || ((x2 - x).abs() == 1 && (y2 - y).abs() == 2)
                     {
                         return true;
                     }

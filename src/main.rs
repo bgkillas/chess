@@ -67,7 +67,7 @@ fn main()
             "--numbers" => arg[2] = true,
             "--file" =>
             {
-                arg[0] = false;
+                arg[0] = !arg[0];
                 file = args().nth(i + 1).unwrap()
             }
             "--black" =>
@@ -457,7 +457,7 @@ fn get_input(
         if let Some(n) = move_char.1
         {
             let x = (n.0.saturating_sub(2)) / 3;
-            if (x as usize) < board.len() && x != 0 && (n.1 as usize) < board.len()
+            if (x as usize) < board.len() && (n.1 as usize) < board.len()
             {
                 str = format!(
                     "{}{}",
@@ -476,6 +476,16 @@ fn get_input(
                     str += "\n"
                 }
             }
+        }
+        else if move_char.0 == '\x14'
+        {
+            write_all_turns(all_turns, true);
+            terminal::disable_raw_mode().unwrap();
+            stdout().execute(terminal::LeaveAlternateScreen).unwrap();
+            stdout().execute(DisableMouseCapture).unwrap();
+            stdout().execute(cursor::Show).unwrap();
+            stdout().flush().unwrap();
+            exit(0);
         }
         else if input.len() == 1 && move_char.0 != '\x08'
         {
@@ -566,7 +576,7 @@ fn get_input(
             }
             stdout().flush().unwrap();
         }
-        else if move_char.0 == '\n'
+        else if move_char.0 == '\n' || move_char.0 == '_'
         {
             break;
         }
@@ -611,6 +621,11 @@ fn can_move(
 }
 fn write_all_turns(all_turns: &Vec<Vec<char>>, bot: bool)
 {
+    terminal::disable_raw_mode().unwrap();
+    stdout().execute(terminal::LeaveAlternateScreen).unwrap();
+    stdout().execute(DisableMouseCapture).unwrap();
+    stdout().execute(cursor::Show).unwrap();
+    print!("\x1b[G\x1b[K");
     for (x, row) in all_turns.iter().enumerate().take(all_turns.len())
     {
         if bot && x % 2 == 0
@@ -627,7 +642,6 @@ fn write_all_turns(all_turns: &Vec<Vec<char>>, bot: bool)
         }
     }
     println!();
-    stdout().write_all(b"\x1B[?25h").unwrap();
     stdout().flush().unwrap();
     exit(0);
 }
@@ -647,11 +661,7 @@ pub fn read_input() -> (char, Option<(u16, u16)>)
                 (KeyCode::Char('c'), KeyModifiers::CONTROL) =>
                 {
                     terminal::disable_raw_mode().unwrap();
-                    stdout().execute(terminal::LeaveAlternateScreen).unwrap();
-                    stdout().execute(DisableMouseCapture).unwrap();
-                    stdout().execute(cursor::Show).unwrap();
-                    stdout().flush().unwrap();
-                    exit(0);
+                    return ('\x14', None);
                 }
                 (KeyCode::Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) =>
                 {
