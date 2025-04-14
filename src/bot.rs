@@ -116,7 +116,7 @@ fn best(
             let piece = board[x as usize][y as usize];
             let piece_score = score_of(piece);
             let mut is_attacked = false;
-            if j != 0 && attackable(board, x, y)
+            if (start_score > 20 && j != 0) && attackable(board, x, y)
             {
                 is_attacked = true;
                 if !pieces_attacked
@@ -150,7 +150,7 @@ fn best(
                     continue;
                 }
                 let score = get_score(n, &possible_moves(&board2, Some(castle), Some(passant)));
-                if (score < max[i][0] || max[i][0] == 127) && !(is_attacked ^ pieces_attacked)
+                if score < max[i][0] && !(is_attacked ^ pieces_attacked)
                 {
                     if attackable(&board2, x2, y2) && piece_score > score_of(piece2)
                     {
