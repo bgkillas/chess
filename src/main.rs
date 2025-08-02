@@ -14,8 +14,7 @@ use std::{
     process::exit,
     time::Instant,
 };
-mod pieces
-{
+mod pieces {
     pub mod bishop;
     pub mod king;
     pub mod knight;
@@ -30,8 +29,7 @@ use bot::gen_move;
 use check::check;
 use pieces::{bishop, king, knight, pawn, rook};
 use print_board::print_board;
-fn main()
-{
+fn main() {
     // 0=bot
     // 1=flip
     // 2=numbers
@@ -43,12 +41,9 @@ fn main()
     arg[0] = true;
     let mut file = String::new();
     let mut ip = String::new();
-    for i in 0..args().len()
-    {
-        match args().nth(i).unwrap().as_str()
-        {
-            "--help" =>
-            {
+    for i in 0..args().len() {
+        match args().nth(i).unwrap().as_str() {
+            "--help" => {
                 println!("Usage: chess [OPTION]...");
                 println!("to move a piece type the coordinates of the piece you want to move and the coordinates of where you want to move it");
                 println!("for example: e2e4 or 5254");
@@ -65,18 +60,15 @@ fn main()
             "--flip" => arg[1] = true,
             "--keep_flip" => arg[5] = !arg[5],
             "--numbers" => arg[2] = true,
-            "--file" =>
-            {
+            "--file" => {
                 arg[0] = !arg[0];
                 file = args().nth(i + 1).unwrap()
             }
-            "--black" =>
-            {
+            "--black" => {
                 arg[4] = true;
                 arg[5] = !arg[5];
             }
-            "--ip" =>
-            {
+            "--ip" => {
                 arg[0] = false;
                 ip = args().nth(i + 1).unwrap();
             }
@@ -84,14 +76,12 @@ fn main()
             "--debug" => arg[3] = true,
             "--double" => arg[6] = true,
             "--no_extra_output" => arg[7] = true,
-            _ =>
-            {}
+            _ => {}
         }
     }
     // disable line blinking
     let mut board: Vec<Vec<char>>;
-    if !file.is_empty() && File::open(&file).is_ok()
-    {
+    if !file.is_empty() && File::open(&file).is_ok() {
         let csv = File::open(file).unwrap();
         let reader = BufReader::new(csv);
         board = reader
@@ -103,9 +93,7 @@ fn main()
                     .collect()
             })
             .collect();
-    }
-    else
-    {
+    } else {
         board = vec![
             vec!['r', 'p', ' ', ' ', ' ', ' ', 'P', 'R'],
             vec!['n', 'p', ' ', ' ', ' ', ' ', 'P', 'N'],
@@ -118,8 +106,7 @@ fn main()
         ];
     }
     // ensure the board is a square
-    if board[0].len() != board.len()
-    {
+    if board[0].len() != board.len() {
         println!("Board must be a square");
         exit(1);
     }
@@ -127,8 +114,7 @@ fn main()
     let mut all_turns: Vec<Vec<char>> = vec![vec![]];
     let mut turns: Vec<Vec<char>> = vec![vec!['0'; 4]; board.len()];
     let mut turn = 1;
-    if arg[4] && ip.is_empty() && !arg[0]
-    {
+    if arg[4] && ip.is_empty() && !arg[0] {
         turn = 2;
     }
     // print_board(board.clone(), &turns, flip, numbers, keep_flip, turn, None);
@@ -143,28 +129,23 @@ fn main()
     stdout().execute(EnableMouseCapture).unwrap();
     print!("\x1b[H\x1b[J");
     stdout().flush().unwrap();
-    loop
-    {
+    loop {
         // dont allow en passant on a piece after a turn
-        if turn != passant[2] + 1
-        {
+        if turn != passant[2] + 1 {
             passant[0] = 0;
             passant[1] = 0;
             passant[2] = 0;
         }
         copy = board.clone();
         let mut are_you_moving = false;
-        if (ip.is_empty() && !arg[0]) || (turn % 2 == 0 && arg[4]) || (turn % 2 == 1 && !arg[4])
-        {
+        if (ip.is_empty() && !arg[0]) || (turn % 2 == 0 && arg[4]) || (turn % 2 == 1 && !arg[4]) {
             are_you_moving = true;
         }
-        if arg[6]
-        {
+        if arg[6] {
             are_you_moving = false;
         }
         let mut input = String::new();
-        if are_you_moving
-        {
+        if are_you_moving {
             input = get_input(
                 &board,
                 &all_turns,
@@ -174,38 +155,28 @@ fn main()
                 instant.map(|d| d.elapsed().as_nanos()),
                 arg,
             );
-            if arg[3]
-            {
+            if arg[3] {
                 instant = Some(Instant::now())
             }
-        }
-        else if !ip.is_empty()
-        {
+        } else if !ip.is_empty() {
             input = receive_data(ip.split_once(':').unwrap().1.parse::<u16>().unwrap()).unwrap();
-        }
-        else if arg[0]
-        {
+        } else if arg[0] {
             input = gen_move(&board, &castle, passant, &all_turns);
         }
-        if !ip.is_empty()
-        {
-            match send_data(input.clone(), &ip)
-            {
+        if !ip.is_empty() {
+            match send_data(input.clone(), &ip) {
                 Ok(_) => (),
                 Err(e) => println!("Error: {}", e),
             }
         }
         let moves: Vec<u8> = convert_to_num(input.clone());
-        if moves.is_empty()
-        {
-            if !arg[7]
-            {
+        if moves.is_empty() {
+            if !arg[7] {
                 println!("Invalid input");
             }
             continue;
         }
-        if moves[0] == 31 && moves[1] == 50 && moves[2] == 35 && moves[3] == 46
-        {
+        if moves[0] == 31 && moves[1] == 50 && moves[2] == 35 && moves[3] == 46 {
             write_all_turns(&all_turns, arg[0]);
         }
         // ensure the input is in range
@@ -219,8 +190,7 @@ fn main()
             || moves[3] < 1
             || moves[3] > (board.len() + 2) as u8
         {
-            if !arg[7]
-            {
+            if !arg[7] {
                 println!("Invalid move");
             }
             continue;
@@ -235,189 +205,144 @@ fn main()
         if piece.is_uppercase() && piece2.is_uppercase()
             || piece.is_lowercase() && piece2.is_lowercase()
         {
-            if !arg[7]
-            {
+            if !arg[7] {
                 println!("Invalid move");
             }
             continue;
         }
         // allow only white/black piece to move if its white's/black's turn
-        if (turn % 2 == 0 && piece.is_uppercase()) || (turn % 2 == 1 && piece.is_lowercase())
-        {
-            if !arg[7]
-            {
+        if (turn % 2 == 0 && piece.is_uppercase()) || (turn % 2 == 1 && piece.is_lowercase()) {
+            if !arg[7] {
                 println!("Invalid move");
             }
             continue;
         }
         // pawn movement
-        if piece.eq_ignore_ascii_case(&'p')
-        {
+        if piece.eq_ignore_ascii_case(&'p') {
             let possible_moves = pawn::pawn(&board, x, y, Some(passant));
-            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
-            {
-                if !arg[7]
-                {
+            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves) {
+                if !arg[7] {
                     println!("Invalid move");
                 }
                 continue;
             }
             pawn::promotion(&mut board, x2, y2, piece, arg[0]);
             // if pawn moved 2 spaces
-            if y + 2 == y2 || (y > 1 && y - 2 == y2)
-            {
+            if y + 2 == y2 || (y > 1 && y - 2 == y2) {
                 passant[0] = x2;
                 passant[1] = y2;
                 passant[2] = turn;
             }
-            if piece2 == ' ' && x2 == passant[0] && y == passant[1] && turn - passant[2] == 1
-            {
+            if piece2 == ' ' && x2 == passant[0] && y == passant[1] && turn - passant[2] == 1 {
                 board[passant[0]][passant[1]] = ' ';
             }
         }
         // if rook
-        else if piece.eq_ignore_ascii_case(&'r')
-        {
+        else if piece.eq_ignore_ascii_case(&'r') {
             let possible_moves = rook::rook(&board, x, y);
-            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
-            {
-                if !arg[7]
-                {
+            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves) {
+                if !arg[7] {
                     println!("Invalid move");
                 }
                 continue;
             }
-            if x == 0 && piece == 'R'
-            {
+            if x == 0 && piece == 'R' {
                 castle[0] = false; // disable white left castle
-            }
-            else if x == 7 && piece == 'R'
-            {
+            } else if x == 7 && piece == 'R' {
                 castle[1] = false; // disable white right castle
-            }
-            else if x == 0 && piece == 'r'
-            {
+            } else if x == 0 && piece == 'r' {
                 castle[2] = false; // disable black left castle
-            }
-            else if x == 7 && piece == 'r'
-            {
+            } else if x == 7 && piece == 'r' {
                 castle[3] = false; // disable black right castle
             }
         }
         // if bishop
-        else if piece.eq_ignore_ascii_case(&'b')
-        {
+        else if piece.eq_ignore_ascii_case(&'b') {
             let possible_moves = bishop::bishop(&board, x, y);
-            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
-            {
-                if !arg[7]
-                {
+            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves) {
+                if !arg[7] {
                     println!("Invalid move");
                 }
                 continue;
             }
         }
         // if knight
-        else if piece.eq_ignore_ascii_case(&'n')
-        {
+        else if piece.eq_ignore_ascii_case(&'n') {
             let possible_moves = knight::knight(&board, x, y);
-            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
-            {
-                if !arg[7]
-                {
+            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves) {
+                if !arg[7] {
                     println!("Invalid move");
                 }
                 continue;
             }
         }
         // if queen
-        else if piece.eq_ignore_ascii_case(&'q')
-        {
+        else if piece.eq_ignore_ascii_case(&'q') {
             // just use rook and bishop logic together
             let mut possible_moves = bishop::bishop(&board, x, y);
             possible_moves.extend(rook::rook(&board, x, y));
-            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
-            {
-                if !arg[7]
-                {
+            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves) {
+                if !arg[7] {
                     println!("Invalid move");
                 }
                 continue;
             }
         }
         // if king
-        else if piece.eq_ignore_ascii_case(&'k')
-        {
+        else if piece.eq_ignore_ascii_case(&'k') {
             let possible_moves = king::king(&board, x, y, Some(castle.clone()));
-            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves)
-            {
-                if !arg[7]
-                {
+            if !can_move(&mut board, x, y, x2, y2, piece, possible_moves) {
+                if !arg[7] {
                     println!("Invalid move");
                 }
                 continue;
             }
-            if (x2 as i8 - x as i8).abs() == 2
-            {
-                let piece3 = match piece
-                {
+            if (x2 as i8 - x as i8).abs() == 2 {
+                let piece3 = match piece {
                     'K' => 'R',
                     'k' => 'r',
                     _ => ' ',
                 };
-                if x2 == 2
-                {
+                if x2 == 2 {
                     board[0][y2] = ' ';
                     board[3][y2] = piece3;
-                }
-                else if x2 == 6
-                {
+                } else if x2 == 6 {
                     board[7][y2] = ' ';
                     board[5][y2] = piece3;
                 }
             }
-        }
-        else
-        {
-            if !arg[7]
-            {
+        } else {
+            if !arg[7] {
                 println!("Invalid move");
             }
             continue;
         }
         // ensure that the player is not in check after move
         let is_check = check(&board, turn, false, if turn % 2 == 1 { 'K' } else { 'k' });
-        if (turn % 2 == 0 && is_check == 2) || (turn % 2 == 1 && is_check == 1)
-        {
+        if (turn % 2 == 0 && is_check == 2) || (turn % 2 == 1 && is_check == 1) {
             println!("cant move in check");
             board = copy.clone();
             continue;
         }
         let turn_str: Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
         // delete the first turn of the turn tracker if there are too many to display
-        if turn > board.len()
-        {
+        if turn > board.len() {
             turns.remove(0);
             turns.push(turn_str.clone());
-        }
-        else
-        {
+        } else {
             turns[turn - 1] = turn_str.clone();
         }
         all_turns.push(turn_str);
         turn += 1;
-        if !(arg[0] && turn % 2 == 1)
-        {
+        if !(arg[0] && turn % 2 == 1) {
             print_board(board.clone(), &turns, &all_turns, None, arg);
         }
     }
 }
-fn convert_to_num(input: String) -> Vec<u8>
-{
+fn convert_to_num(input: String) -> Vec<u8> {
     return input
         .chars()
-        .filter_map(|c| match c
-        {
+        .filter_map(|c| match c {
             'a'..='t' => Some(c as u8 - b'a' + 1),
             'A'..='Z' => Some(c as u8 - b'A' + 27),
             '0'..='9' => c.to_digit(10).map(|d| d as u8),
@@ -433,58 +358,42 @@ fn get_input(
     passant: [usize; 3],
     instant: Option<u128>,
     arg: [bool; 8],
-) -> String
-{
+) -> String {
     let turn = if all_turns.len() % 2 == 1 { 1 } else { 2 };
     let mut input = String::new();
     print_board(board.clone(), turns, all_turns, None, arg);
-    if let Some(instant) = instant
-    {
+    if let Some(instant) = instant {
         println!("{}", instant);
     }
     let mut piece_moves: Vec<Vec<u8>>;
     let mut str = String::new();
-    loop
-    {
-        let move_char = if str.is_empty()
-        {
+    loop {
+        let move_char = if str.is_empty() {
             read_input()
-        }
-        else
-        {
+        } else {
             (str.remove(0), None)
         };
-        if let Some(n) = move_char.1
-        {
+        if let Some(n) = move_char.1 {
             let x = (n.0.saturating_sub(2)) / 3;
-            if (x as usize) < board.len() && (n.1 as usize) < board.len()
-            {
+            if (x as usize) < board.len() && (n.1 as usize) < board.len() {
                 str = format!(
                     "{}{}",
                     (x as u8 + b'a') as char,
-                    if turn % 2 == 0 && arg[1]
-                    {
+                    if turn % 2 == 0 && arg[1] {
                         n.1 as usize + 1
-                    }
-                    else
-                    {
+                    } else {
                         board.len() - n.1 as usize
                     }
                 );
-                if input.len() == 2
-                {
+                if input.len() == 2 {
                     str += "\n"
                 }
             }
-        }
-        else if move_char.0 == '\x14'
-        {
+        } else if move_char.0 == '\x14' {
             write_all_turns(all_turns, true);
             stdout().execute(terminal::LeaveAlternateScreen).unwrap();
             exit(0);
-        }
-        else if input.len() == 1 && move_char.0 != '\x08'
-        {
+        } else if input.len() == 1 && move_char.0 != '\x08' {
             let x: usize = convert_to_num(input.clone())
                 .first()
                 .map(|val| *val as usize - 1)
@@ -494,15 +403,12 @@ fn get_input(
                 .map(|val| *val as i8 - board.len() as i8)
                 .unwrap_or_default()
                 .unsigned_abs() as usize;
-            if input == "E" && move_char.0 == 'X'
-            {
+            if input == "E" && move_char.0 == 'X' {
                 println!();
                 write_all_turns(all_turns, arg[0]);
             }
-            if x >= board.len() || y >= board.len()
-            {
-                if !arg[7]
-                {
+            if x >= board.len() || y >= board.len() {
+                if !arg[7] {
                     println!("\nInvalid move");
                 }
                 input = String::new();
@@ -511,21 +417,18 @@ fn get_input(
             if turn % 2 == 1 && board[x][y].is_lowercase()
                 || turn % 2 == 0 && board[x][y].is_uppercase()
             {
-                if !arg[7]
-                {
+                if !arg[7] {
                     println!("\nInvalid move");
                 }
                 input = String::new();
                 continue;
             }
-            match board[x][y].to_ascii_uppercase()
-            {
+            match board[x][y].to_ascii_uppercase() {
                 'P' => piece_moves = pawn::pawn(board, x, y, Some(passant)),
                 'R' => piece_moves = rook::rook(board, x, y),
                 'N' => piece_moves = knight::knight(board, x, y),
                 'B' => piece_moves = bishop::bishop(board, x, y),
-                'Q' =>
-                {
+                'Q' => {
                     let mut bishop_moves: Vec<Vec<u8>> = bishop::bishop(board, x, y);
                     let mut rook_moves: Vec<Vec<u8>> = rook::rook(board, x, y);
                     rook_moves.remove(0);
@@ -533,54 +436,40 @@ fn get_input(
                     piece_moves = bishop_moves;
                 }
                 'K' => piece_moves = king::king(board, x, y, Some(castle.to_owned())),
-                _ =>
-                {
+                _ => {
                     input = String::new();
-                    if !arg[7]
-                    {
+                    if !arg[7] {
                         println!("\nNot a valid piece\x1b[A\x1b[A  ");
                     }
                     continue;
                 }
             }
             print_board(board.clone(), turns, all_turns, Some(piece_moves), arg);
-            if let Some(instant) = instant
-            {
+            if let Some(instant) = instant {
                 println!("{}", instant);
             }
             input += &move_char.0.to_string();
-            if !arg[7]
-            {
+            if !arg[7] {
                 print!("\x1b[G\x1b[K{}", input);
             }
             stdout().flush().unwrap();
-        }
-        else if move_char.0 == '\x08'
-        {
+        } else if move_char.0 == '\x08' {
             input.pop();
-            if input.len() == 1
-            {
+            if input.len() == 1 {
                 print_board(board.clone(), turns, all_turns, None, arg);
             }
-            if let Some(instant) = instant
-            {
+            if let Some(instant) = instant {
                 println!("{}", instant);
             }
-            if !arg[7]
-            {
+            if !arg[7] {
                 print!("\x1b[G\x1b[K{}", input);
             }
             stdout().flush().unwrap();
-        }
-        else if move_char.0 == '\n' || move_char.0 == '_'
-        {
+        } else if move_char.0 == '\n' || move_char.0 == '_' {
             break;
-        }
-        else if move_char.0 != '\0'
-        {
+        } else if move_char.0 != '\0' {
             input += &move_char.0.to_string();
-            if !arg[7]
-            {
+            if !arg[7] {
                 print!("\x1b[G\x1b[K{}", input);
             }
             stdout().flush().unwrap();
@@ -596,16 +485,12 @@ fn can_move(
     y2: usize,
     piece: char,
     possible_moves: Vec<Vec<u8>>,
-) -> bool
-{
+) -> bool {
     let mut success = false;
-    for row in possible_moves
-    {
+    for row in possible_moves {
         let mut iter = row.iter().peekable();
-        while let Some(&value) = iter.next()
-        {
-            if value == x2 as u8 && iter.peek() == Some(&&(y2 as u8))
-            {
+        while let Some(&value) = iter.next() {
+            if value == x2 as u8 && iter.peek() == Some(&&(y2 as u8)) {
                 success = true;
                 board[x2][y2] = piece;
                 board[x][y] = ' ';
@@ -615,83 +500,65 @@ fn can_move(
     }
     success
 }
-fn write_all_turns(all_turns: &Vec<Vec<char>>, bot: bool)
-{
+fn write_all_turns(all_turns: &Vec<Vec<char>>, bot: bool) {
     terminal::disable_raw_mode().unwrap();
     stdout().execute(DisableMouseCapture).unwrap();
     stdout().execute(cursor::Show).unwrap();
     print!("\x1b[G\x1b[K");
-    for (x, row) in all_turns.iter().enumerate().take(all_turns.len())
-    {
-        if bot && x % 2 == 0
-        {
+    for (x, row) in all_turns.iter().enumerate().take(all_turns.len()) {
+        if bot && x % 2 == 0 {
             continue;
         }
-        if x > 1
-        {
+        if x > 1 {
             print!("_");
         }
-        for val in row.iter()
-        {
+        for val in row.iter() {
             print!("{}", val);
         }
     }
     println!();
     stdout().flush().unwrap();
 }
-pub fn read_input() -> (char, Option<(u16, u16)>)
-{
+pub fn read_input() -> (char, Option<(u16, u16)>) {
     terminal::enable_raw_mode().unwrap();
     stdout().execute(cursor::Hide).unwrap();
-    loop
-    {
+    loop {
         let read = event::read().unwrap();
-        match read
-        {
+        match read {
             Event::Key(KeyEvent {
                 code, modifiers, ..
-            }) => match (code, modifiers)
-            {
-                (KeyCode::Char('c'), KeyModifiers::CONTROL) =>
-                {
+            }) => match (code, modifiers) {
+                (KeyCode::Char('c'), KeyModifiers::CONTROL) => {
                     terminal::disable_raw_mode().unwrap();
                     return ('\x14', None);
                 }
-                (KeyCode::Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) =>
-                {
+                (KeyCode::Char(c), KeyModifiers::NONE | KeyModifiers::SHIFT) => {
                     terminal::disable_raw_mode().unwrap();
                     return (c, None);
                 }
-                (KeyCode::Enter, KeyModifiers::NONE) =>
-                {
+                (KeyCode::Enter, KeyModifiers::NONE) => {
                     terminal::disable_raw_mode().unwrap();
                     return ('\n', None);
                 }
-                (KeyCode::Backspace, KeyModifiers::NONE) =>
-                {
+                (KeyCode::Backspace, KeyModifiers::NONE) => {
                     terminal::disable_raw_mode().unwrap();
                     return ('\x08', None);
                 }
-                _ =>
-                {}
+                _ => {}
             },
             Event::Mouse(MouseEvent {
                 kind, column, row, ..
-            }) =>
-            {
-                if kind == MouseEventKind::Down(MouseButton::Left)
-                {
+            }) => {
+                if kind == MouseEventKind::Down(MouseButton::Left) {
                     terminal::disable_raw_mode().unwrap();
                     return ('\0', Some((column, row)));
                 }
             }
-            _ =>
-            {}
+            _ => {}
         }
     }
 }
-fn send_data(moves: String, addr: &str) -> Result<String>
-{
+fn send_data(moves: String, addr: &str) -> Result<String> {
     let mut stream = TcpStream::connect(addr)?;
     stream.write_all(moves.as_bytes())?;
     let mut buf = [0; 3];
@@ -699,11 +566,9 @@ fn send_data(moves: String, addr: &str) -> Result<String>
     let message = String::from_utf8_lossy(&buf).to_string();
     Ok(message)
 }
-fn receive_data(port: u16) -> Result<String>
-{
+fn receive_data(port: u16) -> Result<String> {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))?;
-    if let Some(stream) = listener.incoming().next()
-    {
+    if let Some(stream) = listener.incoming().next() {
         let mut stream = stream?;
         let mut buf = [0; 4];
         stream.read_exact(&mut buf)?;

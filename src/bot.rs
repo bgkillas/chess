@@ -9,8 +9,7 @@ pub fn gen_move(
     castle: &Vec<bool>,
     passant: [usize; 3],
     all_turns: &Vec<Vec<char>>,
-) -> String
-{
+) -> String {
     let mut generated_move;
     let best_move = best(board, castle, passant, all_turns);
     generated_move = char::from_u32(best_move[0] as u32 + 97)
@@ -28,8 +27,7 @@ fn best(
     castle: &Vec<bool>,
     passant: [usize; 3],
     all_turns: &Vec<Vec<char>>,
-) -> Vec<u8>
-{
+) -> Vec<u8> {
     // https://www.chessprogramming.org/Simplified_Evaluation_Function
     #[rustfmt::skip]
         let table: [[i8; 64]; 6] = [
@@ -107,27 +105,22 @@ fn best(
     let mut pieces_attacked = false;
     let i = if all_turns.len() % 2 == 0 { 1 } else { 0 };
     let mut j = 0;
-    while j < 6
-    {
-        for possible_move in &possible_move[i][j]
-        {
+    while j < 6 {
+        for possible_move in &possible_move[i][j] {
             let x = possible_move[0][0] as i8;
             let y = possible_move[0][1] as i8;
             let piece = board[x as usize][y as usize];
             let piece_score = score_of(piece);
             let mut is_attacked = false;
-            if (start_score > 20 && j != 0) && attackable(board, x, y)
-            {
+            if (start_score > 20 && j != 0) && attackable(board, x, y) {
                 is_attacked = true;
-                if !pieces_attacked
-                {
+                if !pieces_attacked {
                     pieces_attacked = true;
                     max[i][0] = 127;
                     max[i][1] = -128;
                 }
             }
-            for possible_move in possible_move
-            {
+            for possible_move in possible_move {
                 let mut board2 = board.to_vec();
                 let x2 = possible_move[0] as i8;
                 let y2 = possible_move[1] as i8;
@@ -150,10 +143,8 @@ fn best(
                     continue;
                 }
                 let score = get_score(n, &possible_moves(&board2, Some(castle), Some(passant)));
-                if score < max[i][0] && !(is_attacked ^ pieces_attacked)
-                {
-                    if attackable(&board2, x2, y2) && piece_score > score_of(piece2)
-                    {
+                if score < max[i][0] && !(is_attacked ^ pieces_attacked) {
+                    if attackable(&board2, x2, y2) && piece_score > score_of(piece2) {
                         continue;
                     }
                     max[i][0] = score;
@@ -162,14 +153,11 @@ fn best(
                     max[i][4] = x2;
                     max[i][5] = y2;
                 }
-                if start_score == max[i][0] && !(is_attacked ^ pieces_attacked)
-                {
-                    if attackable(&board2, x2, y2) && piece_score > score_of(piece2)
-                    {
+                if start_score == max[i][0] && !(is_attacked ^ pieces_attacked) {
+                    if attackable(&board2, x2, y2) && piece_score > score_of(piece2) {
                         continue;
                     }
-                    let num = match board[x as usize][y as usize].to_ascii_lowercase()
-                    {
+                    let num = match board[x as usize][y as usize].to_ascii_lowercase() {
                         'p' => 0,
                         'r' => 1,
                         'n' => 2,
@@ -179,15 +167,13 @@ fn best(
                         _ => continue,
                     };
                     let mut offset = -7;
-                    if i == 0
-                    {
+                    if i == 0 {
                         offset += 7;
                     }
                     let t1 = ((y + offset).abs() * 8 + x) as usize;
                     let t2 = ((y2 + offset).abs() * 8 + x2) as usize;
                     let score2 = table[num][t2] - table[num][t1];
-                    if score2 > max[i][1]
-                    {
+                    if score2 > max[i][1] {
                         max[i][1] = score2;
                         max[i][2] = x;
                         max[i][3] = y;
@@ -199,8 +185,7 @@ fn best(
         }
         j += 1;
     }
-    if max[i][2] == 0 && max[i][3] == 0 && max[i][4] == 0 && max[i][5] == 0
-    {
+    if max[i][2] == 0 && max[i][3] == 0 && max[i][4] == 0 && max[i][5] == 0 {
         println!("Checkmate. {} wins", if i == 1 { "White" } else { "Black" });
         write_all_turns(all_turns, true);
     }
@@ -211,10 +196,8 @@ fn best(
         max[i][5] as u8,
     ]
 }
-fn score_of(piece: char) -> i8
-{
-    match piece.to_ascii_uppercase()
-    {
+fn score_of(piece: char) -> i8 {
+    match piece.to_ascii_uppercase() {
         'P' => 1,
         'R' => 5,
         'N' => 3,
@@ -224,25 +207,21 @@ fn score_of(piece: char) -> i8
         _ => 0,
     }
 }
-fn get_score(n: usize, possible_move: &[Vec<Vec<Vec<Vec<u8>>>>]) -> i8
-{
+fn get_score(n: usize, possible_move: &[Vec<Vec<Vec<Vec<u8>>>>]) -> i8 {
     (possible_move[n][0].len()
         + possible_move[n][1].len() * 5
         + possible_move[n][2].len() * 3
         + possible_move[n][3].len() * 4
         + possible_move[n][4].len() * 9) as i8
 }
-fn attackable(board: &[Vec<char>], x: i8, y: i8) -> bool
-{
+fn attackable(board: &[Vec<char>], x: i8, y: i8) -> bool {
     let moves_from_piece: Vec<Vec<Vec<u8>>> = vec![
         rook::rook(board, x as usize, y as usize),
         bishop::bishop(board, x as usize, y as usize),
         knight::knight(board, x as usize, y as usize),
     ];
-    for piece in moves_from_piece
-    {
-        for i in &piece[1..]
-        {
+    for piece in moves_from_piece {
+        for i in &piece[1..] {
             let x2 = i[0] as i8;
             let y2 = i[1] as i8;
             let piece2 = board[x2 as usize][y2 as usize];
@@ -254,65 +233,48 @@ fn attackable(board: &[Vec<char>], x: i8, y: i8) -> bool
             {
                 continue;
             }
-            match piece2
-            {
-                'P' =>
-                {
-                    if y2 == y + 1 && (x2 == x - 1 || x2 == x + 1)
-                    {
+            match piece2 {
+                'P' => {
+                    if y2 == y + 1 && (x2 == x - 1 || x2 == x + 1) {
                         return true;
                     }
                 }
-                'p' =>
-                {
-                    if y2 == y - 1 && (x2 == x - 1 || x2 == x + 1)
-                    {
+                'p' => {
+                    if y2 == y - 1 && (x2 == x - 1 || x2 == x + 1) {
                         return true;
                     }
                 }
-                _ =>
-                {}
+                _ => {}
             }
-            match piece2.to_ascii_uppercase()
-            {
-                'Q' =>
-                {
-                    if ((x2 - x).abs() == (y2 - y).abs()) || (x2 == x || y2 == y)
-                    {
+            match piece2.to_ascii_uppercase() {
+                'Q' => {
+                    if ((x2 - x).abs() == (y2 - y).abs()) || (x2 == x || y2 == y) {
                         return true;
                     }
                 }
-                'R' =>
-                {
-                    if x2 == x || y2 == y
-                    {
+                'R' => {
+                    if x2 == x || y2 == y {
                         return true;
                     }
                 }
-                'B' =>
-                {
-                    if (x2 - x).abs() == (y2 - y).abs()
-                    {
+                'B' => {
+                    if (x2 - x).abs() == (y2 - y).abs() {
                         return true;
                     }
                 }
-                'N' =>
-                {
+                'N' => {
                     if ((x2 - x).abs() == 2 && (y2 - y).abs() == 1)
                         || ((x2 - x).abs() == 1 && (y2 - y).abs() == 2)
                     {
                         return true;
                     }
                 }
-                'K' =>
-                {
-                    if (x2 - x).abs() <= 1 && (y2 - y).abs() <= 1
-                    {
+                'K' => {
+                    if (x2 - x).abs() <= 1 && (y2 - y).abs() <= 1 {
                         return true;
                     }
                 }
-                _ =>
-                {}
+                _ => {}
             }
         }
     }
