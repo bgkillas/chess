@@ -75,7 +75,7 @@ pub fn pawn(board: &[Vec<char>], x: usize, y: usize, passant: Option<[usize; 3]>
     }
     possible_moves
 }
-pub fn promotion(board: &mut Vec<Vec<char>>, x2: usize, y2: usize, piece: char, bot: bool) {
+pub fn promotion(board: &mut [Vec<char>], x2: usize, y2: usize, piece: char, bot: bool) {
     if y2 == 0 || y2 == board.len() - 1 {
         let rook: char;
         let bishop: char;

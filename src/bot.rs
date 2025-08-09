@@ -6,9 +6,9 @@ use crate::{
 };
 pub fn gen_move(
     board: &[Vec<char>],
-    castle: &Vec<bool>,
+    castle: &[bool],
     passant: [usize; 3],
-    all_turns: &Vec<Vec<char>>,
+    all_turns: &[Vec<char>],
 ) -> String {
     let mut generated_move;
     let best_move = best(board, castle, passant, all_turns);
@@ -24,9 +24,9 @@ pub fn gen_move(
 }
 fn best(
     board: &[Vec<char>],
-    castle: &Vec<bool>,
+    castle: &[bool],
     passant: [usize; 3],
-    all_turns: &Vec<Vec<char>>,
+    all_turns: &[Vec<char>],
 ) -> Vec<u8> {
     // https://www.chessprogramming.org/Simplified_Evaluation_Function
     #[rustfmt::skip]
@@ -188,6 +188,7 @@ fn best(
     if max[i][2] == 0 && max[i][3] == 0 && max[i][4] == 0 && max[i][5] == 0 {
         println!("Checkmate. {} wins", if i == 1 { "White" } else { "Black" });
         write_all_turns(all_turns, true);
+        std::process::exit(0);
     }
     vec![
         max[i][2] as u8,

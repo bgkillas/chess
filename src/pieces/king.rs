@@ -1,5 +1,5 @@
 use crate::check::check;
-pub fn king(board: &[Vec<char>], x: usize, y: usize, castle: Option<Vec<bool>>) -> Vec<Vec<u8>> {
+pub fn king(board: &[Vec<char>], x: usize, y: usize, castle: Option<&[bool]>) -> Vec<Vec<u8>> {
     let piece = board[x][y];
     let mut possible_moves: Vec<Vec<u8>> = vec![vec![x as u8, y as u8]];
     let row: usize;
@@ -46,7 +46,7 @@ pub fn king(board: &[Vec<char>], x: usize, y: usize, castle: Option<Vec<bool>>) 
                 continue;
             }
             // allow castling
-            if let Some(ref castle) = castle {
+            if let Some(castle) = castle {
                 let mut copy = board.to_vec();
                 copy[if x2 == 2 { 3 } else { 5 }][y2] = piece;
                 if y == row

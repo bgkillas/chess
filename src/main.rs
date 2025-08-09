@@ -149,7 +149,6 @@ fn main() {
             input = get_input(
                 &board,
                 &all_turns,
-                &turns,
                 &castle,
                 passant,
                 instant.map(|d| d.elapsed().as_nanos()),
@@ -290,7 +289,7 @@ fn main() {
         }
         // if king
         else if piece.eq_ignore_ascii_case(&'k') {
-            let possible_moves = king::king(&board, x, y, Some(castle.clone()));
+            let possible_moves = king::king(&board, x, y, Some(castle.as_ref()));
             if !can_move(&mut board, x, y, x2, y2, piece, possible_moves) {
                 if !arg[7] {
                     println!("Invalid move");
@@ -335,12 +334,12 @@ fn main() {
         all_turns.push(turn_str);
         turn += 1;
         if !(arg[0] && turn % 2 == 1) {
-            print_board(board.clone(), &turns, &all_turns, None, arg);
+            print_board(&board, &all_turns, None, arg);
         }
     }
 }
 fn convert_to_num(input: String) -> Vec<u8> {
-    return input
+    input
         .chars()
         .filter_map(|c| match c {
             'a'..='t' => Some(c as u8 - b'a' + 1),
@@ -348,12 +347,11 @@ fn convert_to_num(input: String) -> Vec<u8> {
             '0'..='9' => c.to_digit(10).map(|d| d as u8),
             _ => None,
         })
-        .collect();
+        .collect()
 }
 fn get_input(
-    board: &Vec<Vec<char>>,
-    all_turns: &Vec<Vec<char>>,
-    turns: &[Vec<char>],
+    board: &[Vec<char>],
+    all_turns: &[Vec<char>],
     castle: &[bool],
     passant: [usize; 3],
     instant: Option<u128>,
@@ -361,7 +359,7 @@ fn get_input(
 ) -> String {
     let turn = if all_turns.len() % 2 == 1 { 1 } else { 2 };
     let mut input = String::new();
-    print_board(board.clone(), turns, all_turns, None, arg);
+    print_board(board, all_turns, None, arg);
     if let Some(instant) = instant {
         println!("{}", instant);
     }
@@ -435,7 +433,7 @@ fn get_input(
                     bishop_moves.extend(rook_moves);
                     piece_moves = bishop_moves;
                 }
-                'K' => piece_moves = king::king(board, x, y, Some(castle.to_owned())),
+                'K' => piece_moves = king::king(board, x, y, Some(castle)),
                 _ => {
                     input = String::new();
                     if !arg[7] {
@@ -444,7 +442,7 @@ fn get_input(
                     continue;
                 }
             }
-            print_board(board.clone(), turns, all_turns, Some(piece_moves), arg);
+            print_board(board, all_turns, Some(piece_moves), arg);
             if let Some(instant) = instant {
                 println!("{}", instant);
             }
@@ -456,7 +454,7 @@ fn get_input(
         } else if move_char.0 == '\x08' {
             input.pop();
             if input.len() == 1 {
-                print_board(board.clone(), turns, all_turns, None, arg);
+                print_board(board, all_turns, None, arg);
             }
             if let Some(instant) = instant {
                 println!("{}", instant);
@@ -500,7 +498,7 @@ fn can_move(
     }
     success
 }
-fn write_all_turns(all_turns: &Vec<Vec<char>>, bot: bool) {
+fn write_all_turns(all_turns: &[Vec<char>], bot: bool) {
     terminal::disable_raw_mode().unwrap();
     stdout().execute(DisableMouseCapture).unwrap();
     stdout().execute(cursor::Show).unwrap();

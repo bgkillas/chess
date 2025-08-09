@@ -1,7 +1,7 @@
 use crate::pieces::{bishop, king, knight, pawn, rook};
 pub fn possible_moves(
     board: &[Vec<char>],
-    castle: Option<&Vec<bool>>,
+    castle: Option<&[bool]>,
     passant: Option<[usize; 3]>,
 ) -> Vec<Vec<Vec<Vec<Vec<u8>>>>> {
     let mut moves: Vec<Vec<Vec<Vec<Vec<u8>>>>> = vec![vec![vec![]; 6], vec![vec![]; 6]];
@@ -41,7 +41,7 @@ pub fn possible_moves(
                         bishop_moves.extend(rook_moves);
                         moves[num][4].push(bishop_moves);
                     }
-                    'k' => moves[num][5].push(king::king(board, x, y, castle.cloned())),
+                    'k' => moves[num][5].push(king::king(board, x, y, castle)),
                     _ => (),
                 }
             }
