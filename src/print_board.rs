@@ -37,11 +37,13 @@ pub fn print_board(
     for x in 0..board.len() {
         let res;
         let ind;
+        let mut flip = 0;
         if arg[1] {
             if turn == 1 || turn % 2 == 1 {
                 res = (x as i8 - board.len() as i8).abs();
                 ind = x;
             } else {
+                flip = 1;
                 res = x as i8 + 1i8;
                 ind = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
             }
@@ -84,12 +86,12 @@ pub fn print_board(
                     let mut x2 = x;
                     if arg[5] {
                         x2 = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
-                        if (y as usize + ((x + 1) % 2)) % 2 == 0 {
+                        if (y as usize + ((x + 1) % 2)) % 2 == flip {
                             bg_color = "\x1b[48;2;255;250;225m";
                         } else {
                             bg_color = "\x1b[48;2;110;80;50m";
                         }
-                    } else if (y as usize + ((x + 1) % 2)) % 2 == 0 {
+                    } else if (y as usize + ((x + 1) % 2)) % 2 == flip {
                         bg_color = "\x1b[48;2;110;80;50m";
                     } else {
                         bg_color = "\x1b[48;2;255;250;225m";
@@ -112,12 +114,12 @@ pub fn print_board(
                 }
             }
             if arg[5] {
-                if (y as usize + ((x + 1) % 2)) % 2 == 0 {
+                if (y as usize + ((x + 1) % 2)) % 2 == flip {
                     bg_color = "\x1b[48;2;240;217;181m";
                 } else {
                     bg_color = "\x1b[48;2;181;136;99m";
                 }
-            } else if (y as usize + ((x + 1) % 2)) % 2 == 0 {
+            } else if (y as usize + ((x + 1) % 2)) % 2 == flip {
                 bg_color = "\x1b[48;2;181;136;99m";
             } else {
                 bg_color = "\x1b[48;2;240;217;181m";
