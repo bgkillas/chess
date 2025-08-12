@@ -194,10 +194,15 @@ fn main() {
             }
             continue;
         }
-        let x = moves[0] as usize - 1;
+        let mut x = moves[0] as usize - 1;
         let y = (moves[1] as i8 - board.len() as i8).unsigned_abs() as usize;
-        let x2 = moves[2] as usize - 1;
+        let mut x2 = moves[2] as usize - 1;
         let y2 = (moves[3] as i8 - board.len() as i8).unsigned_abs() as usize;
+        let is_flipped = !(arg[1] && turn != 1 && turn % 2 == 0);
+        if !is_flipped {
+            x = board.len() - x - 1;
+            x2 = board.len() - x2 - 1;
+        }
         let piece = board[x][y];
         let piece2 = board[x2][y2];
         // dont move if the piece is the same color as the piece you are moving to
@@ -365,6 +370,7 @@ fn get_input(
     }
     let mut piece_moves: Vec<Vec<u8>>;
     let mut str = String::new();
+    let is_flipped = !(arg[1] && turn != 1 && turn % 2 == 0);
     loop {
         let move_char = if str.is_empty() {
             read_input()
@@ -392,10 +398,13 @@ fn get_input(
             stdout().execute(terminal::LeaveAlternateScreen).unwrap();
             exit(0);
         } else if input.len() == 1 && move_char.0 != '\x08' {
-            let x: usize = convert_to_num(input.clone())
+            let mut x: usize = convert_to_num(input.clone())
                 .first()
                 .map(|val| *val as usize - 1)
                 .unwrap_or_default();
+            if !is_flipped {
+                x = board.len() - x - 1;
+            }
             let y: usize = convert_to_num(move_char.0.to_string())
                 .first()
                 .map(|val| *val as i8 - board.len() as i8)

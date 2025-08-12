@@ -7,6 +7,7 @@ pub fn print_board(
 ) {
     let turn = if all_turns.len() % 2 == 1 { 1 } else { 0 };
     let mut last_move = vec![];
+    let is_flipped = !(arg[1] && turn != 1 && turn % 2 == 0);
     if !all_turns.is_empty() {
         last_move = String::from_iter(&all_turns[all_turns.len() - 1])
             .chars()
@@ -37,13 +38,11 @@ pub fn print_board(
     for x in 0..board.len() {
         let res;
         let ind;
-        let mut flip = 0;
         if arg[1] {
             if turn == 1 || turn % 2 == 1 {
                 res = (x as i8 - board.len() as i8).abs();
                 ind = x;
             } else {
-                flip = 1;
                 res = x as i8 + 1i8;
                 ind = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
             }
@@ -64,7 +63,7 @@ pub fn print_board(
         let mut y: i8 = 0;
         let mut ende: i8 = board.len() as i8;
         let mut dir: i8 = 1;
-        if arg[5] {
+        if arg[5] || !is_flipped {
             dir = -1;
             y = board.len() as i8 - 1;
             ende = -1;
@@ -86,12 +85,12 @@ pub fn print_board(
                     let mut x2 = x;
                     if arg[5] {
                         x2 = (x as i8 - (board.len() as i8 - 1)).unsigned_abs() as usize;
-                        if (y as usize + ((x + 1) % 2)) % 2 == flip {
+                        if (y as usize + ((x + 1) % 2)) % 2 == 0 {
                             bg_color = "\x1b[48;2;255;250;225m";
                         } else {
                             bg_color = "\x1b[48;2;110;80;50m";
                         }
-                    } else if (y as usize + ((x + 1) % 2)) % 2 == flip {
+                    } else if (y as usize + ((x + 1) % 2)) % 2 == 0 {
                         bg_color = "\x1b[48;2;110;80;50m";
                     } else {
                         bg_color = "\x1b[48;2;255;250;225m";
@@ -113,20 +112,24 @@ pub fn print_board(
                     }
                 }
             }
-            if arg[5] {
-                if (y as usize + ((x + 1) % 2)) % 2 == flip {
+            if arg[5] || !is_flipped {
+                if (y as usize + ((x + 1) % 2)) % 2 == 0 {
                     bg_color = "\x1b[48;2;240;217;181m";
                 } else {
                     bg_color = "\x1b[48;2;181;136;99m";
                 }
-            } else if (y as usize + ((x + 1) % 2)) % 2 == flip {
+            } else if (y as usize + ((x + 1) % 2)) % 2 == 0 {
                 bg_color = "\x1b[48;2;181;136;99m";
             } else {
                 bg_color = "\x1b[48;2;240;217;181m";
             }
             if (!arg[0] || turn % 2 == if arg[4] { 0 } else { 1 })
                 && !last_move.is_empty()
-                && y as usize == last_move[2] as usize
+                && if is_flipped {
+                    board.len() - y as usize - 1
+                } else {
+                    y as usize
+                } == last_move[2] as usize
                 && if arg[5] || (arg[1] && turn % 2 == 0) {
                     x + 1
                 } else {
@@ -158,6 +161,7 @@ pub fn print_board(
     } else {
         output += " ";
         for j in 0..board.len() {
+            let j = if is_flipped { j } else { board.len() - j - 1 };
             output += &format!(
                 "  {}",
                 (if arg[5] {
